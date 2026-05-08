@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Электрик PRO v14.4 (Ultimate Logic)</title>
+    <title>Электрик PRO v14.5 (PUE & Secure UI)</title>
     
     <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore-compat.js"></script>
@@ -113,7 +113,6 @@
         .logic-label { font-size: 11px; font-weight: bold; color: var(--primary); display: block; margin-bottom: 5px; text-transform: uppercase; }
         .logic-row { margin-bottom: 10px; }
 
-        /* ИСПРАВЛЕННЫЙ CSS ДЛЯ МНОГОСТРАНИЧНОГО PDF */
         @media print {
             body, html { height: auto !important; overflow: visible !important; background: white; margin: 0; padding: 0; }
             .no-print, .container, .burger-menu, .burger-overlay { display: none !important; }
@@ -150,8 +149,9 @@
     <button class="btn-vendor" style="background: rgba(245,158,11,0.15); color: #F59E0B;" onclick="openModal('buhModal'); toggleMenu();">💰 Бухгалтерия (Акты)</button>
     
     <div style="border-top: 1px solid var(--border); margin-top:15px; padding-top:15px;">
-        <button class="btn-vendor" style="background: rgba(100,116,139,0.15); color: var(--text);" onclick="openMatCatalog(); toggleMenu();">🛠 Ручная сборка щита (Каталог)</button>
+        <button class="btn-vendor" style="background: rgba(16,185,129,0.15); color: #10B981;" onclick="aiPueHelper(); toggleMenu();">📚 ИИ-Помощник (ПУЭ и Монтаж)</button>
         <button class="btn-vendor" style="background: rgba(244,63,94,0.1); color: var(--danger);" onclick="compareShopsAI(); toggleMenu();">🛒 ИИ-Сравнение цен в магазинах</button>
+        <button class="btn-vendor" style="background: rgba(100,116,139,0.15); color: var(--text);" onclick="openMatCatalog(); toggleMenu();">🛠 Ручная сборка щита (Каталог)</button>
         <button class="btn-vendor" style="background: rgba(79,70,229,0.1); color: var(--primary);" onclick="openModal('logicModal'); toggleMenu();">⚙️ Логика расчетов и Цены</button>
         <button class="btn-vendor" style="background: rgba(100,116,139,0.15); color: var(--text);" onclick="openModal('settingsModal'); toggleMenu();">🛠 Настройки системы</button>
         <button class="btn-danger" style="margin-top:20px;" onclick="openLogoutModal(); toggleMenu();">🚪 Выйти</button>
@@ -196,6 +196,22 @@
         <div style="display: flex; gap:8px; margin-top: 15px;">
             <button onclick="openRecalcModal()" class="btn-info" style="flex: 1; height:48px; background:rgba(59,130,246,0.9); font-size:14px;">🔄 Пересчитать трассы</button>
             <button onclick="clearCurrentEstimate()" class="btn-danger" style="flex:0.5; background:rgba(71,85,105,0.9); height:48px;">Очистить</button>
+        </div>
+    </div>
+</div>
+
+<div class="modal" id="qtyPromptModal" style="z-index: 3000;">
+    <div class="modal-content glass" style="max-width: 300px; text-align:center;">
+        <h3 style="color:var(--primary); margin-top:0;">Укажите количество</h3>
+        <p id="qty-prompt-name" style="font-size:12px; margin-bottom:15px; font-weight:bold;"></p>
+        <div style="display:flex; justify-content:center; align-items:center; gap:10px; margin-bottom:15px;">
+            <button class="c-btn" onclick="document.getElementById('qty-input').value = Math.max(1, Number(document.getElementById('qty-input').value)-1)">-</button>
+            <input type="number" id="qty-input" value="1" style="width:80px; margin:0; text-align:center; font-size:18px; font-weight:bold;">
+            <button class="c-btn" onclick="document.getElementById('qty-input').value = Number(document.getElementById('qty-input').value)+1">+</button>
+        </div>
+        <div style="display:flex; gap:10px;">
+            <button class="btn-ghost" style="flex:1; margin:0;" onclick="closeModal('qtyPromptModal')">Отмена</button>
+            <button class="btn-success" style="flex:1; margin:0;" onclick="confirmQtyAdd()">Добавить</button>
         </div>
     </div>
 </div>
@@ -265,6 +281,7 @@
         <h2 style="color: var(--primary); margin-top:0;">⚙️ Логика расчетов и Цены</h2>
         
         <div class="logic-group"><span class="logic-label">Цены для авто-калькуляторов (Руб)</span>
+            <p style="font-size:10px; color:var(--gray); margin-top:0; margin-bottom:10px; line-height:1.2;">Здесь меняются переменные для формул сборки щита и трасс, а не базовые цены из БД.</p>
             <div class="logic-row"><label style="font-size:12px; color:var(--gray);">Установка механизма (Розетка/Выкл):</label><input type="number" id="logic-price-soc" placeholder="500"></div>
             <div class="logic-row"><label style="font-size:12px; color:var(--gray);">Сборка щита (за 1 модуль):</label><input type="number" id="logic-price-shield" placeholder="500"></div>
             <div class="logic-row"><label style="font-size:12px; color:var(--gray);">Высверливание подрозетника (Бетон):</label><input type="number" id="logic-price-drill" placeholder="600"></div>
@@ -281,6 +298,11 @@
             <div class="logic-row"><label style="font-size:12px;">Площадок на 1 метр по потолку (шт):</label><input type="number" id="logic-bases-m"></div>
             <div class="logic-row"><label style="font-size:12px;">Клипс на 1 метр штробы/гофры (шт):</label><input type="number" id="logic-clips-m"></div>
             <div class="logic-row"><label style="font-size:12px;">Штук в 1 упаковке крепежа:</label><input type="number" id="logic-pack-size"></div>
+        </div>
+
+        <div class="logic-group"><span class="logic-label">Сверление и Подрозетники</span>
+            <div class="logic-row"><label style="font-size:12px;">Алебастр/Штукатурка на 1 точку (кг):</label><input type="number" id="logic-mix-box" step="0.1"></div>
+            <div class="logic-row"><label style="font-size:12px;">Ресурс 1 алмазной коронки (кол-во отверстий):</label><input type="number" id="logic-crown-life"></div>
         </div>
 
         <button id="logic-save-btn" class="btn-primary" style="width:100%; padding:14px; margin-top:5px;" onclick="saveLogic()">Сохранить логику и Цены</button>
@@ -385,6 +407,9 @@ let priceReqs = []; let priceOverrides = {};
 let cfg = {rms: 1, acs: 0, fls: 0, bals: 0 };
 var st_soc = 1, st_sw = 0, st_pass = 0, st_cross = 0, st_tv = 0, st_tpol = 0, st_q = 1, st_h = 30, st_p = 1, st_podr = 'std';
 let globalRecalcCab = 0, globalRecalcSht = 0; let currentCardId = null;
+
+// ПЕРЕМЕННАЯ ДЛЯ КАСТОМНОГО PROMPT
+let pendingAdd = null;
 
 window.onload = async function() {
     let savedTheme = localStorage.getItem('theme_v31') || 'light'; changeTheme(savedTheme); document.getElementById('theme-select').value = savedTheme;
@@ -552,7 +577,25 @@ function openMatCatalog() { let cats = {}; matDB.forEach(m => { let c = m.c || "
 function openWorkCatalog() { let cats = {}; workDB.forEach(w => { let c = w.c || "ОБЩИЕ"; let g = w.g || "РАЗНОЕ"; if(!cats[c]) cats[c] = {}; if(!cats[c][g]) cats[c][g] = []; cats[c][g].push(w); }); let html = ""; let idx = 0; for(let c in cats) { let sid = 'wcat_' + (idx++); html += `<div class="cat-header" style="color:var(--orange);" onclick="toggleCat('${sid}')">${c}</div><div class="cat-body" id="${sid}" style="display:none !important;">`; for(let g in cats[c]) { let subSid = 'wsub_'+(idx++); html += `<div class="sub-cat-header" onclick="toggleSubCat('${subSid}', event)">${g.toUpperCase()} </div><div class="sub-cat-body" id="${subSid}" style="display:none !important;">`; cats[c][g].forEach(w => { html += `<div class="mat-item"><div style="flex:1; font-size:13px; font-weight:600;">${w.n}<br><span style="color:var(--gray); font-size:11px; font-weight:normal;">${w.p} P / ${w.u||'ед.'}</span></div><button class="mat-add-btn" style="background: var(--orange); width:auto; margin:0;" onclick="promptAdd('${w.id}', 'work')">+ Добавить</button></div>`; }); html += `</div>`; } html += `</div>`; } document.getElementById('work-cat-list').innerHTML = html; openModal('workModal'); }
 function toggleCat(id) { let el = document.getElementById(id); if(el) { if(el.classList.contains('active')) { el.classList.remove('active'); el.style.setProperty('display', 'none', 'important'); } else { el.classList.add('active'); el.style.setProperty('display', 'block', 'important'); } } }
 function toggleSubCat(id, ev) { ev.stopPropagation(); let el = document.getElementById(id); if(el) { if(el.classList.contains('active')) { el.classList.remove('active'); el.style.setProperty('display', 'none', 'important'); } else { el.classList.add('active'); el.style.setProperty('display', 'block', 'important'); } } }
-function promptAdd(id, type) { let dbArr = type === 'mat'? matDB: workDB; let item = dbArr.find(x => String(x.id) === String(id)); if(!item) return showToast("❌ Ошибка: Позиция не найдена!"); let qty = prompt(`Количество:\n${item.n}`, "1"); if(qty !== null && qty.trim() !== "" && !isNaN(qty) && Number(qty) > 0) { addAuto([{...item, q: Number(qty), type: type}], 'man_' + Date.now() + Math.random()); showToast(`✅ Добавлено: ${qty}`); } }
+
+// === КАСТОМНЫЙ PROMPT БЕЗ ССЫЛОК ===
+function promptAdd(id, type) { 
+    let dbArr = type === 'mat'? matDB: workDB; 
+    let item = dbArr.find(x => String(x.id) === String(id)); 
+    if(!item) return showToast("❌ Ошибка: Позиция не найдена!"); 
+    pendingAdd = { item: item, type: type };
+    document.getElementById('qty-prompt-name').innerText = item.n;
+    document.getElementById('qty-input').value = 1;
+    openModal('qtyPromptModal');
+}
+function confirmQtyAdd() {
+    let qty = Number(document.getElementById('qty-input').value);
+    if(qty !== null && qty > 0 && pendingAdd) { 
+        addAuto([{...pendingAdd.item, q: qty, type: pendingAdd.type}], 'man_' + Date.now() + Math.random()); 
+        showToast(`✅ Добавлено: ${qty}`); 
+    } 
+    closeModal('qtyPromptModal');
+}
 
 function fPrice(it) { return Math.round((it.p || 0) * (1 + (it.type === 'mat'? coeffs.mat: coeffs.work) / 100)); }
 function getPrice(db, category, name, defValue) { let item = db.find(x => x.n === name) || db.find(x => x.n.includes(name)); return item ? Number(item.p) : defValue; }
@@ -573,7 +616,7 @@ function renderMainTable() {
     document.getElementById('tot-all').innerText = total.toLocaleString() + ' P'; localStorage.setItem('est_v31', JSON.stringify(currentEstimate)); syncDraft();
 }
 
-// === ИИ СНАБЖЕНЕЦ И СРАВНЕНИЕ ===
+// === ИИ СНАБЖЕНЕЦ, СРАВНЕНИЕ И ПУЭ ===
 async function handleInvoiceUpload(input) {
     if (!GEMINI_API_KEY) return showToast("❌ Введите ключ ИИ в Админке!"); if (!input.files || !input.files[0]) return;
     const file = input.files[0]; const mimeType = file.type; closeModal('settModal'); showLoader("ИИ читает накладную...", "🤖"); const reader = new FileReader();
@@ -609,23 +652,52 @@ async function runAiCheck() {
 }
 function addAiItemByNameFast(name) { let item = matDB.find(x => x.n === name) || workDB.find(x => x.n === name); if(item) { addAuto([{...item, q: 1, type: item.c ? 'mat' : 'work'}], 'ai_sugg_' + Date.now()); showToast(`✅ Добавлено в смету: ${name}`); closeModal('aiModal'); setTimeout(runAiCheck, 500); } else showToast(`❌ ${name} не найдено в базе`); }
 
-// НОВАЯ ФУНКЦИЯ: Сравнение магазинов
+// === ИИ СРАВНЕНИЕ (ГОСТ И ОТЗЫВЫ) ===
 async function compareShopsAI() {
     if (!GEMINI_API_KEY) return showToast("❌ Введите ключ ИИ в Админке!");
     let matsOnly = currentEstimate.filter(i => i.type === 'mat');
     if (matsOnly.length === 0) return showToast("❌ В смете нет материалов для сравнения!");
     let shops = document.getElementById('ai-shops').value || "Лемана ПРО, ВсеИнструменты, Петрович";
-    showLoader("ИИ сравнивает магазины...", "🛒");
+    showLoader("ИИ собирает цены на ГОСТ...", "🛒");
     try {
         const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`;
-        const estNames = matsOnly.map(i => `${i.n} (${i.q} шт)`).join(", ");
-        const promptText = `Я электрик. Мне нужно купить этот список: ${estNames}. Создай HTML таблицу для сравнения примерных цен в этих магазинах: ${shops}. Таблица должна быть красивой, компактной (class="pdf-table"). Последняя строка - ИТОГО по каждому магазину. Верни ТОЛЬКО HTML код таблицы, без markdown и пояснений.`;
+        const estNames = matsOnly.map(i => `${i.n} (${i.q} шт/м)`).join(", ");
+        
+        const promptText = `Я профессиональный электрик. Мне нужно составить смету на закупку: ${estNames}. 
+        КРИТИЧЕСКИ ВАЖНО: Ищи цены ТОЛЬКО на премиальные или строго ГОСТовские материалы (кабель Конкорд, РЭК, Алюр, полная медь, надежная автоматика). 
+        КАТЕГОРИЧЕСКИ ИГНОРИРУЙ дешевый ТУ-кабель, усеченку, китайские ноунейм бренды и самый низкий ценовой сегмент! Мне нужны реальные цены за качественный, надежный материал, за который не стыдно перед заказчиком.
+        Создай HTML таблицу для сравнения примерных розничных цен в магазинах: ${shops}. 
+        ОБЯЗАТЕЛЬНО добавь колонку "Рейтинг/Отзывы", где укажешь примерный рейтинг товара в этих сетях на основе популярности (например "4.8 ⭐ (120 отз)").
+        Таблица должна быть красивой, компактной (class="pdf-table"). Последняя строка - ИТОГО по каждому магазину. Верни ТОЛЬКО HTML код таблицы, без markdown, кавычек и пояснений.`;
+        
         const payload = { contents: [{ parts: [{text: promptText }] }] };
         const response = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) }); const data = await response.json(); hideLoader();
         let aiText = data.candidates[0].content.parts[0].text.replace(/```html/g, '').replace(/```/g, '').trim();
-        document.getElementById('ai-modal-title').innerText = "🛒 Сравнение Цен";
-        document.getElementById('ai-suggestions').innerHTML = `<div style="overflow-x:auto;">${aiText}</div>`; openModal('aiModal');
+        document.getElementById('ai-modal-title').innerText = "🛒 Сравнение Цен (ГОСТ)";
+        document.getElementById('ai-suggestions').innerHTML = `<div style="overflow-x:auto;">${aiText}</div><p style="font-size:10px; color:var(--gray); margin-top:10px; text-align:center;">*ИИ анализирует цены на материалы стандарта ГОСТ. Включена фильтрация дешевого ТУ-сегмента.</p>`; openModal('aiModal');
     } catch (error) { hideLoader(); showToast("❌ Ошибка ИИ-Сравнения."); }
+}
+
+// === ИИ ПОМОЩНИК (ПУЭ) ===
+async function aiPueHelper() {
+    if (!GEMINI_API_KEY) return showToast("❌ Введите ключ ИИ в Админке!");
+    if (!currentEstimate || currentEstimate.length === 0) return showToast("❌ Смета пуста! Добавьте позиции.");
+    showLoader("ИИ подбирает ГОСТ и ПУЭ...", "📚");
+    try {
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`;
+        const estNames = currentEstimate.map(i => i.n).join(", ");
+        const promptText = `Я профессиональный электрик. Выполняю работы и закупаю материалы: ${estNames}. 
+        Задача 1. Напиши, какие основные строгие нормы ПУЭ или СНиП применимы именно к этому списку материалов и работ (кратко, только важные выдержки).
+        Задача 2. Подскажи, какие неочевидные расходники или спец. инструмент мне могут пригодиться для монтажа этого списка (чего нет в самом списке: смазки, изолента, специальные буры, клеммы, СИЗы).
+        Отформатируй ответ красиво в HTML (используй <ul>, <li>, <strong>, <h3 style="color:blue">), без маркдауна.`;
+        const payload = { contents: [{ parts: [{text: promptText }] }] };
+        const response = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) }); 
+        const data = await response.json(); hideLoader();
+        let aiText = data.candidates[0].content.parts[0].text.replace(/```html/g, '').replace(/```/g, '').trim();
+        document.getElementById('ai-modal-title').innerText = "📚 ИИ-Помощник (ПУЭ и Снабжение)";
+        document.getElementById('ai-suggestions').innerHTML = `<div style="font-size:13px; line-height:1.5;">${aiText}</div>`;
+        openModal('aiModal');
+    } catch (error) { hideLoader(); showToast("❌ Ошибка связи с ИИ."); }
 }
 
 async function analyzeMastersAI() {
@@ -798,7 +870,7 @@ function updateRecalcUI() {
     document.getElementById('r-res-sht').innerText = globalRecalcSht + ' м'; document.getElementById('r-res-ceil').innerText = ceilCab + ' м'; document.getElementById('r-res-floor').innerText = floorCab + ' м'; 
 }
 
-// НОВЫЕ ЛОКАЛЬНЫЕ КАЛЬКУЛЯТОРЫ (Из v3.1.0 Топ)
+// === ЛОКАЛЬНЫЕ КАЛЬКУЛЯТОРЫ ===
 function doRecalculate() {
     let ceilCab = Number(document.getElementById('r-ceil-input').value) || 0; let floorCab = Math.max(0, globalRecalcCab - ceilCab - globalRecalcSht);
     const rmList = ["Гофра ПВХ", "Лента монтажная", "Площадка под стяжку", "Стяжки нейлоновые", "Стяжка нейлоновая", "Прокладка кабеля", "Клипса в штробу", "Газовый баллон", "Гвозди для прямого", "Смесь штукатурная", "Амортизация: Коронка алмазная"];
@@ -865,7 +937,6 @@ function applyPoolToEstimate() {
     if(res.gml6 > 0) m.push({ n: "Гильза ГМЛ 6", q: res.gml6, p: 18, type: 'mat' });
     if(res.shrinkCm > 0) m.push({ n: "Термоусадка (м)", q: Math.ceil(res.shrinkCm / 100), p: 80, type: 'mat' });
 
-    // Добавляем сами механизмы в материалы (Чистовая!)
     if(res.mechs.soc > 0) m.push({ n: "Розетка 220В (механизм)", q: res.mechs.soc, p: 250, type: 'mat' });
     if((res.mechs.sw+res.mechs.pass+res.mechs.cross) > 0) m.push({ n: "Выключатель (механизм)", q: res.mechs.sw+res.mechs.pass+res.mechs.cross, p: 280, type: 'mat' });
     if(res.mechs.tv > 0) m.push({ n: "Слаботочная розетка (механизм)", q: res.mechs.tv, p: 350, type: 'mat' });
@@ -903,37 +974,37 @@ function generateCascadePanel() {
     let prShield = appLogic.priceShield || 500;
     const bBox = document.getElementById('cfg-brand-box').value; const bAuto = document.getElementById('cfg-brand-auto').value; const sWall = document.getElementById('cfg-shield-wall').value; const ph = parseInt(document.getElementById('cfg-phase').value); const isMaster = document.getElementById('cfg-master').checked;
     let m = []; let w = []; let count1P = 0; let countDIF = 0;
-    m.push({ n: `Вводной автомат ${ph}ф (${bAuto})`, q: 1, p: bAuto==='ABB'?3500:1800, type:'mat' }); let totalMod = (ph === 3 ? 3 : 2);
-    countDIF++; m.push({ n: `⚡ ДИФ 40А (Силовые) ${bAuto}`, q: 1, p: bAuto==='ABB'?4500:3800, type:'mat' }); totalMod += 2;
-    m.push({ n: `  ↳ Автомат C16 (Кухня) ${bAuto}`, q: 1, p: bAuto==='ABB'?350:155, type:'mat' }); count1P++;
-    m.push({ n: `  ↳ Автомат C16 (Коридор) ${bAuto}`, q: 1, p: bAuto==='ABB'?350:155, type:'mat' }); count1P++;
-    if(cfg.rms > 0) { m.push({ n: `  ↳ Автомат C16 (Комнаты) ${bAuto}`, q: cfg.rms, p: bAuto==='ABB'?350:155, type:'mat' }); count1P += cfg.rms; }
-    if(cfg.bals > 0) { m.push({ n: `  ↳ Автомат C16 (Балконы) ${bAuto}`, q: cfg.bals, p: bAuto==='ABB'?350:155, type:'mat' }); count1P += cfg.bals; }
-    ['oven','fridge','apron','dish','washer','boiler','neptun'].forEach(id => { if(document.getElementById('c-'+id).checked) { let nm = id==='oven'?'Плита/Духовка':id==='fridge'?'Холодильник':id==='apron'?'Фартук':id==='dish'?'Посудомойка':id==='washer'?'Стиралка':id==='boiler'?'Бойлер':'Нептун'; m.push({ n: `  ↳ Автомат C16 (${nm}) ${bAuto}`, q: 1, p: bAuto==='ABB'?350:155, type:'mat' }); count1P++; } });
+    m.push({ n: `Вводной автомат ${ph}ф (${bAuto})`, q: 1, p: bAuto==='ABB'?3500:1800, type:'mat', stage: 1 }); let totalMod = (ph === 3 ? 3 : 2);
+    countDIF++; m.push({ n: `⚡ ДИФ 40А (Силовые) ${bAuto}`, q: 1, p: bAuto==='ABB'?4500:3800, type:'mat', stage: 1 }); totalMod += 2;
+    m.push({ n: `  ↳ Автомат C16 (Кухня) ${bAuto}`, q: 1, p: bAuto==='ABB'?350:155, type:'mat', stage: 1 }); count1P++;
+    m.push({ n: `  ↳ Автомат C16 (Коридор) ${bAuto}`, q: 1, p: bAuto==='ABB'?350:155, type:'mat', stage: 1 }); count1P++;
+    if(cfg.rms > 0) { m.push({ n: `  ↳ Автомат C16 (Комнаты) ${bAuto}`, q: cfg.rms, p: bAuto==='ABB'?350:155, type:'mat', stage: 1 }); count1P += cfg.rms; }
+    if(cfg.bals > 0) { m.push({ n: `  ↳ Автомат C16 (Балконы) ${bAuto}`, q: cfg.bals, p: bAuto==='ABB'?350:155, type:'mat', stage: 1 }); count1P += cfg.bals; }
+    ['oven','fridge','apron','dish','washer','boiler','neptun'].forEach(id => { if(document.getElementById('c-'+id).checked) { let nm = id==='oven'?'Плита/Духовка':id==='fridge'?'Холодильник':id==='apron'?'Фартук':id==='dish'?'Посудомойка':id==='washer'?'Стиралка':id==='boiler'?'Бойлер':'Нептун'; m.push({ n: `  ↳ Автомат C16 (${nm}) ${bAuto}`, q: 1, p: bAuto==='ABB'?350:155, type:'mat', stage: 1 }); count1P++; } });
     
-    countDIF++; m.push({ n: `💡 ДИФ 25А (Свет) ${bAuto}`, q: 1, p: bAuto==='ABB'?4200:3200, type:'mat' }); totalMod += 2;
-    m.push({ n: `  ↳ Автомат C10 (Свет Кухня) ${bAuto}`, q: 1, p: bAuto==='ABB'?350:155, type:'mat' }); count1P++;
-    m.push({ n: `  ↳ Автомат C10 (Свет Ванная) ${bAuto}`, q: 1, p: bAuto==='ABB'?350:155, type:'mat' }); count1P++;
-    if(cfg.rms > 0) { m.push({ n: `  ↳ Автомат C10 (Свет Комнаты) ${bAuto}`, q: cfg.rms, p: bAuto==='ABB'?350:155, type:'mat' }); count1P += cfg.rms; }
+    countDIF++; m.push({ n: `💡 ДИФ 25А (Свет) ${bAuto}`, q: 1, p: bAuto==='ABB'?4200:3200, type:'mat', stage: 1 }); totalMod += 2;
+    m.push({ n: `  ↳ Автомат C10 (Свет Кухня) ${bAuto}`, q: 1, p: bAuto==='ABB'?350:155, type:'mat', stage: 1 }); count1P++;
+    m.push({ n: `  ↳ Автомат C10 (Свет Ванная) ${bAuto}`, q: 1, p: bAuto==='ABB'?350:155, type:'mat', stage: 1 }); count1P++;
+    if(cfg.rms > 0) { m.push({ n: `  ↳ Автомат C10 (Свет Комнаты) ${bAuto}`, q: cfg.rms, p: bAuto==='ABB'?350:155, type:'mat', stage: 1 }); count1P += cfg.rms; }
     
-    if (cfg.acs > 0) { countDIF++; m.push({ n: `❄️ ДИФ (Кондиц.) ${bAuto}`, q: 1, p: bAuto==='ABB'?4500:3500, type:'mat' }); totalMod += 2; m.push({ n: `  ↳ Автомат C16 (Конд) ${bAuto}`, q: cfg.acs, p: bAuto==='ABB'?350:155, type:'mat' }); count1P += cfg.acs; }
-    if (cfg.fls > 0) { countDIF++; m.push({ n: `🌡 ДИФ (Т.Полы) ${bAuto}`, q: 1, p: bAuto==='ABB'?4500:3600, type:'mat' }); totalMod += 2; m.push({ n: `  ↳ Автомат C16 (Т.Пол) ${bAuto}`, q: cfg.fls, p: bAuto==='ABB'?350:155, type:'mat' }); count1P += cfg.fls; }
+    if (cfg.acs > 0) { countDIF++; m.push({ n: `❄️ ДИФ (Кондиц.) ${bAuto}`, q: 1, p: bAuto==='ABB'?4500:3500, type:'mat', stage: 1 }); totalMod += 2; m.push({ n: `  ↳ Автомат C16 (Конд) ${bAuto}`, q: cfg.acs, p: bAuto==='ABB'?350:155, type:'mat', stage: 1 }); count1P += cfg.acs; }
+    if (cfg.fls > 0) { countDIF++; m.push({ n: `🌡 ДИФ (Т.Полы) ${bAuto}`, q: 1, p: bAuto==='ABB'?4500:3600, type:'mat', stage: 1 }); totalMod += 2; m.push({ n: `  ↳ Автомат C16 (Т.Пол) ${bAuto}`, q: cfg.fls, p: bAuto==='ABB'?350:155, type:'mat', stage: 1 }); count1P += cfg.fls; }
     
-    if(document.getElementById('cfg-uzm').checked) { m.push({ n: "Реле напряжения УЗМ-50Ц", q: ph === 3 ? 3 : 1, p: 4500, type:'mat' }); totalMod += (ph === 3 ? 6 : 2); }
-    if(isMaster) { m.push({ n: `🎛 Контактор 25А`, q: 1, p: 2200, type:'mat' }); m.push({ n: `  ↳ Автомат 40А (Байпас) ${bAuto}`, q: 1, p: bAuto==='ABB'?600:380, type:'mat' }); count1P++; totalMod += 2; }
+    if(document.getElementById('cfg-uzm').checked) { m.push({ n: "Реле напряжения УЗМ-50Ц", q: ph === 3 ? 3 : 1, p: 4500, type:'mat', stage: 1 }); totalMod += (ph === 3 ? 6 : 2); }
+    if(isMaster) { m.push({ n: `🎛 Контактор 25А`, q: 1, p: 2200, type:'mat', stage: 1 }); m.push({ n: `  ↳ Автомат 40А (Байпас) ${bAuto}`, q: 1, p: bAuto==='ABB'?600:380, type:'mat', stage: 1 }); count1P++; totalMod += 2; }
     
-    m.push({ n: `Провод ПуГВ (ПВ-3) 1х6 синий`, q: 4, p: 85, type:'mat' }); m.push({ n: `Провод ПуГВ (ПВ-3) 1х6 белый`, q: 4, p: 85, type:'mat' });
-    m.push({ n: `Наконечник НШВИ 6.0-12 (упак)`, q: 1, p: 225, type:'mat' });
-    if (bBox === 'ABB') { m.push({ n: `Клеммник винтовой N 5x16 (ABB)`, q: countDIF, p: 345, type:'mat' }); m.push({ n: `Клеммник винтовой PE 11x16 (ABB)`, q: 1, p: 770, type:'mat' }); } else { m.push({ n: `Шина N ноль на DIN-изол (ИЭК)`, q: countDIF, p: 285, type:'mat' }); }
+    m.push({ n: `Провод ПуГВ (ПВ-3) 1х6 синий`, q: 4, p: 85, type:'mat', stage: 1 }); m.push({ n: `Провод ПуГВ (ПВ-3) 1х6 белый`, q: 4, p: 85, type:'mat', stage: 1 });
+    m.push({ n: `Наконечник НШВИ 6.0-12 (упак)`, q: 1, p: 225, type:'mat', stage: 1 });
+    if (bBox === 'ABB') { m.push({ n: `Клеммник винтовой N 5x16 (ABB)`, q: countDIF, p: 345, type:'mat', stage: 1 }); m.push({ n: `Клеммник винтовой PE 11x16 (ABB)`, q: 1, p: 770, type:'mat', stage: 1 }); } else { m.push({ n: `Шина N ноль на DIN-изол (ИЭК)`, q: countDIF, p: 285, type:'mat', stage: 1 }); }
     let comb1P = Math.ceil(count1P / 12); let comb2P = Math.ceil(countDIF / 6);
-    if (comb1P > 0) m.push({ n: `Гребенка 1P (25см)`, q: comb1P, p: 250, type:'mat' }); if (comb2P > 0) m.push({ n: `Гребенка 2P (25см)`, q: comb2P, p: 450, type:'mat' });
+    if (comb1P > 0) m.push({ n: `Гребенка 1P (25см)`, q: comb1P, p: 250, type:'mat', stage: 1 }); if (comb2P > 0) m.push({ n: `Гребенка 2P (25см)`, q: comb2P, p: 450, type:'mat', stage: 1 });
     
     totalMod += count1P; let boxSize = [12, 24, 36, 48, 54, 72, 96].find(s => s >= (totalMod + 5)) || 96;
-    m.unshift({ n: `📦 Щит ${sWall==='Накладной'?'накладной':'встраиваемый'} ${bBox} ${boxSize}М`, q: 1, p: bBox==='ABB'?6510:2660, type:'mat' });
+    m.unshift({ n: `📦 Щит ${sWall==='Накладной'?'накладной':'встраиваемый'} ${bBox} ${boxSize}М`, q: 1, p: bBox==='ABB'?6510:2660, type:'mat', stage: 1 });
     
-    if(sWall !== 'Накладной') w.push({ n: `Вырубка ниши (${sWall})`, q: boxSize, p: 400, type:'work' });
-    w.push({ n: `Штроба ВВОДНАЯ 100х50 (${sWall})`, q: 2, p: 1500, type:'work' });
-    w.push({ n: `Сборка щита`, q: totalMod, p: prShield, type:'work' });
+    if(sWall !== 'Накладной') w.push({ n: `Вырубка ниши (${sWall})`, q: boxSize, p: 400, type:'work', stage: 1 });
+    w.push({ n: `Штроба ВВОДНАЯ 100х50 (${sWall})`, q: 2, p: 1500, type:'work', stage: 1 });
+    w.push({ n: `Сборка щита`, q: totalMod, p: prShield, type:'work', stage: 1 });
     
     addAuto(m.concat(w), 'shield'); closeModal('configModal'); showToast("✅ Щит сгенерирован!");
 }
