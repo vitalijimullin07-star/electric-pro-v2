@@ -1,10 +1,9 @@
-
 <!DOCTYPE html>
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Электрик PRO v14.0 (Cloud DB)</title>
+    <title>Электрик PRO v14.1 (Cloud DB)</title>
     
     <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore-compat.js"></script>
@@ -411,7 +410,15 @@ function requestAccess() {
     window.open(`https://wa.me/789776230182?text=${encodeURIComponent(`Здравствуйте! Я мастер ${name}, мой номер ${phone}. Прошу выдать мне PIN-код.`)}`, '_blank');
 }
 function saveLoginAndProceed() { localStorage.setItem('authUser_v31', JSON.stringify(appUser)); finishLoginSetup(); }
-function logoutApp() { if(confirm("Выйти из профиля?")) { firebase.auth().signOut(); localStorage.removeItem('authUser_v31'); location.reload(); } }
+
+// НОВЫЙ ЧИСТЫЙ ВЫХОД БЕЗ ГИТХАБА И ХВОСТОВ
+function logoutApp() { 
+    if(confirm("Выйти из профиля?")) { 
+        firebase.auth().signOut(); 
+        localStorage.removeItem('authUser_v31'); 
+        window.location.href = window.location.protocol + "//" + window.location.host + window.location.pathname; 
+    } 
+}
 
 async function finishLoginSetup() {
     closeModal('authModal'); document.getElementById('main-app').style.display = 'block';
@@ -419,22 +426,34 @@ async function finishLoginSetup() {
 
     showLoader('Синхронизация с сервером...', '☁️');
     
-    // 1. Грузим из локального кэша (если база осталась с Chrome)
-    let cached = localStorage.getItem('cachedDB_v31');
-    if (cached) { let parsed = JSON.parse(cached); matDB = parsed.matDB || []; workDB = parsed.workDB || []; }
+    // --- УМНАЯ МИГРАЦИЯ СТАРОЙ БАЗЫ ---
+    let localMat = [], localWork = [];
+    let cached = localStorage.getItem('cachedDB_v31') || localStorage.getItem('matDB') || localStorage.getItem('ePro_CacheDB');
+    if (cached) { 
+        try {
+            let parsed = JSON.parse(cached); 
+            localMat = parsed.matDB || parsed.mat || (Array.isArray(parsed) ? parsed : []); 
+            localWork = parsed.workDB || parsed.work || []; 
+        } catch(e) {}
+    }
 
-    // 2. Идем в Firebase за Справочником
+    // Идем в Firebase за Справочником
     try {
         if(db) {
             const dbDoc = await db.collection('settings').doc('global_db').get();
             if(dbDoc.exists && (dbDoc.data().matDB?.length > 0 || dbDoc.data().workDB?.length > 0)) {
-                // Если в облаке есть данные - берем их (это загрузится в пустой APK)
+                // В облаке есть данные - берем их
                 matDB = dbDoc.data().matDB || [];
                 workDB = dbDoc.data().workDB || [];
                 localStorage.setItem('cachedDB_v31', JSON.stringify({matDB, workDB}));
-            } else if (appUser.role === 'admin' && (matDB.length > 0 || workDB.length > 0)) {
-                // Если в облаке пусто, но у Админа есть данные в кэше Chrome - льем в облако!
+            } else if (appUser.role === 'admin' && (localMat.length > 0 || localWork.length > 0)) {
+                // ЕСЛИ В ОБЛАКЕ ПУСТО, НО У АДМИНА ЕСТЬ СТАРЫЕ 141 ПОЗИЦИИ В ТЕЛЕФОНЕ - ЛЬЕМ В ОБЛАКО!
+                matDB = localMat;
+                workDB = localWork;
                 await db.collection('settings').doc('global_db').set({matDB: matDB, workDB: workDB});
+                showToast("✅ Ваша база выгружена в Облако!");
+            } else {
+                matDB = localMat; workDB = localWork;
             }
             
             const logicDoc = await db.collection('settings').doc('global_logic').get();
