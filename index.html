@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Электрик PRO v15.0 (ERP Final)</title>
+    <title>Электрик PRO v15.1 (Armor Edition)</title>
     
     <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore-compat.js"></script>
@@ -146,7 +146,7 @@
 <div class="modal" id="qtyPromptModal" style="z-index: 3000;"><div class="modal-content glass" style="max-width:300px; text-align:center;"><h3 style="color:var(--primary); margin-top:0;">Укажите количество</h3><p id="qty-prompt-name" style="font-size:12px; font-weight:bold; margin-bottom:15px;"></p><div style="display:flex; justify-content:center; align-items:center; gap:10px; margin-bottom:15px;"><button class="btn-ghost" style="padding:10px 15px; font-size:18px;" onclick="modQtyInput(-1)">-</button><input type="number" id="qty-input" value="1" style="width:80px; margin:0; text-align:center; font-size:16px; font-weight:bold;"><button class="btn-ghost" style="padding:10px 15px; font-size:18px;" onclick="modQtyInput(1)">+</button></div><div class="grid-2" style="margin:0;"><button class="btn-ghost" onclick="closeModal('qtyPromptModal')">Отмена</button><button class="btn-success" onclick="confirmQtyAdd()">Добавить</button></div></div></div>
 <div class="modal" id="logoutModal" style="z-index: 3000;"><div class="modal-content glass" style="max-width:300px; text-align:center;"><h3 style="color:var(--danger); margin-top:0;">Выход</h3><p style="font-size:13px; margin-bottom:20px;">Выйти из профиля?</p><div class="grid-2" style="margin:0;"><button class="btn-ghost" onclick="closeModal('logoutModal')">Отмена</button><button class="btn-danger" onclick="confirmLogout()">Выйти</button></div></div></div>
 
-<div class="modal" id="authModal" style="background: rgba(0,0,0,0.9);"><div class="modal-content glass" style="max-width:350px; text-align:center; padding:30px;"><h2 style="color:var(--primary); margin-top:0; font-weight:900;">Электрик PRO</h2><p style="font-size:12px; color:var(--gray); margin-bottom:20px;">Версия 15.0 ERP</p><input type="tel" id="auth-phone" placeholder="Номер (8977...)" style="text-align:center;"><input type="password" id="auth-pin" placeholder="PIN-код" style="text-align:center;"><button class="btn-primary" style="width:100%; margin-bottom:10px;" onclick="loginApp()">Войти</button><button class="btn-ghost" style="width:100%; font-size:11px;" onclick="requestAccess()">Новый мастер? Заявка</button></div></div>
+<div class="modal" id="authModal" style="background: rgba(0,0,0,0.9); display: block;"><div class="modal-content glass" style="max-width:350px; text-align:center; padding:30px;"><h2 style="color:var(--primary); margin-top:0; font-weight:900;">Электрик PRO</h2><p style="font-size:12px; color:var(--gray); margin-bottom:20px;">Версия 15.1 Armor</p><input type="tel" id="auth-phone" placeholder="Номер (8977...)" style="text-align:center;"><input type="password" id="auth-pin" placeholder="PIN-код" style="text-align:center;"><button class="btn-primary" style="width:100%; margin-bottom:10px;" onclick="loginApp()">Войти</button><button class="btn-ghost" style="width:100%; font-size:11px;" onclick="requestAccess()">Новый мастер? Заявка</button></div></div>
 
 <div class="modal" id="dbSelectModal" style="z-index:2500;"><div class="modal-content glass"><div class="close-x" onclick="closeModal('dbSelectModal')">×</div><h3 style="margin-top:0; color:var(--primary);">Выберите эталон из БД</h3><input type="text" id="db-search-input" placeholder="Поиск по базе..." oninput="filterDbSelect()" style="padding:10px; font-size:12px;"><div id="db-select-list" style="max-height:50vh; overflow-y:auto;"></div></div></div>
 
@@ -269,15 +269,25 @@ try {
 
 let GEMINI_API_KEY = localStorage.getItem('gemini_key_v31') || "";
 let appUser = null; let cust = {name:"", phone:"", addr:"", ceil:270}; let myName = localStorage.getItem('my_name_v31') || "";
-let hDB = []; let currentEstimate = JSON.parse(localStorage.getItem('est_v31')) || []; let matDB = [], workDB = []; let pool = [];
-let coeffs = JSON.parse(localStorage.getItem('coeffs_v31')) || {mat:0, work:0};
 
-let appLogic = JSON.parse(localStorage.getItem('appLogic_v31')) || { 
+// === ЗАЩИТА КЭША ===
+let hDB = []; 
+let coeffs = {mat:0, work:0};
+try { let sc = localStorage.getItem('coeffs_v31'); if(sc && sc !== 'undefined') coeffs = JSON.parse(sc); } catch(e){}
+
+let currentEstimate = [];
+try { let se = localStorage.getItem('est_v31'); if(se && se !== 'undefined') currentEstimate = JSON.parse(se); } catch(e){}
+
+let matDB = [], workDB = [], pool = [];
+
+let appLogic = { 
     cabRes: 1.1, gofraRes: 1.05, basesPerM: 3, clipsPerM: 3, packSize: 100, mixPerBox: 0.3, crLife: 80, diskLife: 150, bagLife: 30,
     prSoc: 500, prShield: 500, prDrill: 600, prShtroba: 550, prCabCeil: 120,
     nomOven: 32, nomWash: 16, nomSoc: 16, nomLight: 10,
-    commType: 'gml', commSoc: 3, commSw: 4, commPass: 5, commId: 'm27' // Default GML
+    commType: 'gml', commSoc: 3, commSw: 4, commPass: 5, commId: 'm27' 
 };
+try { let sl = localStorage.getItem('appLogic_v31'); if(sl && sl !== 'undefined') Object.assign(appLogic, JSON.parse(sl)); } catch(e){}
+
 let logicReqs = []; let priceReqs = []; let priceOverrides = {};
 let cfg = {rms: 1, acs: 0, fls: 0, bals: 0 };
 var st_soc = 1, st_sw = 0, st_pass = 0, st_cross = 0, st_tv = 0, st_tpol = 0, st_q = 1, st_h = 30, st_p = 1, st_podr = 'std';
@@ -285,14 +295,18 @@ let globalRecalcCab = 0, globalRecalcSht = 0; let pendingAdd = null; let targetD
 
 // === ЗАПУСК ===
 window.onload = async function() {
-    changeTheme(localStorage.getItem('theme_v31') || 'light'); changeScale(localStorage.getItem('scale_v31') || '1');
-    document.getElementById('m-coeff').value = coeffs.mat; document.getElementById('w-coeff').value = coeffs.work;
-    let savedUser = localStorage.getItem('authUser_v31');
-    if(savedUser) { 
-        appUser = JSON.parse(savedUser); 
-        if (appUser.phone === '89776230182') { firebase.auth().onAuthStateChanged(u => { if (u) finishLoginSetup(); else openModal('authModal'); }); } 
-        else { finishLoginSetup(); }
-    } else { openModal('authModal'); }
+    try {
+        changeTheme(localStorage.getItem('theme_v31') || 'light'); changeScale(localStorage.getItem('scale_v31') || '1');
+        document.getElementById('m-coeff').value = coeffs.mat; document.getElementById('w-coeff').value = coeffs.work;
+        let aiShops = localStorage.getItem('ai_shops_v31'); if(aiShops) document.getElementById('ai-shops').value = aiShops;
+
+        let savedUser = localStorage.getItem('authUser_v31');
+        if(savedUser && savedUser !== 'undefined') { 
+            appUser = JSON.parse(savedUser); 
+            if (appUser.phone === '89776230182') { firebase.auth().onAuthStateChanged(u => { if (u) finishLoginSetup(); else closeModal('authModal'); }); } 
+            else { finishLoginSetup(); }
+        }
+    } catch(e) { console.error("Startup error:", e); }
 };
 
 function showLoader(text) { document.getElementById('loader-text').innerText = text; document.getElementById('global-loader').classList.add('show'); }
@@ -315,7 +329,8 @@ async function loginApp() {
         if(!snap.exists || snap.data().pin !== pin) { hideLoader(); return showToast("❌ Неверные данные."); }
         appUser = snap.data();
     } catch(e) { 
-        hideLoader(); let users = JSON.parse(localStorage.getItem('users_v31')) || []; let found = users.find(u => u.phone === phone && u.pin === pin);
+        hideLoader(); let users = []; try{ let su = localStorage.getItem('users_v31'); if(su) users = JSON.parse(su); }catch(err){}
+        let found = users.find(u => u.phone === phone && u.pin === pin);
         if(found) { appUser = found; saveLoginAndProceed(); } else return showToast("❌ Ошибка входа."); return;
     }
     try { await firebase.auth().signInWithEmailAndPassword(email, pin); } catch(e) { try { await firebase.auth().createUserWithEmailAndPassword(email, pin); } catch(er) {} }
@@ -487,10 +502,10 @@ function applyPoolToEstimate() {
     
     if(appLogic.commType === 'gml') {
         let reqGml = (res.boxes * appLogic.commSoc) + (res.boxesSw * appLogic.commSw) + (res.boxesPass * appLogic.commPass);
-        if(reqGml > 0) { m.push({ n: "Гильза ГМЛ (коммутация)", q: reqGml, p: 18, type: 'mat' }); m.push({ n: "Термоусадка (м)", q: Math.ceil((reqGml * 4)/100), p: 80, type: 'mat' }); }
+        if(reqGml > 0) { m.push({ n: "Гильза ГМЛ 6", q: reqGml, p: 18, type: 'mat' }); m.push({ n: "Термоусадка (м)", q: Math.ceil((reqGml * 4)/100), p: 80, type: 'mat' }); }
     } else if (appLogic.commType === 'wago') {
         let reqWago = (res.boxes * appLogic.commSoc) + (res.boxesSw * appLogic.commSw) + (res.boxesPass * appLogic.commPass);
-        let wItem = matDB.find(i => i.id === appLogic.commId) || {n: "Клемма WAGO соединительная", p: 25};
+        let wItem = matDB.find(i => i.id === appLogic.commId) || {n: "Клемма WAGO 3-pin", p: 25};
         if(reqWago > 0) m.push({ n: wItem.n, q: reqWago, p: wItem.p, type: 'mat' });
     } else {
         if(totalBoxes > 0) m.push({ n: "Изолента / СИЗ (коммутация)", q: Math.ceil(totalBoxes/5), p: 100, type: 'mat' });
@@ -543,7 +558,7 @@ function doRecalculate() {
     let calcFloorCab = Math.ceil(floorCab * appLogic.cabRes), calcCeilCab = Math.ceil(ceilCab * appLogic.cabRes), calcGofra = Math.ceil(calcFloorCab * appLogic.gofraRes);
     
     let boxesCount = 0; currentEstimate.forEach(i => { if(i.n.toLowerCase().includes('подрозетн') && i.type === 'work') boxesCount += Number(i.q); });
-    let mixKg = Math.ceil(boxesCount * appLogic.mixBox); if(mixKg > 0) m.push({ n: "Смесь штукатурная/алебастр (кг)", q: mixKg, p: 40, type: 'mat' });
+    let mixKg = Math.ceil(boxesCount * appLogic.mixBox); if(mixKg > 0) m.push({ n: "Смесь штукатурная (кг)", q: mixKg, p: 40, type: 'mat' });
     let crowns = Math.ceil(boxesCount / appLogic.crLife); if(crowns > 0) m.push({ n: "Амортизация: Коронка алмазная", q: crowns, p: 3500, type: 'mat' });
     let disks = Math.ceil((globalRecalcSht + (currentEstimate.some(i=>i.n.includes('ВВОДНАЯ'))?2:0)) / appLogic.diskLife); if(disks > 0) m.push({ n: "Амортизация: Диск алмазный", q: disks, p: 1200, type: 'mat' });
     let bags = Math.ceil(globalRecalcSht / appLogic.bagLife); if(bags > 0) m.push({ n: "Мешок для пылесоса", q: bags, p: 250, type: 'mat' });
@@ -552,7 +567,7 @@ function doRecalculate() {
     if (calcCeilCab > 0) {
         let tB = Math.ceil(calcCeilCab * appLogic.basesM), bP = Math.ceil(tB / appLogic.packSize);
         if(bP > 0) { m.push({ n: `Площадка под стяжку (уп. ${appLogic.packSize}шт)`, q: bP, p: 500, type: 'mat' }); m.push({ n: `Стяжка нейлоновая 400х5 (уп. ${appLogic.packSize}шт)`, q: bP, p: 350, type: 'mat' }); }
-        let nailPacks = Math.ceil(tB / 1000); if(tB > 0 && nailPacks < 1) nailPacks = 1; m.push({ n: "Гвозди для прямого монтажа 3х19 мм (1000 шт)", q: nailPacks, p: 1905, type: 'mat' });
+        let nailPacks = Math.ceil(tB / 1000); if(tB > 0 && nailPacks < 1) nailPacks = 1; m.push({ n: "Гвозди для прямого монтажа 3х19 мм", q: nailPacks, p: 1905, type: 'mat' });
         let gas = Math.ceil(tB / 1100); if(tB > 0 && gas < 1) gas = 1; m.push({ n: "Газовый баллон 80 мл 165 мм", q: gas, p: 550, type: 'mat' }); w.push({ n: "Прокладка кабеля (без гофры)", q: calcCeilCab, p: appLogic.prCabCeil, type: 'work' });
     }
     if (globalRecalcSht > 0) { let clP = Math.ceil((globalRecalcSht * appLogic.clipsM) / appLogic.packSize); if(clP > 0) m.push({ n: `Клипса в штробу (уп. ${appLogic.packSize}шт)`, q: clP, p: 250, type: 'mat' }); }
@@ -602,7 +617,7 @@ function generateCascadePanel() {
     w.push({ n: `Штроба ВВОДНАЯ 100х50 (${sWall})`, q: 2, p: 1500, type:'work' });
     w.push({ n: `Сборка щита (модуль)`, q: totalMod, p: appLogic.prShield, type:'work' });
     
-    addAuto(m.concat(w), 'shield_'+Date.now()); closeModal('configModal'); showToast("Щит собран!");
+    addAuto(m.concat(w), 'shield_'+Date.now()); closeModal('configModal'); showToast("✅ Щит сгенерирован!");
 }
 
 // === СТРУКТУРИРОВАННЫЙ PDF С ГАЛОЧКАМИ ===
@@ -610,8 +625,6 @@ function isFW(n) { let l=n.toLowerCase(); return l.includes('установк') 
 function isFM(n) { let l=n.toLowerCase(); return l.includes('розетк')||l.includes('выключател')||l.includes('рамк')||l.includes('механизм')||l.includes('светильник')||l.includes('диммер')||l.includes('термостат'); }
 function isSW(n) { let l=n.toLowerCase(); return l.includes('сборка щита')||l.includes('вырубка ниш')||l.includes('вводная'); }
 function isSM(n) { let l=n.toLowerCase(); return l.includes('автомат')||l.includes('диф')||l.includes('узо')||l.includes('щит')||l.includes('реле')||l.includes('клеммник')||l.includes('гребенк')||l.includes('уздп')||l.includes('счетчик')||l.includes('рубильник'); }
-function isDW(n) { let l=n.toLowerCase(); return i.type==='work' && !isFW(n) && !isSW(n); }
-function isDM(n) { let l=n.toLowerCase(); return i.type==='mat' && !isFM(n) && !isSM(n); }
 
 function openPreviewPrint(mode) {
     let title = mode==='vendor' ? 'СПИСОК ПОСТАВЩИКУ' : (mode==='details' ? 'ДЕТАЛИЗАЦИЯ ЩИТА' : 'СМЕТА ОБЪЕКТA');
@@ -635,7 +648,6 @@ function openPreviewPrint(mode) {
         }
     } 
     else {
-        // CLIENT ESTIMATE (6 groups)
         let g1 = currentEstimate.filter(i => i.type==='work' && (i.n.toLowerCase().includes('штроб')||i.n.toLowerCase().includes('сверл')||i.n.toLowerCase().includes('отверст')||i.n.toLowerCase().includes('выруб')));
         let g2 = currentEstimate.filter(i => i.type==='work' && !isFW(i.n) && !isSW(i.n) && !g1.includes(i));
         let g3 = currentEstimate.filter(i => i.type==='mat' && !isFM(i.n) && !isSM(i.n));
