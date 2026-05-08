@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Электрик PRO v15.2 (Stable Edition)</title>
+    <title>Электрик PRO v15.3 (Final Fix)</title>
     
     <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore-compat.js"></script>
@@ -59,8 +59,13 @@
         .chk-row { display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; cursor: pointer;}
         .chk-row input[type="checkbox"] { width: 18px !important; height: 18px !important; margin: 0; }
         
-        .global-loader { position: fixed; inset: 0; background: rgba(0,0,0,0.7); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 9999; opacity: 0; pointer-events: none; transition: 0.3s; color: white; }
+        .global-loader { position: fixed; inset: 0; background: rgba(0,0,0,0.8); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 9999; opacity: 0; pointer-events: none; transition: 0.3s; color: white; }
         .global-loader.show { opacity: 1; pointer-events: auto; }
+        .toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(100px); background: var(--text); color: var(--bg); padding: 10px 20px; border-radius: 20px; z-index: 10000; opacity: 0; transition: 0.4s; font-size: 12px; font-weight:bold; }
+        .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+        
+        .print-cb { width: 18px !important; height: 18px !important; margin:0; cursor: pointer;}
+        .print-group-header { background: rgba(0,0,0,0.05); font-weight:bold; font-size:13px; padding:8px; cursor:pointer;}
         
         @media print {
             body, html { height: auto !important; background: white; margin: 0; padding: 0; }
@@ -80,21 +85,8 @@
 </head>
 <body>
 
-<div id="global-loader" class="global-loader">
-    <div style="font-size:40px; margin-bottom:10px;">☁️</div>
-    <div id="loader-text" style="font-weight:bold;">Загрузка...</div>
-</div>
-
-<div id="login-screen" style="position: fixed; top: 0; bottom: 0; left: 0; right: 0; background: var(--bg); z-index: 5000; display: flex; align-items: center; justify-content: center; padding: 20px;">
-    <div class="glass" style="width: 100%; max-width: 350px; text-align: center; padding: 30px; border-radius: 20px;">
-        <h2 style="color:var(--primary); margin-top:0; font-weight:900;">Электрик PRO</h2>
-        <p style="font-size:12px; color:var(--gray); margin-bottom:20px;">Версия 15.2 (Стабильная)</p>
-        <input type="tel" id="auth-phone" placeholder="Номер телефона (8977...)" style="text-align:center;">
-        <input type="password" id="auth-pin" placeholder="PIN-код" style="text-align:center;">
-        <button class="btn-primary" style="width:100%; margin-bottom:10px; padding: 14px; font-size: 14px;" onclick="loginApp()">Войти в систему</button>
-        <button class="btn-ghost" style="width:100%; font-size:11px;" onclick="requestAccess()">Новый мастер? Отправить заявку</button>
-    </div>
-</div>
+<div id="global-loader" class="global-loader"><div style="font-size:40px; margin-bottom:10px;">☁️</div><div id="loader-text" style="font-weight:bold;">Загрузка...</div></div>
+<div id="toast" class="toast">Уведомление</div>
 
 <div class="overlay" id="overlay" onclick="toggleMenu()"></div>
 <div class="burger-menu glass" id="burger-menu">
@@ -103,13 +95,14 @@
     <button class="btn-vendor" style="width:100%; margin-bottom:8px; background: rgba(139,92,246,0.15); color: #8B5CF6;" onclick="runAiCheck(); toggleMenu();">✨ ИИ-Анализ сметы</button>
     <button class="btn-vendor" style="width:100%; margin-bottom:8px; background: rgba(16,185,129,0.15); color: #10B981;" onclick="openModal('kupModal'); toggleMenu();">⚡ Сборка КУП (Модуль)</button>
     <button class="btn-vendor" style="width:100%; margin-bottom:8px; background: rgba(245,158,11,0.15); color: #F59E0B;" onclick="openModal('buhModal'); toggleMenu();">💰 Бухгалтерия (Акты)</button>
+    
     <div style="border-top: 1px solid var(--border); margin-top:15px; padding-top:15px;">
         <button class="btn-vendor" style="width:100%; margin-bottom:8px; background: rgba(16,185,129,0.15); color: #10B981;" onclick="aiPueHelper(); toggleMenu();">📚 ИИ (ПУЭ и Снабжение)</button>
         <button class="btn-vendor" style="width:100%; margin-bottom:8px; background: rgba(244,63,94,0.1); color: var(--danger);" onclick="compareShopsAI(); toggleMenu();">🛒 ИИ-Сравнение цен (ГОСТ)</button>
         <button class="btn-vendor" style="width:100%; margin-bottom:8px; background: rgba(100,116,139,0.15); color: var(--text);" onclick="openMatCatalog(); toggleMenu();">🛠 Ручная сборка (Каталог)</button>
         <button class="btn-vendor" style="width:100%; margin-bottom:8px; background: rgba(79,70,229,0.1); color: var(--primary);" onclick="openModal('logicModal'); toggleMenu();">⚙️ Логика расчетов и Цены</button>
         <button class="btn-vendor" style="width:100%; margin-bottom:8px; background: rgba(100,116,139,0.15); color: var(--text);" onclick="openModal('settingsModal'); toggleMenu();">🛠 Настройки БД и Системы</button>
-        <button class="btn-danger" style="width:100%; margin-top:10px;" onclick="openLogoutModal(); toggleMenu();">🚪 Выйти</button>
+        <button class="btn-danger" style="width:100%; margin-top:10px;" onclick="openConfirmModal('Выход', 'Вы уверены, что хотите выйти из профиля?', confirmLogout); toggleMenu();">🚪 Выйти</button>
     </div>
 </div>
 
@@ -119,28 +112,29 @@
             <button class="burger-btn" onclick="toggleMenu()">☰</button>
             <div id="master-badge" style="font-size: 11px; color: var(--primary); font-weight:bold; text-align: right;"></div>
         </div>
+        
         <div class="grid-2">
             <button onclick="openModal('configModal')" class="btn-shield" style="grid-column: span 2;">1. Конфигуратор щита (PRO)</button>
             <button onclick="openModal('roughModal')" class="btn-rough" style="grid-column: span 2;">2. Пул розеток и Трассы</button>
             <button onclick="openMatCatalog()" class="btn-mat">+ Материалы</button>
             <button onclick="openWorkCatalog()" class="btn-work">+ Работы</button>
         </div>
+        
         <div class="grid-3" style="margin-top:15px;">
             <button onclick="openPreviewPrint('vendor')" class="btn-vendor" style="font-size:10px;">Поставщику</button>
             <button onclick="openPreviewPrint('client')" class="btn-success" style="font-size:10px;">Смета PDF</button>
             <button onclick="openPreviewPrint('details')" class="btn-info" style="font-size:10px;">Детализация</button>
         </div>
+
         <div class="grid-2" style="background:rgba(0,0,0,0.03); padding:10px; border-radius:10px; margin-bottom:10px;">
             <div><label style="font-size:10px; font-weight:bold; color:var(--primary);">Наценка МАТЕРИАЛ (%)</label><input type="number" id="m-coeff" value="0" style="margin:0; padding:8px; text-align:center;" onchange="updateCoeffs()"></div>
             <div><label style="font-size:10px; font-weight:bold; color:var(--orange);">Наценка РАБОТА (%)</label><input type="number" id="w-coeff" value="0" style="margin:0; padding:8px; text-align:center;" onchange="updateCoeffs()"></div>
         </div>
-        <div class="table-wrapper">
-            <table id="mainTable">
-                <thead><tr><th style="width:55%;">Наименование</th><th style="width:20%; text-align:center;">Кол-во</th><th style="width:25%; text-align:right;">Сумма</th><th style="width:30px;"></th></tr></thead>
-                <tbody></tbody>
-            </table>
-        </div>
+
+        <div class="table-wrapper"><table id="mainTable"><thead><tr><th style="width:55%;">Наименование</th><th style="width:20%; text-align:center;">Кол-во</th><th style="width:25%; text-align:right;">Сумма</th><th style="width:30px;"></th></tr></thead><tbody></tbody></table></div>
+        
         <div style="padding: 15px; background:rgba(79, 70, 229, 0.08); border-radius: 12px; font-weight:bold; border: 1px solid rgba(79, 70, 229, 0.15); display: flex; justify-content:space-between; font-size:18px; color:var(--primary);"><span>ИТОГО:</span> <span id="tot-all">0 P</span></div>
+        
         <div class="grid-2" style="margin-top: 15px;">
             <button onclick="openRecalcModal()" class="btn-info">🔄 Пересчитать трассы</button>
             <button onclick="clearCurrentEstimate()" class="btn-danger">Очистить смету</button>
@@ -148,41 +142,38 @@
     </div>
 </div>
 
+<!-- ЖЕСТКО ВШИТОЕ ОКНО ВХОДА (Оно не может пропасть) -->
+<div class="modal" id="authModal" style="background: rgba(0,0,0,0.9); display: block; z-index: 5000;">
+    <div class="modal-content glass" style="max-width:350px; text-align:center; padding:30px; border-radius:20px; top: 10%;">
+        <h2 style="color:var(--primary); margin-top:0; font-weight:900;">Электрик PRO</h2>
+        <p style="font-size:12px; color:var(--gray); margin-bottom:20px;">Версия 15.3 (Final Fix)</p>
+        <input type="tel" id="auth-phone" placeholder="Номер (8977...)" style="text-align:center;">
+        <input type="password" id="auth-pin" placeholder="PIN-код" style="text-align:center;">
+        <button class="btn-primary" style="width:100%; margin-bottom:10px; padding:14px;" onclick="loginApp()">Войти в систему</button>
+        <button class="btn-ghost" style="width:100%; font-size:11px;" onclick="requestAccess()">Новый мастер? Заявка</button>
+    </div>
+</div>
+
+<!-- УНИВЕРСАЛЬНОЕ ОКНО ПОДТВЕРЖДЕНИЯ (Без prompt/alert/confirm) -->
 <div class="modal" id="qtyPromptModal" style="z-index: 3000;">
     <div class="modal-content glass" style="max-width:300px; text-align:center;">
-        <h3 style="color:var(--primary); margin-top:0;">Укажите количество</h3>
+        <h3 id="qty-prompt-title" style="color:var(--primary); margin-top:0;">Укажите количество</h3>
         <p id="qty-prompt-name" style="font-size:12px; font-weight:bold; margin-bottom:15px;"></p>
-        <div style="display:flex; justify-content:center; align-items:center; gap:10px; margin-bottom:15px;">
+        
+        <div id="qty-input-wrapper" style="display:flex; justify-content:center; align-items:center; gap:10px; margin-bottom:15px;">
             <button class="btn-ghost" style="padding:10px 15px; font-size:18px;" onclick="modQtyInput(-1)">-</button>
             <input type="number" id="qty-input" value="1" style="width:80px; margin:0; text-align:center; font-size:16px; font-weight:bold;">
             <button class="btn-ghost" style="padding:10px 15px; font-size:18px;" onclick="modQtyInput(1)">+</button>
         </div>
+        
         <div class="grid-2" style="margin:0;">
             <button class="btn-ghost" onclick="closeModal('qtyPromptModal')">Отмена</button>
-            <button class="btn-success" onclick="confirmQtyAdd()">Добавить</button>
+            <button class="btn-success" id="qty-confirm-btn" onclick="">ОК</button>
         </div>
     </div>
 </div>
 
-<div class="modal" id="logoutModal" style="z-index: 3000;">
-    <div class="modal-content glass" style="max-width:300px; text-align:center;">
-        <h3 style="color:var(--danger); margin-top:0;">Выход</h3>
-        <p style="font-size:13px; margin-bottom:20px;">Вы уверены, что хотите выйти из профиля?</p>
-        <div class="grid-2" style="margin:0;">
-            <button class="btn-ghost" onclick="closeModal('logoutModal')">Отмена</button>
-            <button class="btn-danger" onclick="confirmLogout()">Выйти</button>
-        </div>
-    </div>
-</div>
-
-<div class="modal" id="dbSelectModal" style="z-index:2500;">
-    <div class="modal-content glass">
-        <div class="close-x" onclick="closeModal('dbSelectModal')">×</div>
-        <h3 style="margin-top:0; color:var(--primary);">Выберите эталон из БД</h3>
-        <input type="text" id="db-search-input" placeholder="Поиск по базе..." oninput="filterDbSelect()" style="padding:10px; font-size:12px;">
-        <div id="db-select-list" style="max-height:50vh; overflow-y:auto;"></div>
-    </div>
-</div>
+<div class="modal" id="dbSelectModal" style="z-index:2500;"><div class="modal-content glass"><div class="close-x" onclick="closeModal('dbSelectModal')">×</div><h3 style="margin-top:0; color:var(--primary);">Выберите эталон из БД</h3><input type="text" id="db-search-input" placeholder="Поиск по базе..." oninput="filterDbSelect()" style="padding:10px; font-size:12px;"><div id="db-select-list" style="max-height:50vh; overflow-y:auto;"></div></div></div>
 
 <div class="modal" id="custModal"><div class="modal-content glass"><div class="close-x" onclick="closeModal('custModal')">×</div><h3 style="color:var(--primary); margin-top:0;">👤 Заказчик и Объект</h3><select id="c-history-select" onchange="loadCustFromHistory(this.value)" style="background:rgba(16,185,129,0.1); color:var(--success); border-color:var(--success);"><option value="">📥 Загрузить из Истории</option></select><input type="text" id="c-name" placeholder="ФИО Заказчика (Объект)"><input type="tel" id="c-phone" placeholder="Телефон"><input type="text" id="c-addr" placeholder="Адрес"><label style="font-size:11px; font-weight:bold; color:var(--gray);">Высота потолка (см):</label><input type="number" id="c-ceil" value="270"><button class="btn-success" style="width:100%;" onclick="saveCust()">Сохранить данные</button></div></div>
 
@@ -200,73 +191,34 @@
     <div class="modal-content glass">
         <div class="close-x" onclick="closeModal('logicModal')">×</div>
         <h3 style="color: var(--primary); margin-top:0;">⚙️ Настройка формул</h3>
-        
         <div style="background:rgba(0,0,0,0.03); padding:12px; border-radius:12px; margin-bottom:15px;">
             <span style="font-size:11px; font-weight:bold; color:var(--orange); display:block; margin-bottom:8px;">1. КОММУТАЦИЯ (Распаечные коробки)</span>
             <label style="font-size:11px; color:var(--gray);">Метод соединения:</label>
-            <select id="logic-comm-type" onchange="toggleCommOptions()">
-                <option value="gml">Опрессовка (Гильзы ГМЛ + Термоусадка)</option>
-                <option value="wago">Клеммы (WAGO / СИЗ)</option>
-                <option value="weld">Сварка / Пайка (Только изоляция)</option>
-            </select>
-            <div id="comm-wago-options" style="display:none; margin-top:10px;">
-                <label style="font-size:10px; font-weight:bold;">Выберите эталон клеммы/СИЗ из БД:</label>
-                <button class="btn-ghost" id="logic-wago-btn" style="width:100%; padding:8px; font-size:11px; margin-bottom:10px;" onclick="openDbSelectFor('logic-wago', 'wago')">Выбрать клемму</button>
-            </div>
-            <div class="grid-3" style="margin-top:10px;">
-                <div><label style="font-size:9px;">Шт. на Розетки</label><input type="number" id="logic-comm-soc" value="3" style="padding:8px;"></div>
-                <div><label style="font-size:9px;">Шт. на Выключ.</label><input type="number" id="logic-comm-sw" value="4" style="padding:8px;"></div>
-                <div><label style="font-size:9px;">Шт. на Проход.</label><input type="number" id="logic-comm-pass" value="5" style="padding:8px;"></div>
-            </div>
+            <select id="logic-comm-type" onchange="toggleCommOptions()"><option value="gml">Опрессовка (Гильзы ГМЛ + Термоусадка)</option><option value="wago">Клеммы (WAGO / СИЗ)</option><option value="weld">Сварка / Пайка (Только изоляция)</option></select>
+            <div id="comm-wago-options" style="display:none; margin-top:10px;"><label style="font-size:10px; font-weight:bold;">Выберите эталон клеммы/СИЗ из БД:</label><button class="btn-ghost" id="logic-wago-btn" style="width:100%; padding:8px; font-size:11px; margin-bottom:10px;" onclick="openDbSelectFor('logic-wago', 'wago')">Выбрать клемму</button></div>
+            <div class="grid-3" style="margin-top:10px;"><div><label style="font-size:9px;">Шт. на Розетки</label><input type="number" id="logic-comm-soc" value="3" style="padding:8px;"></div><div><label style="font-size:9px;">Шт. на Выключ.</label><input type="number" id="logic-comm-sw" value="4" style="padding:8px;"></div><div><label style="font-size:9px;">Шт. на Проход.</label><input type="number" id="logic-comm-pass" value="5" style="padding:8px;"></div></div>
         </div>
-
         <div style="background:rgba(0,0,0,0.03); padding:12px; border-radius:12px; margin-bottom:15px;">
             <span style="font-size:11px; font-weight:bold; color:var(--primary); display:block; margin-bottom:8px;">2. ЦЕНЫ РАБОТ ДЛЯ АВТО-КАЛЬКУЛЯТОРОВ (Руб)</span>
-            <div class="grid-2">
-                <div><label style="font-size:10px;">Сборка щита (1 мод):</label><input type="number" id="logic-pr-shield" placeholder="500"></div>
-                <div><label style="font-size:10px;">Установка розетки/выкл:</label><input type="number" id="logic-pr-soc" placeholder="500"></div>
-                <div><label style="font-size:10px;">Высверлив. (Бетон):</label><input type="number" id="logic-pr-drill" placeholder="600"></div>
-                <div><label style="font-size:10px;">Штроба (Бетон, 1м):</label><input type="number" id="logic-pr-shtroba" placeholder="550"></div>
-                <div><label style="font-size:10px;">Кабель (потолок, без гофры):</label><input type="number" id="logic-pr-cab-ceil" placeholder="120"></div>
-            </div>
+            <div class="grid-2"><div><label style="font-size:10px;">Сборка щита (1 мод):</label><input type="number" id="logic-pr-shield" placeholder="500"></div><div><label style="font-size:10px;">Установка розетки/выкл:</label><input type="number" id="logic-pr-soc" placeholder="500"></div><div><label style="font-size:10px;">Высверлив. (Бетон):</label><input type="number" id="logic-pr-drill" placeholder="600"></div><div><label style="font-size:10px;">Штроба (Бетон, 1м):</label><input type="number" id="logic-pr-shtroba" placeholder="550"></div><div><label style="font-size:10px;">Кабель (потолок, без гофры):</label><input type="number" id="logic-pr-cab-ceil" placeholder="120"></div></div>
         </div>
-
         <div style="background:rgba(0,0,0,0.03); padding:12px; border-radius:12px; margin-bottom:15px;">
             <span style="font-size:11px; font-weight:bold; color:var(--success); display:block; margin-bottom:8px;">3. НОРМАТИВЫ И АМОРТИЗАЦИЯ</span>
-            <div class="grid-2">
-                <div><label style="font-size:10px;">Коэфф. кабеля (+%):</label><input type="number" id="logic-cab-res" step="0.01" placeholder="1.1"></div>
-                <div><label style="font-size:10px;">Коэфф. гофры (+%):</label><input type="number" id="logic-gofra-res" step="0.01" placeholder="1.05"></div>
-                <div><label style="font-size:10px;">Крепеж по потолку (шт/м):</label><input type="number" id="logic-bases-m" placeholder="3"></div>
-                <div><label style="font-size:10px;">Крепеж в штробе (шт/м):</label><input type="number" id="logic-clips-m" placeholder="3"></div>
-                <div><label style="font-size:10px;">Штук в 1 уп. крепежа:</label><input type="number" id="logic-pack-size" placeholder="100"></div>
-                <div><label style="font-size:10px;">Смесь на 1 точку (кг):</label><input type="number" id="logic-mix-box" step="0.1" placeholder="0.3"></div>
-                <div><label style="font-size:10px;">Коронка алмаз. (отверстий):</label><input type="number" id="logic-cr-life" placeholder="80"></div>
-                <div><label style="font-size:10px;">Диск штробореза (метров):</label><input type="number" id="logic-disk-life" placeholder="150"></div>
-                <div><label style="font-size:10px;">Мешок пылесоса (на Х м. штробы):</label><input type="number" id="logic-bag-life" placeholder="30"></div>
-            </div>
+            <div class="grid-2"><div><label style="font-size:10px;">Коэфф. кабеля (+%):</label><input type="number" id="logic-cab-res" step="0.01" placeholder="1.1"></div><div><label style="font-size:10px;">Коэфф. гофры (+%):</label><input type="number" id="logic-gofra-res" step="0.01" placeholder="1.05"></div><div><label style="font-size:10px;">Крепеж по потолку (шт/м):</label><input type="number" id="logic-bases-m" placeholder="3"></div><div><label style="font-size:10px;">Крепеж в штробе (шт/м):</label><input type="number" id="logic-clips-m" placeholder="3"></div><div><label style="font-size:10px;">Штук в 1 уп. крепежа:</label><input type="number" id="logic-pack-size" placeholder="100"></div><div><label style="font-size:10px;">Смесь на 1 точку (кг):</label><input type="number" id="logic-mix-box" step="0.1" placeholder="0.3"></div><div><label style="font-size:10px;">Коронка алмаз. (отверстий):</label><input type="number" id="logic-cr-life" placeholder="80"></div><div><label style="font-size:10px;">Диск штробореза (метров):</label><input type="number" id="logic-disk-life" placeholder="150"></div><div><label style="font-size:10px;">Мешок пылесоса (на Х м. штробы):</label><input type="number" id="logic-bag-life" placeholder="30"></div></div>
         </div>
-
         <div style="background:rgba(0,0,0,0.03); padding:12px; border-radius:12px; margin-bottom:15px;">
             <span style="font-size:11px; font-weight:bold; color:var(--text); display:block; margin-bottom:8px;">4. НОМИНАЛЫ АВТОМАТОВ (ЩИТ)</span>
-            <div class="grid-3">
-                <div><label style="font-size:10px;">Плита (А):</label><input type="number" id="logic-nom-oven" value="32"></div>
-                <div><label style="font-size:10px;">Стиралка (А):</label><input type="number" id="logic-nom-wash" value="16"></div>
-                <div><label style="font-size:10px;">Розеточные (А):</label><input type="number" id="logic-nom-soc" value="16"></div>
-                <div><label style="font-size:10px;">Световые (А):</label><input type="number" id="logic-nom-light" value="10"></div>
-            </div>
+            <div class="grid-3"><div><label style="font-size:10px;">Плита (А):</label><input type="number" id="logic-nom-oven" value="32"></div><div><label style="font-size:10px;">Стиралка (А):</label><input type="number" id="logic-nom-wash" value="16"></div><div><label style="font-size:10px;">Розеточные (А):</label><input type="number" id="logic-nom-soc" value="16"></div><div><label style="font-size:10px;">Световые (А):</label><input type="number" id="logic-nom-light" value="10"></div></div>
         </div>
-
-        <button class="btn-primary" style="width:100%;" onclick="saveLogic()">💾 Сохранить Логику и Цены</button>
+        <button id="logic-save-btn" class="btn-primary" style="width:100%;" onclick="saveLogic()">💾 Сохранить Логику и Цены</button>
     </div>
 </div>
 
 <div class="modal" id="configModal"><div class="modal-content glass"><div class="close-x" onclick="closeModal('configModal')">×</div><h3 style="color:var(--primary); margin: 0 0 10px 0;">⚡ Сборка щита (PRO)</h3><div class="grid-2"><div><label style="font-size:10px; font-weight:bold;">Корпус:</label><select id="cfg-brand-box" style="margin:0;"><option>Tekfor</option><option>ABB</option><option>Schneider</option><option>IEK</option></select></div><div><label style="font-size:10px; font-weight:bold;">Автоматы:</label><select id="cfg-brand-auto" style="margin:0;"><option>IEK</option><option>ABB</option><option>Schneider</option></select></div></div><select id="cfg-phase" style="margin-bottom:10px;"><option value="1">220В (1 фаза)</option><option value="3">380B (3 фазы)</option></select><div style="background:rgba(0,0,0,0.03); padding:10px; border-radius:10px; margin-bottom:10px;"><div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; font-size:12px;"><span>Комнаты (шт)</span><div style="display:flex; align-items:center; gap:8px;"><button class="btn-ghost" style="padding:4px 10px;" onclick="modV('rms',-1)">-</button><b id="v-rms">1</b><button class="btn-ghost" style="padding:4px 10px;" onclick="modV('rms',1)">+</button></div></div><div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; font-size:12px;"><span>Кондиционеры</span><div style="display:flex; align-items:center; gap:8px;"><button class="btn-ghost" style="padding:4px 10px;" onclick="modV('acs',-1)">-</button><b id="v-acs">0</b><button class="btn-ghost" style="padding:4px 10px;" onclick="modV('acs',1)">+</button></div></div><div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; font-size:12px;"><span>Теплые полы</span><div style="display:flex; align-items:center; gap:8px;"><button class="btn-ghost" style="padding:4px 10px;" onclick="modV('fls',-1)">-</button><b id="v-fls">0</b><button class="btn-ghost" style="padding:4px 10px;" onclick="modV('fls',1)">+</button></div></div><div style="display:flex; justify-content:space-between; align-items:center; font-size:12px;"><span>Балконы</span><div style="display:flex; align-items:center; gap:8px;"><button class="btn-ghost" style="padding:4px 10px;" onclick="modV('bals',-1)">-</button><b id="v-bals">0</b><button class="btn-ghost" style="padding:4px 10px;" onclick="modV('bals',1)">+</button></div></div></div><div class="chk-grid"><label class="chk-row"><input type="checkbox" id="c-oven" checked> Плита/Дух.</label><label class="chk-row"><input type="checkbox" id="c-fridge" checked> Холод-к</label><label class="chk-row"><input type="checkbox" id="c-apron" checked> Фартук</label><label class="chk-row"><input type="checkbox" id="c-dish" checked> Посудом-ка</label><label class="chk-row"><input type="checkbox" id="c-washer" checked> Стиралка</label><label class="chk-row"><input type="checkbox" id="c-boiler"> Бойлер</label><label class="chk-row"><input type="checkbox" id="c-neptun"> Нептун</label><label class="chk-row"><input type="checkbox" id="cfg-master"> Мастер-кнопка</label></div><h4 style="font-size:12px; margin:10px 0 5px 0; color:var(--orange);">🛡 Доп. Защита и Модули:</h4><div class="chk-grid"><label class="chk-row"><input type="checkbox" id="cfg-uzm"> Реле напряж. (УЗМ)</label><label class="chk-row"><input type="checkbox" id="cfg-uzdp"> УЗДП (Искра)</label><label class="chk-row"><input type="checkbox" id="cfg-var"> ВАР (Вольт-ампер)</label><label class="chk-row"><input type="checkbox" id="cfg-revers"> Реверсивный руб.</label><label class="chk-row"><input type="checkbox" id="cfg-fireuzo"> Вводное УЗО (Противопож)</label><label class="chk-row"><input type="checkbox" id="cfg-cross"> Кросс-модуль</label><label class="chk-row"><input type="checkbox" id="cfg-meter"> Счетчик</label></div><label style="font-size:10px; font-weight:bold;">Тип монтажа Щита: </label><select id="cfg-shield-wall" style="margin-bottom:10px;"><option value="Бетон">Встраиваемый (Бетон)</option><option value="Кирпич">Встраиваемый (Кирпич)</option><option value="Панелька">Встраиваемый (Панелька)</option><option value="Мягкий мат.">Встраиваемый (ГКЛ)</option><option value="Накладной">Накладной (без ниши)</option></select><button onclick="generateCascadePanel()" class="btn-shield" style="width:100%;">Сгенерировать щит</button></div></div>
 
-<div class="modal" id="roughModal"><div class="modal-content glass"><div class="close-x" onclick="closeModal('roughModal')">×</div><h3 style="color:var(--orange); margin: 0 0 10px 0;">🔌 Пул розеток</h3><div style="background:rgba(0,0,0,0.03); padding:10px; border-radius:10px; margin-bottom:10px; display:grid; grid-template-columns:1fr 1fr; gap:8px;"><div style="grid-column: span 2;"><label style="font-size:10px; font-weight:bold;">Логика монтажа</label><select id="montage-mode" style="margin:0; padding:8px;"><option value="classic">Классика (Распредкоробки)</option><option value="gyn">Гинекологический (В подрозетниках)</option></select></div><div><label style="font-size:10px; font-weight:bold;">Монтаж трассы</label><select id="g-routing" style="margin:0; padding:8px;"><option value="ceiling">Потолок</option><option value="floor">Пол</option></select></div><div><label style="font-size:10px; font-weight:bold;">Стена</label><select id="g-wall" style="margin:0; padding:8px;"><option value="Бетон">Бетон</option><option value="Кирпич">Кирпич</option><option value="Панелька">Панелька</option><option value="Мягкий мат.">Мягкий мат.</option></select></div></div>
-<div class="chk-grid" style="grid-template-columns:1fr;"><label class="chk-row"><input type="checkbox" id="pool-cable-channel"> В кабель-канале (без штробы)</label><label class="chk-row"><input type="checkbox" id="pool-surface"> Накладные розетки (без сверления)</label></div>
-<div style="margin-bottom:10px;"><label style="font-size:10px; font-weight:bold;">БАЗОВЫЙ ПОДРОЗЕТНИК:</label><div style="display:flex; gap:5px; margin-top:4px;"><button class="btn-ghost active" id="btn-podr-std" style="flex:1; padding:8px; font-size:11px;" onclick="setPodr('std')">45мм</button><button class="btn-ghost" id="btn-podr-deep" style="flex:1; padding:8px; font-size:11px;" onclick="setPodr('deep')">64мм</button><button class="btn-ghost" id="btn-podr-kopos" style="flex:1; padding:8px; font-size:11px;" onclick="setPodr('kopos')">Kopos 75мм</button></div></div><div style="margin-bottom:10px;"><label style="font-size:10px; font-weight:bold;">Высота (см):</label><div style="display:flex; gap:5px; margin-top:4px;"><button class="btn-ghost active" id="btn-h-30" style="flex:1; padding:8px; font-size:11px;" onclick="setH(30)">30</button><button class="btn-ghost" id="btn-h-90" style="flex:1; padding:8px; font-size:11px;" onclick="setH(90)">90</button><button class="btn-ghost" id="btn-h-110" style="flex:1; padding:8px; font-size:11px;" onclick="setH(110)">110</button><input type="number" id="c-h-custom" placeholder="Своя" style="flex:1; margin:0; padding:8px; font-size:11px;" oninput="setH(this.value)"></div></div><div style="margin-bottom:10px;"><label style="font-size:10px; font-weight:bold;">Постов в рамке:</label><div style="display:flex; gap:5px; margin-top:4px;"><button class="btn-ghost active" id="btn-p-1" style="flex:1; padding:8px; font-size:11px;" onclick="setP(1)">1</button><button class="btn-ghost" id="btn-p-2" style="flex:1; padding:8px; font-size:11px;" onclick="setP(2)">2</button><button class="btn-ghost" id="btn-p-3" style="flex:1; padding:8px; font-size:11px;" onclick="setP(3)">3</button><button class="btn-ghost" id="btn-p-4" style="flex:1; padding:8px; font-size:11px;" onclick="setP(4)">4</button><button class="btn-ghost" id="btn-p-5" style="flex:1; padding:8px; font-size:11px;" onclick="setP(5)">5</button></div></div><div style="background:rgba(255,255,255,0.4); padding:10px; border-radius:10px; border:1px solid var(--border);"><div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; font-size:12px;"><span>Розетки 220В</span><div style="display:flex; align-items:center; gap:8px;"><button class="btn-ghost" style="padding:4px 10px;" onclick="modM('soc',-1)">-</button><b id="v-soc">1</b><button class="btn-ghost" style="padding:4px 10px;" onclick="modM('soc',1)">+</button></div></div><div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; font-size:12px;"><span>Выключатели</span><div style="display:flex; align-items:center; gap:8px;"><button class="btn-ghost" style="padding:4px 10px;" onclick="modM('sw',-1)">-</button><b id="v-sw">0</b><button class="btn-ghost" style="padding:4px 10px;" onclick="modM('sw',1)">+</button></div></div><div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; font-size:12px;"><span>Проходные</span><div style="display:flex; align-items:center; gap:8px;"><button class="btn-ghost" style="padding:4px 10px;" onclick="modM('pass',-1)">-</button><b id="v-pass">0</b><button class="btn-ghost" style="padding:4px 10px;" onclick="modM('pass',1)">+</button></div></div><div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; font-size:12px;"><span>Перекрестные</span><div style="display:flex; align-items:center; gap:8px;"><button class="btn-ghost" style="padding:4px 10px;" onclick="modM('cross',-1)">-</button><b id="v-cross">0</b><button class="btn-ghost" style="padding:4px 10px;" onclick="modM('cross',1)">+</button></div></div><div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; font-size:12px;"><span>ТВ/Инет (RJ-45)</span><div style="display:flex; align-items:center; gap:8px;"><button class="btn-ghost" style="padding:4px 10px;" onclick="modM('tv',-1)">-</button><b id="v-tv">0</b><button class="btn-ghost" style="padding:4px 10px;" onclick="modM('tv',1)">+</button></div></div><div style="display:flex; justify-content:space-between; align-items:center; font-size:12px; color:var(--danger);"><span>Т.Пол</span><div style="display:flex; align-items:center; gap:8px;"><button class="btn-ghost" style="padding:4px 10px;" onclick="modM('tpol',-1)">-</button><b id="v-tpol">0</b><button class="btn-ghost" style="padding:4px 10px;" onclick="modM('tpol',1)">+</button></div></div></div><div style="display:flex; justify-content:space-between; align-items:center; margin-top: 10px; padding-top:10px; border-top:1px solid var(--border);"><b style="font-size:12px;">Кол-во таких рамок:</b><div style="display:flex; align-items:center; gap:8px;"><button class="btn-ghost" style="padding:6px 12px; font-size:14px;" onclick="st_q=Math.max(1,st_q-1); upUI();">-</button><b id="v-q" style="color:var(--primary); font-size:16px;">1</b><button class="btn-ghost" style="padding:6px 12px; font-size:14px;" onclick="st_q++; upUI();">+</button></div></div><div class="grid-3" style="margin-top:15px;"><button class="btn-danger" style="background:var(--gray); font-size:18px; margin:0;" onclick="popPool()">↺</button><button class="btn-success" style="margin:0;" onclick="addGrp()">В Пул</button><button class="btn-shield" style="margin:0;" onclick="applyPoolToEstimate()">Смета</button></div><div id="pool-disp" style="margin-top:15px; max-height:150px; overflow-y:auto; font-size:11px;"></div></div></div>
+<div class="modal" id="roughModal"><div class="modal-content glass"><div class="close-x" onclick="closeModal('roughModal')">×</div><h3 style="color:var(--orange); margin: 0 0 10px 0;">🔌 Пул розеток</h3><div style="background:rgba(0,0,0,0.03); padding:10px; border-radius:10px; margin-bottom:10px; display:grid; grid-template-columns:1fr 1fr; gap:8px;"><div style="grid-column: span 2;"><label style="font-size:10px; font-weight:bold;">Логика монтажа</label><select id="montage-mode" style="margin:0; padding:8px;"><option value="classic">Классика (Распредкоробки)</option><option value="gyn">Гинекологический (В подрозетниках)</option></select></div><div><label style="font-size:10px; font-weight:bold;">Монтаж трассы</label><select id="g-routing" style="margin:0; padding:8px;"><option value="ceiling">Потолок</option><option value="floor">Пол</option></select></div><div><label style="font-size:10px; font-weight:bold;">Стена</label><select id="g-wall" style="margin:0; padding:8px;"><option value="Бетон">Бетон</option><option value="Кирпич">Кирпич</option><option value="Панелька">Панелька</option><option value="Мягкий мат.">Мягкий мат.</option></select></div></div><div class="chk-grid" style="grid-template-columns:1fr;"><label class="chk-row"><input type="checkbox" id="pool-cable-channel"> В кабель-канале (без штробы)</label><label class="chk-row"><input type="checkbox" id="pool-surface"> Накладные розетки (без сверления)</label></div><div style="margin-bottom:10px;"><label style="font-size:10px; font-weight:bold;">БАЗОВЫЙ ПОДРОЗЕТНИК:</label><div style="display:flex; gap:5px; margin-top:4px;"><button class="btn-ghost active" id="btn-podr-std" style="flex:1; padding:8px; font-size:11px;" onclick="setPodr('std')">45мм</button><button class="btn-ghost" id="btn-podr-deep" style="flex:1; padding:8px; font-size:11px;" onclick="setPodr('deep')">64мм</button><button class="btn-ghost" id="btn-podr-kopos" style="flex:1; padding:8px; font-size:11px;" onclick="setPodr('kopos')">Kopos 75мм</button></div></div><div style="margin-bottom:10px;"><label style="font-size:10px; font-weight:bold;">Высота (см):</label><div style="display:flex; gap:5px; margin-top:4px;"><button class="btn-ghost active" id="btn-h-30" style="flex:1; padding:8px; font-size:11px;" onclick="setH(30)">30</button><button class="btn-ghost" id="btn-h-90" style="flex:1; padding:8px; font-size:11px;" onclick="setH(90)">90</button><button class="btn-ghost" id="btn-h-110" style="flex:1; padding:8px; font-size:11px;" onclick="setH(110)">110</button><input type="number" id="c-h-custom" placeholder="Своя" style="flex:1; margin:0; padding:8px; font-size:11px;" oninput="setH(this.value)"></div></div><div style="margin-bottom:10px;"><label style="font-size:10px; font-weight:bold;">Постов в рамке:</label><div style="display:flex; gap:5px; margin-top:4px;"><button class="btn-ghost active" id="btn-p-1" style="flex:1; padding:8px; font-size:11px;" onclick="setP(1)">1</button><button class="btn-ghost" id="btn-p-2" style="flex:1; padding:8px; font-size:11px;" onclick="setP(2)">2</button><button class="btn-ghost" id="btn-p-3" style="flex:1; padding:8px; font-size:11px;" onclick="setP(3)">3</button><button class="btn-ghost" id="btn-p-4" style="flex:1; padding:8px; font-size:11px;" onclick="setP(4)">4</button><button class="btn-ghost" id="btn-p-5" style="flex:1; padding:8px; font-size:11px;" onclick="setP(5)">5</button></div></div><div style="background:rgba(255,255,255,0.4); padding:10px; border-radius:10px; border:1px solid var(--border);"><div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; font-size:12px;"><span>Розетки 220В</span><div style="display:flex; align-items:center; gap:8px;"><button class="btn-ghost" style="padding:4px 10px;" onclick="modM('soc',-1)">-</button><b id="v-soc">1</b><button class="btn-ghost" style="padding:4px 10px;" onclick="modM('soc',1)">+</button></div></div><div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; font-size:12px;"><span>Выключатели</span><div style="display:flex; align-items:center; gap:8px;"><button class="btn-ghost" style="padding:4px 10px;" onclick="modM('sw',-1)">-</button><b id="v-sw">0</b><button class="btn-ghost" style="padding:4px 10px;" onclick="modM('sw',1)">+</button></div></div><div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; font-size:12px;"><span>Проходные</span><div style="display:flex; align-items:center; gap:8px;"><button class="btn-ghost" style="padding:4px 10px;" onclick="modM('pass',-1)">-</button><b id="v-pass">0</b><button class="btn-ghost" style="padding:4px 10px;" onclick="modM('pass',1)">+</button></div></div><div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; font-size:12px;"><span>Перекрестные</span><div style="display:flex; align-items:center; gap:8px;"><button class="btn-ghost" style="padding:4px 10px;" onclick="modM('cross',-1)">-</button><b id="v-cross">0</b><button class="btn-ghost" style="padding:4px 10px;" onclick="modM('cross',1)">+</button></div></div><div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; font-size:12px;"><span>ТВ/Инет (RJ-45)</span><div style="display:flex; align-items:center; gap:8px;"><button class="btn-ghost" style="padding:4px 10px;" onclick="modM('tv',-1)">-</button><b id="v-tv">0</b><button class="btn-ghost" style="padding:4px 10px;" onclick="modM('tv',1)">+</button></div></div><div style="display:flex; justify-content:space-between; align-items:center; font-size:12px; color:var(--danger);"><span>Т.Пол</span><div style="display:flex; align-items:center; gap:8px;"><button class="btn-ghost" style="padding:4px 10px;" onclick="modM('tpol',-1)">-</button><b id="v-tpol">0</b><button class="btn-ghost" style="padding:4px 10px;" onclick="modM('tpol',1)">+</button></div></div></div><div style="display:flex; justify-content:space-between; align-items:center; margin-top: 10px; padding-top:10px; border-top:1px solid var(--border);"><b style="font-size:12px;">Кол-во таких рамок:</b><div style="display:flex; align-items:center; gap:8px;"><button class="btn-ghost" style="padding:6px 12px; font-size:14px;" onclick="st_q=Math.max(1,st_q-1); upUI();">-</button><b id="v-q" style="color:var(--primary); font-size:16px;">1</b><button class="btn-ghost" style="padding:6px 12px; font-size:14px;" onclick="st_q++; upUI();">+</button></div></div><div class="grid-3" style="margin-top:15px;"><button class="btn-danger" style="background:var(--gray); font-size:18px; margin:0;" onclick="popPool()">↺</button><button class="btn-success" style="margin:0;" onclick="addGrp()">В Пул</button><button class="btn-shield" style="margin:0;" onclick="applyPoolToEstimate()">Смета</button></div><div id="pool-disp" style="margin-top:15px; max-height:150px; overflow-y:auto; font-size:11px;"></div></div></div>
 
-<div class="modal" id="recalcModal"><div class="modal-content glass"><div class="close-x" onclick="closeModal('recalcModal')">×</div><h3 style="color:var(--primary); margin: 0 0 10px 0;">Сведение трасс</h3><div style="background:rgba(0,0,0,0.03); padding: 12px; border-radius:10px; margin-bottom: 15px; font-size: 12px; font-weight:bold; border:1px solid var(--border);"><div style="display:flex; justify-content:space-between; margin-bottom: 6px;">ВВГ/Кабель (всего): <span id="r-cab" style="color:var(--primary);">0</span></div><div style="display:flex; justify-content:space-between;">Штробы (всего): <span id="r-sht" style="color:var(--orange);">0</span></div></div><label style="font-size:11px; font-weight:bold;">Кабеля ПО ПОТОЛКУ (м): </label><input type="number" id="r-ceil-input" value="0" oninput="updateRecalcUI()" style="margin-top:5px; margin-bottom:15px; border:2px solid var(--primary);"><div style="background:rgba(79,70,229,0.05); padding:12px; border-radius:10px; margin-bottom:15px; font-size:12px; font-weight:bold; border:1px solid var(--primary); color:var(--primary);"><div style="display:flex; justify-content:space-between; margin-bottom:6px;">Кабель в штробе: <span id="r-res-sht">0</span></div><div style="display:flex; justify-content:space-between; margin-bottom:6px;">Кабель по потолку: <span id="r-res-ceil">0</span></div><div style="display:flex; justify-content:space-between; margin-top:8px; padding-top:8px; border-top:2px solid var(--primary); font-size:14px;">ПО ПОЛУ (в гофре): <span id="r-res-floor">0</span></div></div><button class="btn-success" style="width:100%;" onclick="doRecalculate()">Пересчитать расходники</button></div></div>
+<div class="modal" id="recalcModal"><div class="modal-content glass"><div class="close-x" onclick="closeModal('recalcModal')">×</div><h3 style="color:var(--primary); margin: 0 0 10px 0;">Сведение трасс</h3><div style="background:rgba(0,0,0,0.03); padding:12px; border-radius:10px; margin-bottom:15px; font-size:12px; font-weight:bold; border:1px solid var(--border);"><div style="display:flex; justify-content:space-between; margin-bottom:6px;">ВВГ/Кабель (всего): <span id="r-cab" style="color:var(--primary);">0</span></div><div style="display:flex; justify-content:space-between;">Штробы (всего): <span id="r-sht" style="color:var(--orange);">0</span></div></div><label style="font-size:11px; font-weight:bold;">Кабеля ПО ПОТОЛКУ (м): </label><input type="number" id="r-ceil-input" value="0" oninput="updateRecalcUI()" style="margin-top:5px; margin-bottom:15px; border:2px solid var(--primary);"><div style="background:rgba(79,70,229,0.05); padding:12px; border-radius:10px; margin-bottom:15px; font-size:12px; font-weight:bold; border:1px solid var(--primary); color:var(--primary);"><div style="display:flex; justify-content:space-between; margin-bottom:6px;">Кабель в штробе: <span id="r-res-sht">0</span></div><div style="display:flex; justify-content:space-between; margin-bottom:6px;">Кабель по потолку: <span id="r-res-ceil">0</span></div><div style="display:flex; justify-content:space-between; margin-top:8px; padding-top:8px; border-top:2px solid var(--primary); font-size:14px;">ПО ПОЛУ (в гофре): <span id="r-res-floor">0</span></div></div><button class="btn-success" style="width:100%;" onclick="doRecalculate()">Пересчитать расходники</button></div></div>
 
 <div class="modal" id="settModal"><div class="modal-content glass"><div class="close-x" onclick="closeModal('settModal')">×</div><h3 style="margin-top:0; color:var(--primary);">🗄 База данных</h3><div class="grid-2"><button class="btn-ghost active" id="btnTabMat" onclick="switchDbTab('mat')">Материалы</button><button class="btn-ghost" id="btnTabWork" onclick="switchDbTab('work')">Работы</button></div><div id="editor-mat" style="max-height:50vh; overflow-y:auto; padding-bottom:20px;"></div><div id="editor-work" style="max-height:50vh; overflow-y:auto; display:none; padding-bottom:20px;"></div><div style="border-top:1px solid var(--border); padding-top:10px; margin-top:10px;"><h4 style="margin:0 0 10px 0; font-size:13px;">+ Добавить в БД</h4><div class="grid-2" style="margin-bottom:8px;"><select id="new-db-type" style="margin:0; padding:10px;"><option value="mat">Материал</option><option value="work">Работа</option></select><input type="text" id="new-db-category" placeholder="Папка" style="margin:0; padding:10px;"></div><input type="text" id="new-db-name" placeholder="Название позиции" style="padding:10px; margin-bottom:8px;"><div class="grid-2" style="margin-bottom:10px;"><input type="number" id="new-db-price" placeholder="Цена (P)" style="margin:0; padding:10px;"><input type="text" id="new-db-unit" placeholder="Ед.изм (шт/м)" style="margin:0; padding:10px;"></div><button class="btn-success" style="width:100%;" onclick="addCustomDbItem()">Добавить в базу</button></div></div></div>
 
@@ -285,6 +237,8 @@
             <h3 style="color:var(--danger); margin:0 0 15px 0;">👑 Админ Панель</h3>
             <h4 style="font-size:12px; margin:0 0 8px 0;">🔑 Ключ Gemini API</h4><input type="password" id="api-key-input" placeholder="Ключ API" onchange="saveApiKey(this.value)">
             <h4 style="font-size:12px; margin:15px 0 8px 0; color:var(--orange);">Заявки на изменение цен (БД)</h4><div id="admin-price-reqs" style="max-height:150px; overflow-y:auto; font-size:11px;"></div>
+            <h4 style="font-size:12px; margin:15px 0 8px 0;">Сотрудники</h4><div id="admin-users-list" style="max-height:150px; overflow-y:auto; margin-bottom:10px;"></div>
+            <div class="grid-2"><input type="tel" id="add-user-phone" placeholder="Телефон"><input type="text" id="add-user-name" placeholder="ФИО"><input type="password" id="add-user-pin" placeholder="PIN"><select id="add-user-role"><option value="master">Мастер</option><option value="admin">Админ</option></select></div><button class="btn-danger" style="width:100%;" onclick="adminAddUser()">+ Добавить сотрудника</button>
         </div>
     </div>
 </div>
@@ -317,7 +271,6 @@ let globalRecalcCab = 0, globalRecalcSht = 0; let pendingAdd = null; let targetD
 
 // === ЗАЩИТА КЭША И СТАРТ ===
 window.onload = async function() {
-    document.getElementById('login-screen').style.display = 'flex'; // Гарантированно показываем вход
     try {
         let sc = localStorage.getItem('coeffs_v31'); if(sc && sc !== 'undefined') coeffs = JSON.parse(sc);
         let se = localStorage.getItem('est_v31'); if(se && se !== 'undefined') currentEstimate = JSON.parse(se);
@@ -330,8 +283,7 @@ window.onload = async function() {
         let savedUser = localStorage.getItem('authUser_v31');
         if(savedUser && savedUser !== 'undefined') { 
             appUser = JSON.parse(savedUser); 
-            if (appUser.phone === '89776230182') { firebase.auth().onAuthStateChanged(u => { if (u) finishLoginSetup(); }); } 
-            else { finishLoginSetup(); }
+            finishLoginSetup(); 
         }
     } catch(e) { console.error("Startup error:", e); }
 };
@@ -368,7 +320,10 @@ function openLogoutModal() { openModal('logoutModal'); }
 function confirmLogout() { firebase.auth().signOut(); localStorage.removeItem('authUser_v31'); window.location.reload(); }
 
 async function finishLoginSetup() {
-    document.getElementById('login-screen').style.display = 'none'; document.getElementById('main-app').style.display = 'block'; document.getElementById('admin-panel').style.display = appUser.role === 'admin' ? 'block' : 'none';
+    let authModal = document.getElementById('authModal'); if(authModal) authModal.style.display = 'none';
+    let mainApp = document.getElementById('main-app'); if(mainApp) mainApp.style.display = 'block';
+    let adminPanel = document.getElementById('admin-panel'); if(adminPanel) adminPanel.style.display = appUser.role === 'admin' ? 'block' : 'none';
+    
     showLoader('Загрузка БД...');
     try {
         if(db) {
@@ -403,6 +358,20 @@ function updateMasterBadge() { document.getElementById('master-badge').innerHTML
 function fPrice(it) { return Math.round((it.p || 0) * (1 + (it.type === 'mat'? coeffs.mat: coeffs.work) / 100)); }
 async function syncDraft() { try { if(db && appUser) await db.collection('drafts').doc(appUser.phone).set({ estimate: currentEstimate, cust: cust }); } catch(e){} }
 
+// УНИВЕРСАЛЬНОЕ ОКНО ПОДТВЕРЖДЕНИЯ (Замена confirm/prompt)
+function openConfirmModal(title, text, confirmCb) {
+    document.getElementById('qty-prompt-title').innerText = title;
+    document.getElementById('qty-prompt-name').innerText = text;
+    document.getElementById('qty-input-wrapper').style.display = 'none';
+    document.getElementById('qty-confirm-btn').onclick = confirmCb;
+    openModal('qtyPromptModal');
+}
+
+function requestAccess() {
+    let phone = document.getElementById('auth-phone').value.trim();
+    window.open(`https://wa.me/789776230182?text=${encodeURIComponent(`Здравствуйте! Я новый мастер, мой номер ${phone || '[ваш номер]'}. Прошу выдать мне PIN-код.`)}`, '_blank');
+}
+
 // === ОСНОВНАЯ СМЕТА ===
 function renderMainTable() {
     const tb = document.querySelector("#mainTable tbody"); tb.innerHTML = ""; let total = 0;
@@ -412,15 +381,18 @@ function renderMainTable() {
     });
     document.getElementById('tot-all').innerText = total.toLocaleString() + ' P'; localStorage.setItem('est_v31', JSON.stringify(currentEstimate)); syncDraft();
 }
-function clearCurrentEstimate() { openQtyPrompt("Очистить смету?", "Вы уверены?", () => { currentEstimate=[]; renderMainTable(); showToast("Очищено"); }); }
 
-function openQtyPrompt(title, text, confirmCb, isInput = false) {
-    document.querySelector('#qtyPromptModal h3').innerText = title; document.getElementById('qty-prompt-name').innerText = text;
-    document.getElementById('qty-input').style.display = isInput ? 'inline-block' : 'none';
-    document.getElementById('qty-input').previousElementSibling.style.display = isInput ? 'inline-block' : 'none';
-    document.getElementById('qty-input').nextElementSibling.style.display = isInput ? 'inline-block' : 'none';
+function clearCurrentEstimate() { 
+    openConfirmModal("Очистить смету?", "Вы уверены?", () => { currentEstimate=[]; renderMainTable(); showToast("Очищено"); closeModal('qtyPromptModal'); }); 
+}
+
+function openQtyPrompt(title, text, confirmCb) {
+    document.getElementById('qty-prompt-title').innerText = title; 
+    document.getElementById('qty-prompt-name').innerText = text;
+    document.getElementById('qty-input-wrapper').style.display = 'flex';
     document.getElementById('qty-input').value = 1;
-    document.querySelector('#qtyPromptModal .btn-success').onclick = confirmCb; openModal('qtyPromptModal');
+    document.getElementById('qty-confirm-btn').onclick = confirmCb; 
+    openModal('qtyPromptModal');
 }
 function modQtyInput(val) { let el = document.getElementById('qty-input'); el.value = Math.max(1, Number(el.value) + val); }
 
@@ -432,7 +404,7 @@ function promptAdd(id, type) {
         currentEstimate = currentEstimate.filter(i => i.tag !== 'man_'+id);
         currentEstimate.push({...pendingAdd.item, q: q, type: pendingAdd.type, tag: 'man_'+id});
         renderMainTable(); showToast(`Добавлено: ${q}`); closeModal('qtyPromptModal');
-    }, true);
+    });
 }
 
 // === ПОИСК И ЗАМЕНА ЭТАЛОНОВ ИЗ БД ===
@@ -662,15 +634,15 @@ function openPreviewPrint(mode) {
     let html = header;
     
     if(mode === 'details') {
-        let shI = currentEstimate.filter(i => isSM(i.n)); html += '<table class="pdf-table"><thead><tr><th style="width:30px;" class="no-print"><input type="checkbox" class="print-cb" checked onchange="toggleAllGrp(this, \'det\')"></th><th>Аппарат защиты</th></tr></thead><tbody id="tb_det">';
+        let shI = currentEstimate.filter(i => isSM(i.n)); html += '<table class="pdf-table"><thead><tr><th style="width:30px;" class="no-print"><input type="checkbox" class="print-cb" checked onchange="toggleAllGrp(this, 'det')"></th><th>Аппарат защиты</th></tr></thead><tbody id="tb_det">';
         shI.forEach((i, idx) => { html += `<tr id="tr_det_${idx}"><td class="no-print"><input type="checkbox" class="print-cb item-cb" checked onchange="updTr('tr_det_${idx}', this)"></td><td>${i.n}</td></tr>`; }); html += '</tbody></table>';
     } 
     else if(mode === 'vendor') {
         let mD = currentEstimate.filter(i => i.type==='mat' && !isFM(i.n)), mF = currentEstimate.filter(i => i.type==='mat' && isFM(i.n));
-        html += '<h3 style="color:var(--primary); font-size:16px; margin:0 0 10px 0;">ЧЕРНОВЫЕ МАТЕРИАЛЫ</h3><table class="pdf-table"><thead><tr><th style="width:30px;" class="no-print"><input type="checkbox" class="print-cb" checked onchange="toggleAllGrp(this, \'vd\')"></th><th>Наименование</th><th style="text-align:center;">Кол-во</th></tr></thead><tbody id="tb_vd">';
+        html += '<h3 style="color:var(--primary); font-size:16px; margin:0 0 10px 0;">ЧЕРНОВЫЕ МАТЕРИАЛЫ</h3><table class="pdf-table"><thead><tr><th style="width:30px;" class="no-print"><input type="checkbox" class="print-cb" checked onchange="toggleAllGrp(this, 'vd')"></th><th>Наименование</th><th style="text-align:center;">Кол-во</th></tr></thead><tbody id="tb_vd">';
         mD.forEach((i, idx) => { html += `<tr id="tr_vd_${idx}"><td class="no-print"><input type="checkbox" class="print-cb item-cb" checked onchange="updTr('tr_vd_${idx}', this)"></td><td>${i.n}</td><td style="text-align:center; font-weight:bold;">${i.q}</td></tr>`; }); html += '</tbody></table>';
         if(mF.length>0) {
-            html += '<h3 style="color:var(--success); font-size:16px; margin:15px 0 10px 0;">ЧИСТОВАЯ ЭЛЕКТРИКА</h3><table class="pdf-table"><thead><tr><th style="width:30px;" class="no-print"><input type="checkbox" class="print-cb" checked onchange="toggleAllGrp(this, \'vf\')"></th><th>Наименование</th><th style="text-align:center;">Кол-во</th></tr></thead><tbody id="tb_vf">';
+            html += '<h3 style="color:var(--success); font-size:16px; margin:15px 0 10px 0;">ЧИСТОВАЯ ЭЛЕКТРИКА</h3><table class="pdf-table"><thead><tr><th style="width:30px;" class="no-print"><input type="checkbox" class="print-cb" checked onchange="toggleAllGrp(this, 'vf')"></th><th>Наименование</th><th style="text-align:center;">Кол-во</th></tr></thead><tbody id="tb_vf">';
             mF.forEach((i, idx) => { html += `<tr id="tr_vf_${idx}"><td class="no-print"><input type="checkbox" class="print-cb item-cb" checked onchange="updTr('tr_vf_${idx}', this)"></td><td>${i.n}</td><td style="text-align:center; font-weight:bold;">${i.q}</td></tr>`; }); html += '</tbody></table>';
         }
     } 
@@ -723,7 +695,8 @@ async function callGemini(promptText, loadText, titleText, isHtml = true, isTabl
         let aiText = data.candidates[0].content.parts[0].text; if(isHtml) aiText = aiText.replace(/```html/g, '').replace(/```json/g, '').replace(/```/g, '').trim();
         document.getElementById('ai-modal-title').innerText = titleText; 
         if(isTable) document.getElementById('ai-suggestions').innerHTML = `<div style="overflow-x:auto;">${aiText}</div><p style="font-size:10px; color:var(--gray); margin-top:10px; text-align:center;">*ИИ анализирует ГОСТ. Возможны погрешности.</p>`;
-        else document.getElementById('ai-suggestions').innerHTML = `<div style="line-height:1.5;">${aiText.replace(/\n/g, '<br>')}</div>`;
+        else document.getElementById('ai-suggestions').innerHTML = `<div style="line-height:1.5;">${aiText.replace(/
+/g, '<br>')}</div>`;
         openModal('aiModal'); return aiText;
     } catch (e) { hideLoader(); showToast("❌ Ошибка ИИ."); return null; }
 }
@@ -798,9 +771,11 @@ function loadCustFromHistory(id) { if(!id) return; let h = hDB.find(x => x.id ==
 function saveCust() { cust={name:document.getElementById('c-name').value.trim(), phone:document.getElementById('c-phone').value.trim(), addr:document.getElementById('c-addr').value.trim(), ceil:document.getElementById('c-ceil').value||270}; localStorage.setItem('cust_v31', JSON.stringify(cust)); updateMasterBadge(); closeModal('custModal'); renderMainTable(); showToast("Заказчик сохранен"); }
 
 async function adminAddUser() { let p=document.getElementById('add-user-phone').value.trim(), n=document.getElementById('add-user-name').value.trim(), pin=document.getElementById('add-user-pin').value.trim(), r=document.getElementById('add-user-role').value; if(!p||!n||!pin) return showToast("Заполните все"); try{if(db) await db.collection('users').doc(p).set({phone:p, name:n, pin:pin, role:r}); showToast("Добавлен!"); renderAdminUsers();}catch(e){} }
-async function renderAdminUsers() { if(appUser.role!=='admin') return; try{if(db) {const s=await db.collection('users').get(); let u=s.docs.map(d=>d.data()); document.getElementById('admin-users-list').innerHTML=u.map(x=>`<div class="emp-row"><div><b>${x.name}</b><br><span style="font-size:10px;">${x.phone} (${x.role})</span></div></div>`).join(''); }}catch(e){} }
+async function renderAdminUsers() { if(appUser.role!=='admin') return; try{if(db) {const s=await db.collection('users').get(); let u=s.docs.map(d=>d.data()); document.getElementById('admin-users-list').innerHTML=u.map(x=>`<div class="emp-row" style="display:flex; justify-content:space-between; padding:8px; border-bottom:1px solid #ccc;"><div><b>${x.name}</b><br><span style="font-size:10px;">${x.phone} (${x.role})</span></div><button class="btn-danger" style="padding:4px 8px; font-size:11px;" onclick="fireUser('${x.phone}', '${x.name}')">Уволить ✕</button></div>`).join(''); }}catch(e){} }
+function fireUser(phone, name) { openConfirmModal("Увольнение", `Уволить сотрудника ${name}?`, async () => { try { if(db) await db.collection('users').doc(phone).delete(); renderAdminUsers(); showToast("Сотрудник уволен"); } catch(e) { showToast("Ошибка Облака."); } closeModal('qtyPromptModal'); }); }
 async function loadAdminData() { if(!db||appUser.role!=='admin') return; try{const s=await db.collection('settings').doc('price_requests').get(); if(s.exists) { let reqs=s.data().reqs||[]; document.getElementById('admin-price-reqs').innerHTML = reqs.filter(r=>r.status==='pending').map((r,i)=>`<div style="background:rgba(0,0,0,0.05); padding:8px; margin-bottom:5px;"><b>${r.master}</b>: ${r.itemName} ➡️ <b>${r.newPrice} Р</b> <button class="btn-success" style="padding:4px 8px; font-size:10px;" onclick="approvePrice(${r.id})">ОК</button></div>`).join(''); } }catch(e){} }
 async function approvePrice(id) { try{if(db){const s=await db.collection('settings').doc('price_requests').get(); let reqs=s.data().reqs; let r=reqs.find(x=>x.id===id); if(r){ r.status='approved'; priceOverrides[r.itemId]=r.newPrice; let item=(r.type==='mat'?matDB:workDB).find(x=>x.id===r.itemId); if(item)item.p=r.newPrice; await db.collection('settings').doc('price_overrides').set({overrides:priceOverrides}); await db.collection('settings').doc('price_requests').set({reqs:reqs}); syncGlobalDb(); loadAdminData(); showToast("Одобрено");}}}catch(e){} }
 
 </script>
 </body>
+</html>
