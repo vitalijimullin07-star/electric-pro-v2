@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Электрик PRO v15.5 (ERP Ultimate)</title>
+    <title>Электрик PRO v16.0 (Stable)</title>
     
     <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore-compat.js"></script>
@@ -11,245 +11,430 @@
 
     <style>
         :root {
-            --bg: #F0F4F8; --card: rgba(255, 255, 255, 0.95); --text: #1E293B;
+            --bg: #F0F4F8; --card: rgba(255, 255, 255, 0.85); --text: #1E293B;
             --primary: #4F46E5; --success: #10B981; --danger: #EF4444; 
             --orange: #F59E0B; --gray: #64748B; --border: rgba(200, 210, 224, 0.6);
             --glass-shadow: 0 8px 32px rgba(31, 38, 135, 0.05);
+            --modal-bg: rgba(255, 255, 255, 0.95); --blur: blur(16px);
         }
-        [data-theme="dark"] { --bg: #0F172A; --card: rgba(30, 41, 59, 0.85); --text: #F8FAFC; --primary: #6366F1; --border: rgba(255, 255, 255, 0.08); --glass-shadow: 0 8px 32px rgba(0,0,0,0.4); }
-        [data-theme="emerald"] { --bg: #ECFDF5; --card: rgba(255, 255, 255, 0.95); --text: #064E3B; --primary: #10B981; --border: rgba(16, 185, 129, 0.2); }
         
+        [data-theme="dark"] { --bg: #0F172A; --card: rgba(30, 41, 59, 0.75); --text: #F8FAFC; --primary: #6366F1; --success: #10B981; --danger: #F43F5E; --orange: #F59E0B; --gray: #94A3B8; --border: rgba(255, 255, 255, 0.08); --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.4); --modal-bg: rgba(15, 23, 42, 0.95); }
+        [data-theme="emerald"] { --bg: #ECFDF5; --card: rgba(255, 255, 255, 0.9); --text: #064E3B; --primary: #10B981; --success: #059669; --danger: #EF4444; --orange: #F59E0B; --gray: #64748B; --border: rgba(16, 185, 129, 0.2); --glass-shadow: 0 8px 24px rgba(16, 185, 129, 0.1); --modal-bg: rgba(255, 255, 255, 0.98); }
+        [data-theme="sunset"] { --bg: #FFF7ED; --card: rgba(255, 255, 255, 0.9); --text: #431407; --primary: #F97316; --success: #10B981; --danger: #EF4444; --orange: #EAB308; --gray: #78350F; --border: rgba(249, 115, 22, 0.2); --glass-shadow: 0 8px 24px rgba(249, 115, 22, 0.1); --modal-bg: rgba(255, 255, 255, 0.98); }
+        [data-theme="mono"] { --bg: #F8FAFC; --card: #FFFFFF; --text: #0F172A; --primary: #475569; --success: #334155; --danger: #1E293B; --orange: #64748B; --gray: #94A3B8; --border: #E2E8F0; --glass-shadow: 0 4px 12px rgba(0,0,0,0.05); --modal-bg: #FFFFFF; }
+
+        @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        @keyframes popIn { 0% { transform: scale(0.95); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+        @keyframes pulse { 0% { transform: scale(0.9); } 50% { transform: scale(1.1); } 100% { transform: scale(0.9); } }
+
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; }
-        body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 10px; overflow-x: hidden; transition: 0.3s; }
+        body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 12px; transition: background 0.3s ease; overflow-x: hidden; }
         
-        .glass { background: var(--card); backdrop-filter: blur(12px); border: 1px solid var(--border); box-shadow: var(--glass-shadow); border-radius: 16px; }
-        .card { padding: 15px; margin-bottom: 12px; }
+        .glass { background: var(--card); backdrop-filter: var(--blur); -webkit-backdrop-filter: var(--blur); border: 1px solid var(--border); box-shadow: var(--glass-shadow); border-radius: 20px; }
+        .card { padding: 20px; margin-bottom: 15px; animation: slideUp 0.4s ease-out; }
         
-        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
-        .burger-btn { font-size: 26px; cursor: pointer; background: none; border: none; padding: 0; color: var(--text); }
-        .burger-menu { position: fixed; top: 0; left: -320px; width: 280px; height: 100vh; background: var(--card); z-index: 2000; transition: 0.3s; padding: 20px; box-shadow: var(--glass-shadow); overflow-y:auto; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .burger-btn { font-size: 28px; cursor: pointer; color: var(--text); background: none; border: none; padding: 0; transition: 0.2s; }
+        .burger-btn:active { transform: scale(0.85); }
+        .burger-menu { position: fixed; top: 0; left: -320px; width: 280px; height: 100vh; background: var(--modal-bg); backdrop-filter: var(--blur); -webkit-backdrop-filter: var(--blur); border-right: 1px solid var(--border); z-index: 2000; transition: 0.4s; padding: 25px 20px; box-shadow: var(--glass-shadow); overflow-y:auto; }
         .burger-menu.open { left: 0; }
-        .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1999; display: none; }
-        .overlay.open { display: block; }
+        .burger-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(3px); z-index: 1999; display: none; opacity: 0; transition: 0.3s; }
+        .burger-overlay.open { display: block; opacity: 1; }
         
-        button { padding: 12px; border-radius: 10px; border: none; cursor: pointer; font-weight: 700; font-size: 13px; color: white; transition: 0.2s; text-align: center; }
-        button:active { transform: scale(0.96); }
-        .btn-primary { background: var(--primary); } .btn-success { background: var(--success); } .btn-danger { background: var(--danger); }
+        .controls { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 15px; }
+        .btn-full { grid-column: span 2; }
+        .controls-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 15px; }
+        
+        button { padding: 14px 10px; border-radius: 12px; border: none; cursor: pointer; font-weight: 700; font-size: 13px; color: white; transition: 0.2s; text-align: center; }
+        button:active { transform: scale(0.95); }
         .btn-info { background: #3B82F6; } .btn-shield { background: #8B5CF6; } .btn-rough { background: #F59E0B; }
+        .btn-mat { background: #10B981; } .btn-work { background: #F97316; } .btn-vendor { background: #475569; }
+        .btn-success { background: var(--success); } .btn-danger { background: var(--danger); }
         .btn-ghost { background: transparent; color: var(--text); border: 1px solid var(--border); }
         
-        input, select { width: 100%; padding: 12px; border: 1.5px solid var(--border); border-radius: 10px; font-size: 13px; font-weight: 600; margin-bottom: 10px; background: rgba(255,255,255,0.5); color: var(--text); }
-        input:focus, select:focus { border-color: var(--primary); }
+        .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(6px); display: none; z-index: 1000; padding: 15px; overflow-y: auto; }
+        .modal-content { background: var(--modal-bg); color: var(--text); padding: 25px; border-radius: 24px; width: 100%; max-width: 500px; margin: 20px auto; position: relative; border: 1px solid var(--border); box-shadow: 0 25px 50px rgba(0,0,0,0.2); animation: popIn 0.3s ease-out; }
         
-        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; }
-        .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 12px; }
+        .close-x { position: absolute; top: -10px; right: -10px; width: 34px; height: 34px; background: var(--card); border: 1px solid var(--border); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: 900; cursor: pointer; color: var(--danger); box-shadow: 0 4px 12px rgba(0,0,0,0.15); z-index: 1001; transition: 0.2s; padding-bottom: 2px;}
+        .close-x:active { transform: scale(0.85); }
         
-        .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); display: none; z-index: 1000; padding: 10px; overflow-y: auto; }
-        .modal-content { background: var(--card); padding: 20px; border-radius: 20px; width: 100%; max-width: 600px; margin: 20px auto; position: relative; border: 1px solid var(--border); }
-        .close-x { position: absolute; top: -10px; right: -10px; width: 32px; height: 32px; background: var(--card); border: 1px solid var(--border); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: bold; cursor: pointer; color: var(--danger); z-index: 1001; }
+        input:not([type="checkbox"]):not([type="file"]):not([type="range"]), select { width: 100%; padding: 14px; border: 1.5px solid var(--border); border-radius: 12px; font-size: 14px; font-weight: 600; margin-bottom: 12px; background: rgba(255,255,255,0.4); color: var(--text); transition: 0.3s; }
+        input:not([type="checkbox"]):not([type="file"]):not([type="range"]):focus, select:focus { border-color: var(--primary); background: rgba(255,255,255,0.8); box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15); }
+        input[type="range"] { width: 100%; margin-bottom: 15px; accent-color: var(--primary); }
         
-        .table-wrapper { background: rgba(0,0,0,0.02); border-radius: 12px; padding: 5px; border: 1px solid var(--border); margin-bottom: 10px; overflow-x: auto; }
-        table { width: 100%; border-collapse: collapse; } td, th { padding: 10px 5px; border-bottom: 1px solid var(--border); font-size: 12px; text-align: left; }
+        .table-wrapper { background: rgba(255,255,255,0.3); border-radius: 16px; padding: 8px; border: 1px solid var(--border); margin-bottom: 10px; overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; table-layout: fixed; } 
+        td, th { padding: 12px 6px; border-bottom: 1px solid var(--border); font-size: 13px; text-align: left; word-wrap: break-word; }
+        .col-name { width: 55%; font-weight: 600; line-height: 1.3; }
+        .col-qty { width: 20%; text-align: center; }
+        .col-sum { width: 25%; text-align: right; font-weight: bold; }
         .item-name { font-weight: 600; cursor: pointer; color: var(--primary); text-decoration: underline dashed rgba(79, 70, 229, 0.4); text-underline-offset: 3px; }
+
+        .tabs-container { display: flex; background: rgba(0,0,0,0.05); padding: 5px; border-radius: 14px; margin-bottom: 15px; }
+        .tab-btn { flex: 1; padding: 12px; border-radius: 10px; border: none; font-weight: 700; cursor: pointer; background: transparent; color: var(--gray); font-size: 13px; transition: 0.2s;}
+        .tab-btn.active { background: var(--card); color: var(--primary); box-shadow: 0 4px 8px rgba(0,0,0,0.05); }
+
+        .burger-menu button { justify-content: flex-start; text-align: left; padding: 16px; font-size: 15px; border-radius: 14px; margin-bottom: 10px; width: 100%; }
         
-        .cat-header { background: rgba(79, 70, 229, 0.08); color: var(--primary); border-radius: 8px; padding: 12px; margin-bottom: 6px; font-weight: bold; font-size: 13px; cursor: pointer; }
-        .cat-body { display: none; padding-left: 5px; margin-bottom:10px; } .cat-body.active { display: block; }
-        .mat-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 5px; border-bottom: 1px solid rgba(0,0,0,0.04); font-size: 12px; }
+        .cat-header { background: rgba(79, 70, 229, 0.08); color: var(--primary); border-radius: 10px; padding: 14px 16px; margin-bottom: 6px; font-weight: 800; font-size: 14px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; border: 1px solid rgba(79, 70, 229, 0.1); transition: 0.2s; }
+        .cat-body { display: none; padding: 5px 0 15px 5px; animation: fadeIn 0.3s ease-in-out; } 
+        .cat-body.active { display: block !important; }
+        .sub-cat-header { background: transparent; padding: 10px 14px; font-size: 12px; font-weight: 800; color: var(--gray); margin-top: 5px; text-transform: uppercase; cursor: pointer; display: flex; justify-content: space-between; border-bottom: 1px dashed var(--border); }
+        .sub-cat-body { display: none; padding-left: 5px; margin-top: 5px; } 
+        .sub-cat-body.active { display: block !important; }
         
-        .chk-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; background: rgba(0,0,0,0.03); padding: 10px; border-radius: 10px; margin-bottom: 10px; }
-        .chk-row { display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; cursor: pointer;}
-        .chk-row input[type="checkbox"] { width: 18px !important; height: 18px !important; margin: 0; }
+        .mat-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 10px; border-bottom: 1px solid rgba(0,0,0,0.04); }
+        .mat-add-btn { background: var(--success); color: white; border: none; border-radius: 8px; padding: 8px 14px; font-weight: bold; cursor: pointer; font-size: 12px; box-shadow: 0 2px 6px rgba(16, 185, 129, 0.2); }
+
+        .counter-box { display: flex; align-items: center; gap: 8px; }
+        .c-btn { width: 34px; height: 34px; background: rgba(0,0,0,0.08); border: none; border-radius: 8px; font-weight: 900; font-size: 20px; color: var(--text); display: flex; align-items: center; justify-content: center; cursor: pointer;}
+        .c-btn:active { background: var(--primary); color: white; }
+        .c-val { font-size: 16px; width: 24px; text-align: center; font-weight: 700;}
+        .mech-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--border); font-size: 13px; font-weight: 600; }
         
-        .global-loader { position: fixed; inset: 0; background: rgba(0,0,0,0.8); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 9999; opacity: 0; pointer-events: none; transition: 0.3s; color: white; }
+        .tile-grid { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+        .tile { background: rgba(0,0,0,0.05); padding: 12px 5px; border-radius: 8px; font-weight: 700; font-size: 11px; border: 2px solid transparent; cursor: pointer; flex: 1; text-align: center; color: var(--gray); text-transform: uppercase; transition: 0.2s;}
+        .tile.active { border-color: var(--primary); background: rgba(79, 70, 229, 0.1); color: var(--primary); }
+
+        .chk-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; background: rgba(0,0,0,0.03); padding: 12px; border-radius: 12px; margin-bottom: 10px; }
+        .chk-row { display: flex; align-items: center; gap: 8px; font-size: 13px; cursor: pointer; font-weight: 600; }
+        .chk-row input[type="checkbox"] { width: 20px !important; height: 20px !important; margin: 0; cursor: pointer; flex-shrink: 0; accent-color: var(--primary); }
+
+        .global-loader { position: fixed; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(5px); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 9999; opacity: 0; pointer-events: none; transition: 0.3s; color: white; }
         .global-loader.show { opacity: 1; pointer-events: auto; }
-        .toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(100px); background: var(--text); color: var(--bg); padding: 10px 20px; border-radius: 20px; z-index: 10000; opacity: 0; transition: 0.4s; font-size: 12px; font-weight:bold; }
+        .loader-icon { font-size: 50px; animation: pulse 1s infinite; margin-bottom: 15px; }
+        .loader-text { font-size: 16px; font-weight: bold; text-align: center; }
+
+        .toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(100px); background: var(--text); color: var(--bg); padding: 12px 24px; border-radius: 30px; font-weight: bold; z-index: 10000; opacity: 0; transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 10px 30px rgba(0,0,0,0.2); font-size: 13px; width:max-content; max-width:90%; text-align:center; }
         .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
         
-        .print-cb { width: 18px !important; height: 18px !important; margin:0; cursor: pointer;}
-        .print-group-header { background: rgba(0,0,0,0.05); font-weight:bold; font-size:13px; padding:8px; cursor:pointer;}
+        .emp-row { display:flex; justify-content:space-between; align-items:center; background: rgba(0,0,0,0.05); padding: 10px; border-radius: 10px; margin-bottom: 8px; }
         
+        .logic-group { background: rgba(0,0,0,0.03); padding: 12px; border-radius: 12px; margin-bottom: 15px; border: 1px solid var(--border); }
+        .logic-label { font-size: 11px; font-weight: bold; color: var(--primary); display: block; margin-bottom: 5px; text-transform: uppercase; }
+        .logic-row { margin-bottom: 10px; }
+
         @media print {
-            body, html { height: auto !important; background: white; margin: 0; padding: 0; font-family: Arial, sans-serif; }
-            .no-print, .burger-menu, .overlay { display: none !important; }
-            .modal { position: relative !important; display: block !important; background: white !important; padding: 0 !important; }
-            .modal-content { border: none !important; box-shadow: none !important; max-width: 100% !important; padding: 0 !important; }
+            body, html { height: auto !important; overflow: visible !important; background: white; margin: 0; padding: 0; }
+            .no-print, .container, .burger-menu, .burger-overlay { display: none !important; }
+            .modal { position: relative !important; inset: auto !important; display: block !important; background: white !important; padding: 0 !important; overflow: visible !important; }
+            .modal-content { border: none !important; box-shadow: none !important; max-width: 100% !important; margin: 0 !important; padding: 10px !important; animation: none !important; overflow: visible !important; position: relative !important; }
             .close-x { display: none !important; }
             .no-print-row { display: none !important; }
-            #p-cont { background: white !important; }
-            .pdf-header { text-align: center; border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 15px; }
-            .pdf-table { width: 100%; border-collapse: collapse; font-size: 11px; margin-bottom: 15px; }
-            .pdf-table th { background: #eee !important; -webkit-print-color-adjust: exact; padding: 6px; border: 1px solid #ccc; text-align: left; }
-            .pdf-table td { padding: 6px; border: 1px solid #ccc; }
-            .pdf-table tr { page-break-inside: avoid; }
+            #p-cont { background: white !important; border: none !important; box-shadow: none !important; padding: 0 !important; overflow: visible !important; page-break-inside: auto; }
+            .pdf-header { text-align: center; border-bottom: 3px solid var(--primary); padding-bottom: 15px; margin-bottom: 20px; }
+            .pdf-header h1 { margin: 0; color: var(--primary); font-size: 24px; text-transform: uppercase; letter-spacing: 1px; }
+            .pdf-header p { margin: 5px 0 0 0; color: #555; font-size: 14px; }
+            .pdf-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 12px; page-break-inside: auto; }
+            .pdf-table tr { page-break-inside: avoid; page-break-after: auto; }
+            .pdf-table thead { display: table-header-group; }
+            .pdf-table th { background: #f8fafc !important; -webkit-print-color-adjust: exact; padding: 10px; border-bottom: 2px solid #cbd5e1; color: var(--text); }
+            .pdf-table td { padding: 8px 10px; border-bottom: 1px solid #e2e8f0; }
+            .pdf-footer { display: flex; justify-content: space-between; align-items: flex-end; margin-top: 40px; padding-top: 20px; border-top: 2px solid #e2e8f0; page-break-inside: avoid; }
+            .qr-codes { display: flex; gap: 15px; }
+            .qr-box { text-align: center; font-size: 10px; color: #666; }
+            .qr-box img { width: 70px; height: 70px; margin-bottom: 5px; border-radius: 8px; border: 1px solid #ddd;}
         }
     </style>
 </head>
 <body>
 
-<div id="global-loader" class="global-loader"><div style="font-size:40px; margin-bottom:10px;">☁️</div><div id="loader-text" style="font-weight:bold;">Загрузка...</div></div>
+<div id="global-loader" class="global-loader"><div id="loader-icon" class="loader-icon">☁️</div><div id="loader-text" class="loader-text">Синхронизация...</div></div>
 <div id="toast" class="toast">Уведомление</div>
 
-<!-- ЖЕСТКО ВШИТОЕ ОКНО ВХОДА (Оно не может пропасть) -->
-<div id="login-screen" style="position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 5000; display: flex; justify-content: center; align-items: center;">
-    <div class="glass" style="width: 100%; max-width:350px; text-align:center; padding:30px; border-radius:20px;">
-        <h2 style="color:var(--primary); margin-top:0; font-weight:900;">Электрик PRO</h2>
-        <p style="font-size:12px; color:var(--gray); margin-bottom:20px;">Версия 15.5 (ERP Ultimate)</p>
-        <input type="tel" id="auth-phone" placeholder="Номер (8977...)" style="text-align:center;">
-        <input type="password" id="auth-pin" placeholder="PIN-код" style="text-align:center;">
-        <button class="btn-primary" style="width:100%; margin-bottom:10px; padding:14px;" onclick="loginApp()">Войти в систему</button>
-        <button class="btn-ghost" style="width:100%; font-size:11px;" onclick="requestAccess()">Новый мастер? Заявка</button>
-    </div>
-</div>
-
-<div class="overlay" id="overlay" onclick="toggleMenu()"></div>
+<div class="burger-overlay" id="burger-overlay" onclick="toggleMenu()"></div>
 <div class="burger-menu glass" id="burger-menu">
-    <h2 style="color: var(--primary); margin-top:0;">Электрик PRO</h2>
-    <button class="btn-info" style="width:100%; margin-bottom:8px;" onclick="openModal('custModal'); toggleMenu();">👤 Заказчик и Объект</button>
-    <button class="btn-vendor" style="width:100%; margin-bottom:8px; background: rgba(139,92,246,0.15); color: #8B5CF6;" onclick="runAiCheck(); toggleMenu();">✨ ИИ-Анализ сметы</button>
-    <button class="btn-vendor" style="width:100%; margin-bottom:8px; background: rgba(16,185,129,0.15); color: #10B981;" onclick="openModal('kupModal'); toggleMenu();">⚡ Сборка КУП (Модуль)</button>
-    <button class="btn-vendor" style="width:100%; margin-bottom:8px; background: rgba(245,158,11,0.15); color: #F59E0B;" onclick="openModal('buhModal'); toggleMenu();">💰 Бухгалтерия (Акты)</button>
+    <h2 style="margin-top:0; color: var(--primary); margin-bottom: 30px; font-weight:900;">Электрик PRO</h2>
+    <button class="btn-info" onclick="openModal('custModal'); toggleMenu();">👤 О заказчике</button>
+    <button class="btn-vendor" style="background: rgba(139,92,246,0.15); color: #8B5CF6;" onclick="runAiCheck(); toggleMenu();">✨ ИИ-Анализ сметы</button>
+    <button class="btn-vendor" style="background: rgba(16,185,129,0.15); color: #10B981;" onclick="openModal('kupModal'); toggleMenu();">⚡ Сборка КУП (Модуль)</button>
+    <button class="btn-vendor" style="background: rgba(16,185,129,0.15); color: #10B981;" onclick="openModal('settModal'); toggleMenu();">🗄 База данных</button>
+    <button class="btn-vendor" style="background: rgba(245,158,11,0.15); color: #F59E0B;" onclick="openModal('buhModal'); toggleMenu();">💰 Бухгалтерия (Акты)</button>
     
     <div style="border-top: 1px solid var(--border); margin-top:15px; padding-top:15px;">
-        <button class="btn-vendor" style="width:100%; margin-bottom:8px; background: rgba(16,185,129,0.15); color: #10B981;" onclick="aiPueHelper(); toggleMenu();">📚 ИИ (ПУЭ и Снабжение)</button>
-        <button class="btn-vendor" style="width:100%; margin-bottom:8px; background: rgba(244,63,94,0.1); color: var(--danger);" onclick="compareShopsAI(); toggleMenu();">🛒 ИИ-Сравнение цен (ГОСТ)</button>
-        <button class="btn-vendor" style="width:100%; margin-bottom:8px; background: rgba(100,116,139,0.15); color: var(--text);" onclick="openMatCatalog(); toggleMenu();">🛠 Ручная сборка (Каталог)</button>
-        <button class="btn-vendor" style="width:100%; margin-bottom:8px; background: rgba(79,70,229,0.1); color: var(--primary);" onclick="openModal('logicModal'); toggleMenu();">⚙️ Логика расчетов и Цены</button>
-        <button class="btn-vendor" style="width:100%; margin-bottom:8px; background: rgba(100,116,139,0.15); color: var(--text);" onclick="openModal('settingsModal'); toggleMenu();">🛠 Настройки БД и Системы</button>
-        <button class="btn-danger" style="width:100%; margin-top:10px;" onclick="openConfirmModal('Выход', 'Вы уверены, что хотите выйти из профиля?', confirmLogout); toggleMenu();">🚪 Выйти</button>
+        <button class="btn-vendor" style="background: rgba(16,185,129,0.15); color: #10B981;" onclick="aiPueHelper(); toggleMenu();">📚 ИИ-Помощник (ПУЭ и Монтаж)</button>
+        <button class="btn-vendor" style="background: rgba(244,63,94,0.1); color: var(--danger);" onclick="compareShopsAI(); toggleMenu();">🛒 ИИ-Сравнение цен в магазинах</button>
+        <button class="btn-vendor" style="background: rgba(100,116,139,0.15); color: var(--text);" onclick="openMatCatalog(); toggleMenu();">🛠 Ручная сборка щита (Каталог)</button>
+        <button class="btn-vendor" style="background: rgba(79,70,229,0.1); color: var(--primary);" onclick="openModal('logicModal'); toggleMenu();">⚙️ Логика расчетов и Цены</button>
+        <button class="btn-vendor" style="background: rgba(100,116,139,0.15); color: var(--text);" onclick="openModal('settingsModal'); toggleMenu();">🛠 Настройки системы</button>
+        <button class="btn-danger" style="margin-top:20px;" onclick="openConfirmModal('Выход', 'Вы уверены, что хотите выйти из профиля?', confirmLogout); toggleMenu();">🚪 Выйти</button>
     </div>
 </div>
 
-<div id="main-app" style="display:none;">
+<div class="container" id="main-app" style="display:none;">
     <div class="card glass">
         <div class="header">
             <button class="burger-btn" onclick="toggleMenu()">☰</button>
-            <div id="master-badge" style="font-size: 11px; color: var(--primary); font-weight:bold; text-align: right;"></div>
+            <div id="master-badge" style="font-size: 12px; color: var(--primary); font-weight:bold; text-align: right; line-height: 1.3;"></div>
         </div>
         
-        <div class="grid-2">
-            <button onclick="openModal('configModal')" class="btn-shield" style="grid-column: span 2;">1. Конфигуратор щита (PRO)</button>
-            <button onclick="openModal('roughModal')" class="btn-rough" style="grid-column: span 2;">2. Пул розеток и Трассы</button>
+        <div class="controls">
+            <button onclick="openModal('configModal')" class="btn-shield btn-full" style="font-size: 14px;">1. Конфигуратор щита (PRO)</button>
+            <button onclick="openModal('roughModal')" class="btn-rough btn-full" style="font-size: 14px;">2. Пул розеток и Трассы</button>
             <button onclick="openMatCatalog()" class="btn-mat">+ Материалы</button>
             <button onclick="openWorkCatalog()" class="btn-work">+ Работы</button>
         </div>
-        
-        <div class="grid-3" style="margin-top:15px;">
-            <button onclick="openPreviewPrint('vendor')" class="btn-vendor" style="font-size:10px;">Поставщику</button>
-            <button onclick="openPreviewPrint('client')" class="btn-success" style="font-size:10px;">Смета PDF</button>
-            <button onclick="openPreviewPrint('details')" class="btn-info" style="font-size:10px;">Детализация</button>
+        <div class="controls-3">
+            <button onclick="openPreviewPrint('vendor')" class="btn-vendor" style="font-size: 11px;">Поставщику</button>
+            <button onclick="openPreviewPrint('client')" class="btn-success" style="font-size: 11px;">Смета Заказчику</button>
+            <button onclick="openPreviewPrint('details')" class="btn-info" style="font-size: 11px; background:#0EA5E9;">Детализация</button>
         </div>
 
-        <div class="grid-2" style="background:rgba(0,0,0,0.03); padding:10px; border-radius:10px; margin-bottom:10px;">
-            <div><label style="font-size:10px; font-weight:bold; color:var(--primary);">Наценка МАТЕРИАЛ (%)</label><input type="number" id="m-coeff" value="0" style="margin:0; padding:8px; text-align:center;" onchange="updateCoeffs()"></div>
-            <div><label style="font-size:10px; font-weight:bold; color:var(--orange);">Наценка РАБОТА (%)</label><input type="number" id="w-coeff" value="0" style="margin:0; padding:8px; text-align:center;" onchange="updateCoeffs()"></div>
+        <div style="display: flex; gap:10px; background:rgba(0,0,0,0.03); padding:12px; border-radius:14px; margin-bottom:10px;">
+            <div style="flex: 1;"><label style="font-size: 11px; font-weight:bold; color:var(--primary); display:block; margin-bottom:6px;">Наценка МАТЕРИАЛ (%)</label><input type="number" id="m-coeff" value="0" style="margin:0; padding:10px; text-align:center;" onchange="coeffs.mat=Number(this.value); localStorage.setItem('coeffs_v31', JSON.stringify(coeffs)); renderMainTable();"></div>
+            <div style="flex:1;"><label style="font-size: 11px; font-weight:bold; color:var(--orange); display:block; margin-bottom:6px;">Наценка РАБОТА (%)</label><input type="number" id="w-coeff" value="0" style="margin:0; padding:10px; text-align:center;" onchange="coeffs.work=Number(this.value); localStorage.setItem('coeffs_v31', JSON.stringify(coeffs)); renderMainTable();"></div>
         </div>
 
-        <div class="table-wrapper"><table id="mainTable"><thead><tr><th style="width:55%;">Наименование</th><th style="width:20%; text-align:center;">Кол-во</th><th style="width:25%; text-align:right;">Сумма</th><th style="width:30px;"></th></tr></thead><tbody></tbody></table></div>
+        <div class="table-wrapper">
+            <table id="mainTable">
+                <thead><tr><th class="col-name" style="color:var(--gray);">Наименование</th><th class="col-qty" style="color:var(--gray);">Кол-во</th><th class="col-sum" style="color:var(--gray);">Сумма</th><th style="width:30px;"></th></tr></thead>
+                <tbody></tbody>
+            </table>
+        </div>
+
+        <div style="padding: 18px; background:rgba(79, 70, 229, 0.08); border-radius: 16px; font-weight:800; border: 1px solid rgba(79, 70, 229, 0.15);">
+            <div style="display: flex; justify-content:space-between; font-size:20px; color:var(--primary);"><span>ИТОГО:</span> <span id="tot-all">0 P</span></div>
+        </div>
         
-        <div style="padding: 15px; background:rgba(79, 70, 229, 0.08); border-radius: 12px; font-weight:bold; border: 1px solid rgba(79, 70, 229, 0.15); display: flex; justify-content:space-between; font-size:18px; color:var(--primary);"><span>ИТОГО:</span> <span id="tot-all">0 P</span></div>
-        
-        <div class="grid-2" style="margin-top: 15px;">
-            <button onclick="openRecalcModal()" class="btn-info">🔄 Пересчитать трассы</button>
-            <button onclick="openConfirmModal('Очистить смету?', 'Вы уверены, что хотите удалить все позиции?', clearCurrentEstimate)" class="btn-danger">Очистить смету</button>
+        <div style="display: flex; gap:8px; margin-top: 15px;">
+            <button onclick="openRecalcModal()" class="btn-info" style="flex: 1; height:48px; background:rgba(59,130,246,0.9); font-size:14px;">🔄 Пересчитать трассы</button>
+            <button onclick="openConfirmModal('Очистить смету?', 'Вы уверены, что хотите удалить все позиции из текущей сметы?', clearCurrentEstimate)" class="btn-danger" style="flex:0.5; background:rgba(71,85,105,0.9); height:48px;">Очистить</button>
         </div>
     </div>
 </div>
 
-<!-- УНИВЕРСАЛЬНОЕ ОКНО ДИАЛОГОВ (Без prompt/alert/confirm) -->
+<!-- ================= МОДАЛЬНЫЕ ОКНА БЕЗ PROMPT ================= -->
+
+<div class="modal" id="authModal" style="background: rgba(0,0,0,0.85); backdrop-filter: blur(15px);">
+    <div class="modal-content glass" style="max-width: 400px; text-align:center; padding-top:40px; padding-bottom:40px;">
+        <h2 style="color: var(--primary); margin-top:0; font-size: 26px; font-weight:900;">Электрик PRO</h2>
+        <p style="color:var(--gray); font-size:13px; margin-bottom:30px;">Версия 16.0 (Stable)</p>
+        <input type="tel" id="auth-phone" placeholder="Номер телефона (8977...)" style="text-align:center; font-size:16px; padding:16px;">
+        <input type="password" id="auth-pin" placeholder="PIN-код" style="text-align:center; font-size:16px; padding:16px;">
+        <button class="btn-primary" style="width:100%; background:var(--primary); padding:16px; font-size:16px; margin-bottom:15px; box-shadow: 0 8px 20px rgba(79, 70, 229, 0.4); color:white; border-radius:12px; border:none; font-weight:bold;" onclick="loginApp()">Войти в систему</button>
+        <button style="width:100%; background:transparent; border:1px solid var(--border); color:var(--text); padding:16px; font-size:14px;" onclick="requestAccess()">Новый мастер? Отправить заявку</button>
+    </div>
+</div>
+
 <div class="modal" id="qtyPromptModal" style="z-index: 3000;">
-    <div class="modal-content glass" style="max-width:300px; text-align:center;">
-        <h3 id="qty-prompt-title" style="color:var(--primary); margin-top:0;">Внимание</h3>
-        <p id="qty-prompt-name" style="font-size:12px; font-weight:bold; margin-bottom:15px;"></p>
-        
-        <div id="qty-input-wrapper" style="display:none; justify-content:center; align-items:center; gap:10px; margin-bottom:15px;">
-            <button class="btn-ghost" style="padding:10px 15px; font-size:18px;" onclick="modQtyInput(-1)">-</button>
-            <input type="number" id="qty-input" value="1" style="width:80px; margin:0; text-align:center; font-size:16px; font-weight:bold;">
-            <button class="btn-ghost" style="padding:10px 15px; font-size:18px;" onclick="modQtyInput(1)">+</button>
+    <div class="modal-content glass" style="max-width: 300px; text-align:center;">
+        <h3 id="qty-prompt-title" style="color:var(--primary); margin-top:0;">Укажите количество</h3>
+        <p id="qty-prompt-name" style="font-size:12px; margin-bottom:15px; font-weight:bold;"></p>
+        <div id="qty-input-wrapper" style="display:flex; justify-content:center; align-items:center; gap:10px; margin-bottom:15px;">
+            <button class="c-btn" onclick="modQtyInput(-1)">-</button>
+            <input type="number" id="qty-input" value="1" style="width:80px; margin:0; text-align:center; font-size:18px; font-weight:bold;">
+            <button class="c-btn" onclick="modQtyInput(1)">+</button>
         </div>
-        
-        <div class="grid-2" style="margin:0;">
-            <button class="btn-ghost" onclick="closeModal('qtyPromptModal')">Отмена</button>
-            <button class="btn-success" id="qty-confirm-btn">ОК</button>
+        <div style="display:flex; gap:10px;">
+            <button class="btn-ghost" style="flex:1; margin:0;" onclick="closeModal('qtyPromptModal')">Отмена</button>
+            <button class="btn-success" id="qty-confirm-btn" style="flex:1; margin:0;">ОК</button>
         </div>
     </div>
 </div>
 
-<div class="modal" id="dbSelectModal" style="z-index:2500;"><div class="modal-content glass"><div class="close-x" onclick="closeModal('dbSelectModal')">×</div><h3 style="margin-top:0; color:var(--primary);">Выберите эталон из БД</h3><input type="text" id="db-search-input" placeholder="Поиск по базе..." oninput="filterDbSelect()" style="padding:10px; font-size:12px;"><div id="db-select-list" style="max-height:50vh; overflow-y:auto;"></div></div></div>
+<div class="modal" id="dbSelectModal" style="z-index: 2500;">
+    <div class="modal-content glass">
+        <div class="close-x" onclick="closeModal('dbSelectModal')">×</div>
+        <h3 style="margin-top:0; color:var(--primary);">Выберите эталон из БД</h3>
+        <input type="text" id="db-search-input" placeholder="Поиск по базе..." oninput="filterDbSelect()" style="padding:14px; font-size:14px;">
+        <div id="db-select-list" style="max-height:50vh; overflow-y:auto;"></div>
+    </div>
+</div>
 
-<div class="modal" id="custModal"><div class="modal-content glass"><div class="close-x" onclick="closeModal('custModal')">×</div><h3 style="color:var(--primary); margin-top:0;">👤 Заказчик и Объект</h3><select id="c-history-select" onchange="loadCustFromHistory(this.value)" style="background:rgba(16,185,129,0.1); color:var(--success); border-color:var(--success);"><option value="">📥 Загрузить из Истории</option></select><input type="text" id="c-name" placeholder="ФИО Заказчика (Объект)"><input type="tel" id="c-phone" placeholder="Телефон"><input type="text" id="c-addr" placeholder="Адрес"><label style="font-size:11px; font-weight:bold; color:var(--gray);">Высота потолка (см):</label><input type="number" id="c-ceil" value="270"><button class="btn-success" style="width:100%;" onclick="saveCust()">Сохранить данные</button></div></div>
+<div class="modal" id="kupModal">
+    <div class="modal-content glass">
+        <div class="close-x" onclick="closeModal('kupModal')">×</div>
+        <h2 style="color:var(--success); margin-top:0;">⚡ Сборка КУП</h2>
+        
+        <label style="font-size:12px; font-weight:bold; display:block; margin-bottom:5px;">1. Провод заземления (ПВ-3 / ПуГВ)</label>
+        <div style="display: flex; gap:8px; margin-bottom: 15px;">
+            <button class="btn-ghost" id="kup-wire-btn" style="flex:2; font-size:11px;" onclick="openDbSelectFor('kup-wire', 'провод пугв')">Выбрать провод из БД</button>
+            <input type="number" id="kup-wire-q" placeholder="Метров" style="flex:1; margin:0;">
+        </div>
+        
+        <label style="font-size:12px; font-weight:bold; display:block; margin-bottom:5px;">2. Коробка КУП</label>
+        <div style="display: flex; gap:8px; margin-bottom: 15px;">
+            <button class="btn-ghost" id="kup-box-btn" style="flex:2; font-size:11px;" onclick="openDbSelectFor('kup-box', 'коробка уравнивания')">Выбрать КУП из БД</button>
+            <input type="number" id="kup-box-q" value="1" placeholder="Шт" style="flex:1; margin:0;">
+        </div>
+        
+        <label style="font-size:12px; font-weight:bold; display:block; margin-bottom:5px;">3. Хомуты заземления / Пружинки ППД</label>
+        <div style="display: flex; gap:8px; margin-bottom: 15px;">
+            <button class="btn-ghost" id="kup-clamp-btn" style="flex:2; font-size:11px;" onclick="openDbSelectFor('kup-clamp', 'хомут')">Выбрать хомут/пружинку</button>
+            <input type="number" id="kup-clamp-q" placeholder="Шт" style="flex:1; margin:0;">
+        </div>
+        
+        <button class="btn-success" style="width:100%; margin-top:10px; padding:14px;" onclick="addKupToEstimate()">📥 Добавить КУП в смету</button>
+    </div>
+</div>
 
-<div class="modal" id="buhModal"><div class="modal-content glass"><div class="close-x" onclick="closeModal('buhModal')">×</div><h3 style="color:var(--primary); margin-top:0;">💰 Бухгалтерия</h3><div style="background:rgba(0,0,0,0.03); padding:15px; border-radius:12px; margin-bottom:15px; border:1px solid var(--border);"><div style="display:flex; justify-content:space-between; font-size:16px; font-weight:bold; color:var(--primary); border-bottom:1px solid var(--border); padding-bottom:8px; margin-bottom:8px;"><span>ПРИБЫЛЬ: </span><span id="p-total">0 P</span></div><div style="display:flex; justify-content:space-between; font-size:12px; color:var(--gray); margin-bottom:4px;"><span>Работы:</span><span id="b-work">0 P</span></div><div style="display:flex; justify-content:space-between; font-size:12px; color:var(--gray);"><span>Материалы:</span><span id="b-mat">0 P</span></div></div><div class="grid-2"><input type="number" id="b-discount" placeholder="Скидка (Р)" oninput="updateBuhUI()"><input type="number" id="b-prepay" placeholder="Аванс (Р)" oninput="updateBuhUI()"></div><div style="background:var(--orange); color:white; padding:15px; border-radius:12px; text-align:center; font-size:18px; font-weight:bold; margin-bottom:15px;">К ОПЛАТЕ: <span id="b-final">0 P</span></div><button class="btn-success" style="width:100%; margin-bottom:20px;" onclick="saveHist()">📥 Сохранить Акт в Историю</button><h4 style="margin:0 0 10px 0; color:var(--gray);">История объектов:</h4><div id="h-stat" style="max-height:250px; overflow-y:auto;"></div></div></div>
+<div class="modal" id="custModal">
+    <div class="modal-content glass">
+        <div class="close-x" onclick="closeModal('custModal')">×</div>
+        <h2 style="color: var(--primary); margin-top:0;"> Заказчик и Объект</h2>
+        <select id="c-history-select" onchange="loadCustFromHistory(this.value)" style="background:rgba(16, 185, 129, 0.1); border-color:var(--success); color:var(--success);"><option value="">📥 Загрузить существующего (История)</option></select>
+        <input type="text" id="c-name" placeholder="ФИО Заказчика (Объект)">
+        <input type="tel" id="c-phone" placeholder="Телефон заказчика">
+        <input type="text" id="c-addr" placeholder="Адрес объекта">
+        <label style="font-size:12px; font-weight:bold; color:var(--gray); margin-bottom: 5px; display:block;">Высота потолка (см): </label>
+        <input type="number" id="c-ceil" value="270" placeholder="Потолок (см)">
+        <button onclick="saveCust()" class="btn-success" style="width:100%; margin-top:10px; padding:16px; font-size: 15px;"> Сохранить данные</button>
+    </div>
+</div>
 
-<div class="modal" id="objCardModal"><div class="modal-content glass"><button onclick="closeModal('objCardModal'); openModal('buhModal');" style="position:absolute; top:15px; left:10px; background:none; border:none; font-size:20px; color:var(--primary);">⬅</button><div class="close-x" onclick="closeModal('objCardModal')">×</div><h3 style="color:var(--primary); margin: 0 0 10px 30px;">Акт работ</h3><h4 id="card-obj-name" style="margin-top:0;">Объект</h4><div style="background:rgba(0,0,0,0.03); padding:12px; border-radius:10px; font-size:12px; margin-bottom:15px;"><div id="card-stats-work" style="margin-bottom:10px;"></div><hr style="border:0; border-top:1px dashed var(--border); margin:10px 0;"><div id="card-stats-finish" style="font-weight:bold; color:var(--success);"></div></div><h4 style="margin:0 0 10px 0; font-size:13px;">➕ Доп. работы</h4><input type="text" id="extra-w-n" placeholder="Название"><div class="grid-2"><input type="number" id="extra-w-p" placeholder="Цена (Р)"><button class="btn-success" onclick="addExtraWork()">Добавить</button></div></div></div>
+<div class="modal" id="objCardModal">
+    <div class="modal-content glass">
+        <button onclick="closeModal('objCardModal'); openModal('buhModal');" style="position:absolute; top:20px; left:15px; background:none; border:none; font-size:24px; color:var(--primary); cursor:pointer;">⬅</button>
+        <div class="close-x" onclick="closeModal('objCardModal')">×</div>
+        <h2 style="color:var(--primary); margin: 0 0 10px 40px;">Акт работ</h2>
+        <h3 id="card-obj-name" style="margin-top:0; color:var(--text);">Объект</h3>
+        <div style="background:rgba(0,0,0,0.03); padding: 12px; border-radius: 12px; font-size:13px; border:1px solid var(--border); margin-bottom:15px;"><h4 style="margin:0 0 8px 0; color:var(--orange);">🔨 Выполненный объем</h4><div id="card-stats-work" style="margin-bottom:10px;"></div><h4 style="margin: 15px 0 8px 0; color:var(--primary);">💡 Нужно на чистовую:</h4><div id="card-stats-finish" style="background:rgba(255,255,255,0.6); padding:10px; border-radius:8px; border:1px solid rgba(79, 70, 229, 0.3); font-weight:bold;"></div></div>
+        <div style="margin-top: 15px; border-top: 1px dashed var(--gray); padding-top: 15px;"><h4 style="margin: 0 0 10px 0; color:var(--success);">➕ Внести дополнительные работы</h4><input type="text" id="extra-work-name" placeholder="Название доп. работы" style="padding: 12px; margin-bottom: 8px;"><div style="display:flex; gap:8px; margin-bottom: 10px;"><input type="number" id="extra-work-price" placeholder="Стоимость (Р)" style="padding: 12px; margin:0;"><button class="btn-success" onclick="addExtraWork()" style="padding: 12px 20px; white-space: nowrap; margin:0;">Добавить</button></div></div>
+    </div>
+</div>
 
-<div class="modal" id="previewModal"><div class="modal-content glass" style="max-width:800px; width:95%;"><div class="close-x no-print" onclick="closeModal('previewModal')">×</div><div class="no-print" style="margin-bottom:15px;"><h3 style="margin-top:0; color:var(--primary);">Подготовка PDF</h3><p style="font-size:11px; color:var(--gray); margin-bottom:10px;">Снимите галочки с позиций, которые не нужно выводить на печать (суммы пересчитаются автоматически).</p><button class="btn-shield" style="width:100%; padding:14px; font-size:14px;" onclick="window.print()">🖨 Печать документа</button></div><div id="p-cont" style="background:white; padding:10px; border-radius:8px; color:black;"></div></div></div>
+<div class="modal" id="aiModal"><div class="modal-content glass"><div class="close-x" onclick="closeModal('aiModal')">×</div><h2 style="color:var(--ai);" id="ai-modal-title">✨ ИИ-Аналитика</h2><div id="ai-suggestions" style="overflow-x:auto;"></div></div></div>
 
-<div class="modal" id="aiModal"><div class="modal-content glass"><div class="close-x" onclick="closeModal('aiModal')">×</div><h2 style="color:var(--ai);" id="ai-modal-title">✨ ИИ-Аналитика</h2><div id="ai-suggestions" style="overflow-x:auto; font-size:12px;"></div></div></div>
+<!-- ПЕЧАТЬ И ВЫБОР -->
+<div class="modal" id="previewModal">
+    <div class="modal-content glass" style="max-width: 800px; width: 95%;">
+        <div class="close-x no-print" onclick="closeModal('previewModal')">×</div>
+        <div class="no-print" style="margin-bottom: 20px; background: rgba(0,0,0,0.05); padding: 15px; border-radius: 12px;">
+            <h3 style="margin-top:0; color:var(--primary);">Настройка печати</h3>
+            <p style="font-size:12px; color:var(--gray);">Снимите галочки с тех позиций или разделов, которые не нужно показывать заказчику. Суммы пересчитаются автоматически.</p>
+            <button class="btn-shield" style="width:100%; padding:14px;" onclick="window.print()">🖨 Печать документа (PDF)</button>
+        </div>
+        <div id="p-cont"></div>
+    </div>
+</div>
 
-<div class="modal" id="kupModal"><div class="modal-content glass"><div class="close-x" onclick="closeModal('kupModal')">×</div><h3 style="color:var(--success); margin-top:0;">⚡ Сборка КУП</h3><label style="font-size:11px; font-weight:bold;">1. Провод заземления (ПВ-3 / ПуГВ)</label><div class="grid-2"><button class="btn-ghost" id="kup-wire-btn" onclick="openDbSelectFor('kup-wire', 'провод пугв 1х6')">Выбрать из БД</button><input type="number" id="kup-wire-q" placeholder="Метров"></div><label style="font-size:11px; font-weight:bold;">2. Коробка КУП</label><div class="grid-2"><button class="btn-ghost" id="kup-box-btn" onclick="openDbSelectFor('kup-box', 'коробка уравнивания')">Выбрать из БД</button><input type="number" id="kup-box-q" value="1" placeholder="Шт"></div><label style="font-size:11px; font-weight:bold;">3. Хомуты заземления / Пружинки ППД</label><div class="grid-2"><button class="btn-ghost" id="kup-clamp-btn" onclick="openDbSelectFor('kup-clamp', 'хомут')">Выбрать из БД</button><input type="number" id="kup-clamp-q" placeholder="Шт"></div><button class="btn-success" style="width:100%; margin-top:10px;" onclick="addKupToEstimate()">📥 Добавить КУП в смету</button></div></div>
-
+<!-- СУПЕР ЛОГИКА -->
 <div class="modal" id="logicModal">
     <div class="modal-content glass">
         <div class="close-x" onclick="closeModal('logicModal')">×</div>
-        <h3 style="color: var(--primary); margin-top:0;">⚙️ Настройка формул</h3>
-        <div style="background:rgba(0,0,0,0.03); padding:12px; border-radius:12px; margin-bottom:15px;">
-            <span style="font-size:11px; font-weight:bold; color:var(--orange); display:block; margin-bottom:8px;">1. КОММУТАЦИЯ (Распаечные коробки)</span>
-            <label style="font-size:11px; color:var(--gray);">Метод соединения:</label>
-            <select id="logic-comm-type" onchange="toggleCommOptions()"><option value="gml">Опрессовка (Гильзы ГМЛ + Термоусадка)</option><option value="wago">Клеммы (WAGO / СИЗ)</option><option value="weld">Сварка / Пайка (Только изоляция)</option></select>
-            <div id="comm-wago-options" style="display:none; margin-top:10px;"><label style="font-size:10px; font-weight:bold;">Эталон клеммы из БД:</label><button class="btn-ghost" id="logic-wago-btn" style="width:100%; padding:8px; font-size:11px; margin-bottom:10px;" onclick="openDbSelectFor('logic-wago', 'wago')">Выбрать клемму</button></div>
-            <div class="grid-3" style="margin-top:10px;"><div><label style="font-size:9px;">Шт. на Розетки</label><input type="number" id="logic-comm-soc" value="3" style="padding:8px;"></div><div><label style="font-size:9px;">Шт. на Выключ.</label><input type="number" id="logic-comm-sw" value="4" style="padding:8px;"></div><div><label style="font-size:9px;">Шт. на Проход.</label><input type="number" id="logic-comm-pass" value="5" style="padding:8px;"></div></div>
+        <h2 style="color: var(--primary); margin-top:0;">⚙️ Логика расчетов и Цены</h2>
+        
+        <div class="logic-group">
+            <span class="logic-label">🔌 Коммутация (В распредкоробках)</span>
+            <label style="font-size:12px; color:var(--gray);">Метод соединения проводов:</label>
+            <select id="logic-comm-type" onchange="toggleCommOptions()" style="margin-bottom:10px;">
+                <option value="gml">Опрессовка (Гильзы ГМЛ + Термоусадка)</option>
+                <option value="wago">Клеммы (WAGO / СИЗ)</option>
+                <option value="weld">Сварка / Пайка (Только изоляция)</option>
+            </select>
+            
+            <div id="comm-wago-options" style="display:none; background:rgba(255,255,255,0.5); padding:10px; border-radius:8px; border:1px solid var(--border); margin-bottom:10px;">
+                <label style="font-size:11px; font-weight:bold; color:var(--text);">Эталон клеммы/СИЗ из БД:</label>
+                <button class="btn-ghost" id="logic-wago-btn" style="width:100%; padding:10px; font-size:12px; margin-top:5px; margin-bottom:10px;" onclick="openDbSelectFor('logic-wago', 'wago')">Выбрать клемму</button>
+            </div>
+
+            <label style="font-size:11px; font-weight:bold; color:var(--gray); display:block; margin-bottom:5px;">Сколько штук (расходника) уходит на 1 коробку:</label>
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px;">
+                <div><label style="font-size:10px; text-align:center; display:block;">Розеток</label><input type="number" id="logic-comm-soc" value="3" style="margin:0; text-align:center; padding:10px;"></div>
+                <div><label style="font-size:10px; text-align:center; display:block;">Выключателя</label><input type="number" id="logic-comm-sw" value="4" style="margin:0; text-align:center; padding:10px;"></div>
+                <div><label style="font-size:10px; text-align:center; display:block;">Проходного</label><input type="number" id="logic-comm-pass" value="5" style="margin:0; text-align:center; padding:10px;"></div>
+            </div>
         </div>
-        <div style="background:rgba(0,0,0,0.03); padding:12px; border-radius:12px; margin-bottom:15px;">
-            <span style="font-size:11px; font-weight:bold; color:var(--primary); display:block; margin-bottom:8px;">2. ЦЕНЫ РАБОТ ДЛЯ АВТО-КАЛЬКУЛЯТОРОВ (Руб)</span>
-            <div class="grid-2"><div><label style="font-size:10px;">Сборка щита (1 мод):</label><input type="number" id="logic-pr-shield" placeholder="500"></div><div><label style="font-size:10px;">Установка розетки/выкл:</label><input type="number" id="logic-pr-soc" placeholder="500"></div><div><label style="font-size:10px;">Высверлив. (Бетон):</label><input type="number" id="logic-pr-drill" placeholder="600"></div><div><label style="font-size:10px;">Штроба (Бетон, 1м):</label><input type="number" id="logic-pr-shtroba" placeholder="550"></div><div><label style="font-size:10px;">Кабель (потолок):</label><input type="number" id="logic-pr-cab-ceil" placeholder="120"></div></div>
+
+        <div class="logic-group"><span class="logic-label">Цены для авто-калькуляторов (Руб)</span>
+            <div class="logic-row"><label style="font-size:12px; color:var(--gray);">Установка механизма (Розетка/Выкл):</label><input type="number" id="logic-price-soc" placeholder="500"></div>
+            <div class="logic-row"><label style="font-size:12px; color:var(--gray);">Сборка щита (за 1 модуль):</label><input type="number" id="logic-price-shield" placeholder="500"></div>
+            <div class="logic-row"><label style="font-size:12px; color:var(--gray);">Высверливание подрозетника (Бетон):</label><input type="number" id="logic-price-drill" placeholder="600"></div>
+            <div class="logic-row"><label style="font-size:12px; color:var(--gray);">Штроба (Бетон, за метр):</label><input type="number" id="logic-price-shtroba" placeholder="550"></div>
+            <div class="logic-row"><label style="font-size:12px; color:var(--gray);">Укладка кабеля (потолок, без гофры):</label><input type="number" id="logic-price-cab-ceil" placeholder="120"></div>
         </div>
-        <div style="background:rgba(0,0,0,0.03); padding:12px; border-radius:12px; margin-bottom:15px;">
-            <span style="font-size:11px; font-weight:bold; color:var(--success); display:block; margin-bottom:8px;">3. НОРМАТИВЫ И АМОРТИЗАЦИЯ</span>
-            <div class="grid-2"><div><label style="font-size:10px;">Коэфф. кабеля (+%):</label><input type="number" id="logic-cab-res" step="0.01" value="1.1"></div><div><label style="font-size:10px;">Коэфф. гофры (+%):</label><input type="number" id="logic-gofra-res" step="0.01" value="1.05"></div><div><label style="font-size:10px;">Крепеж по пот. (шт/м):</label><input type="number" id="logic-bases-m" value="3"></div><div><label style="font-size:10px;">Крепеж в штробе (шт/м):</label><input type="number" id="logic-clips-m" value="3"></div><div><label style="font-size:10px;">Штук в 1 уп. крепежа:</label><input type="number" id="logic-pack-size" value="100"></div><div><label style="font-size:10px;">Смесь на 1 точку (кг):</label><input type="number" id="logic-mix-box" step="0.1" placeholder="0.3"></div><div><label style="font-size:10px;">Коронка (отверстий):</label><input type="number" id="logic-cr-life" value="80"></div><div><label style="font-size:10px;">Диск штробореза (м):</label><input type="number" id="logic-disk-life" value="150"></div><div><label style="font-size:10px;">Мешок (на Х м. штробы):</label><input type="number" id="logic-bag-life" value="30"></div></div>
+
+        <div class="logic-group"><span class="logic-label">Нормативы и Амортизация</span>
+            <div class="logic-row"><label style="font-size:12px;">Коэфф. запаса кабеля (напр. 1.1 = +10%):</label><input type="number" id="logic-cab-reserve" step="0.01"></div>
+            <div class="logic-row"><label style="font-size:12px;">Коэфф. укладки в гофру (напр. 1.05 = +5%):</label><input type="number" id="logic-gofra-reserve" step="0.01"></div>
+            <div class="logic-row"><label style="font-size:12px;">Площадок на 1 метр по потолку (шт):</label><input type="number" id="logic-bases-m"></div>
+            <div class="logic-row"><label style="font-size:12px;">Клипс на 1 метр штробы/гофры (шт):</label><input type="number" id="logic-clips-m"></div>
+            <div class="logic-row"><label style="font-size:12px;">Штук в 1 упаковке крепежа:</label><input type="number" id="logic-pack-size"></div>
+            <div class="logic-row"><label style="font-size:12px;">Смесь на 1 подрозетник (кг):</label><input type="number" id="logic-mix-box" step="0.1"></div>
+            <div class="logic-row"><label style="font-size:12px;">Коронка алмазная (ресурс отверстий):</label><input type="number" id="logic-crown-life"></div>
+            <div class="logic-row"><label style="font-size:12px;">Диск штробореза (ресурс метров):</label><input type="number" id="logic-disk-life"></div>
+            <div class="logic-row"><label style="font-size:12px;">Мешок пылесоса (на Х м. штробы):</label><input type="number" id="logic-bag-life"></div>
         </div>
-        <div style="background:rgba(0,0,0,0.03); padding:12px; border-radius:12px; margin-bottom:15px;">
-            <span style="font-size:11px; font-weight:bold; color:var(--text); display:block; margin-bottom:8px;">4. НОМИНАЛЫ АВТОМАТОВ (ЩИТ)</span>
-            <div class="grid-2"><div><label style="font-size:10px;">Плита (А):</label><input type="number" id="logic-nom-oven" value="32"></div><div><label style="font-size:10px;">Стиралка (А):</label><input type="number" id="logic-nom-wash" value="16"></div><div><label style="font-size:10px;">Розеточные (А):</label><input type="number" id="logic-nom-soc" value="16"></div><div><label style="font-size:10px;">Световые (А):</label><input type="number" id="logic-nom-light" value="10"></div></div>
+
+        <div class="logic-group"><span class="logic-label">Номиналы автоматов в Щите (Амперы)</span>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                <div><label style="font-size:12px;">Плита (А):</label><input type="number" id="logic-nom-oven" value="32"></div>
+                <div><label style="font-size:12px;">Стиралка (А):</label><input type="number" id="logic-nom-wash" value="16"></div>
+                <div><label style="font-size:12px;">Розеточные (А):</label><input type="number" id="logic-nom-soc" value="16"></div>
+                <div><label style="font-size:12px;">Световые (А):</label><input type="number" id="logic-nom-light" value="10"></div>
+            </div>
         </div>
-        <button class="btn-primary" style="width:100%;" onclick="saveLogic()">💾 Сохранить Логику и Цены</button>
+
+        <button id="logic-save-btn" class="btn-primary" style="width:100%; padding:14px; margin-top:5px;" onclick="saveLogic()">Сохранить логику и Цены</button>
+        <div id="logic-admin-reqs" style="display:none; margin-top:20px; border-top:1px dashed var(--gray); padding-top:15px;"><h4 style="color:var(--orange); margin-top:0;">📩 Заявки от Мастеров:</h4><div id="logic-req-list" style="font-size:12px;"></div></div>
     </div>
 </div>
-
-<div class="modal" id="configModal"><div class="modal-content glass"><div class="close-x" onclick="closeModal('configModal')">×</div><h3 style="color:var(--primary); margin: 0 0 10px 0;">⚡ Сборка щита (PRO)</h3><div class="grid-2"><div><label style="font-size:10px; font-weight:bold;">Корпус:</label><select id="cfg-brand-box" style="margin:0;"><option>Tekfor</option><option>ABB</option><option>Schneider</option><option>IEK</option></select></div><div><label style="font-size:10px; font-weight:bold;">Автоматы:</label><select id="cfg-brand-auto" style="margin:0;"><option>IEK</option><option>ABB</option><option>Schneider</option></select></div></div><select id="cfg-phase" style="margin-bottom:10px;"><option value="1">220В (1 фаза)</option><option value="3">380B (3 фазы)</option></select><div style="background:rgba(0,0,0,0.03); padding:10px; border-radius:10px; margin-bottom:10px;"><div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; font-size:12px;"><span>Комнаты (шт)</span><div style="display:flex; align-items:center; gap:8px;"><button class="btn-ghost" style="padding:4px 10px;" onclick="modV('rms',-1)">-</button><b id="v-rms">1</b><button class="btn-ghost" style="padding:4px 10px;" onclick="modV('rms',1)">+</button></div></div><div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; font-size:12px;"><span>Кондиционеры</span><div style="display:flex; align-items:center; gap:8px;"><button class="btn-ghost" style="padding:4px 10px;" onclick="modV('acs',-1)">-</button><b id="v-acs">0</b><button class="btn-ghost" style="padding:4px 10px;" onclick="modV('acs',1)">+</button></div></div><div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; font-size:12px;"><span>Теплые полы</span><div style="display:flex; align-items:center; gap:8px;"><button class="btn-ghost" style="padding:4px 10px;" onclick="modV('fls',-1)">-</button><b id="v-fls">0</b><button class="btn-ghost" style="padding:4px 10px;" onclick="modV('fls',1)">+</button></div></div><div style="display:flex; justify-content:space-between; align-items:center; font-size:12px;"><span>Балконы</span><div style="display:flex; align-items:center; gap:8px;"><button class="btn-ghost" style="padding:4px 10px;" onclick="modV('bals',-1)">-</button><b id="v-bals">0</b><button class="btn-ghost" style="padding:4px 10px;" onclick="modV('bals',1)">+</button></div></div></div><div class="chk-grid"><label class="chk-row"><input type="checkbox" id="c-oven" checked> Плита/Дух.</label><label class="chk-row"><input type="checkbox" id="c-fridge" checked> Холод-к</label><label class="chk-row"><input type="checkbox" id="c-apron" checked> Фартук</label><label class="chk-row"><input type="checkbox" id="c-dish" checked> Посудом-ка</label><label class="chk-row"><input type="checkbox" id="c-washer" checked> Стиралка</label><label class="chk-row"><input type="checkbox" id="c-boiler"> Бойлер</label><label class="chk-row"><input type="checkbox" id="c-neptun"> Нептун</label><label class="chk-row"><input type="checkbox" id="cfg-master"> Мастер-кнопка</label></div><h4 style="font-size:12px; margin:10px 0 5px 0; color:var(--orange);">🛡 Доп. Защита и Модули:</h4><div class="chk-grid"><label class="chk-row"><input type="checkbox" id="cfg-uzm"> Реле напряж. (УЗМ)</label><label class="chk-row"><input type="checkbox" id="cfg-uzdp"> УЗДП (Искра)</label><label class="chk-row"><input type="checkbox" id="cfg-var"> ВАР (Вольт-ампер)</label><label class="chk-row"><input type="checkbox" id="cfg-revers"> Реверсивный руб.</label><label class="chk-row"><input type="checkbox" id="cfg-fireuzo"> Вводное УЗО (Противопож)</label><label class="chk-row"><input type="checkbox" id="cfg-cross"> Кросс-модуль</label><label class="chk-row"><input type="checkbox" id="cfg-meter"> Счетчик</label></div><label style="font-size:10px; font-weight:bold;">Тип монтажа Щита: </label><select id="cfg-shield-wall" style="margin-bottom:10px;"><option value="Бетон">Встраиваемый (Бетон)</option><option value="Кирпич">Встраиваемый (Кирпич)</option><option value="Панелька">Встраиваемый (Панелька)</option><option value="Мягкий мат.">Встраиваемый (ГКЛ)</option><option value="Накладной">Накладной (без ниши)</option></select><button onclick="generateCascadePanel()" class="btn-shield" style="width:100%;">Сгенерировать щит</button></div></div>
-
-<div class="modal" id="roughModal"><div class="modal-content glass"><div class="close-x" onclick="closeModal('roughModal')">×</div><h3 style="color:var(--orange); margin: 0 0 10px 0;">🔌 Пул розеток</h3><div style="background:rgba(0,0,0,0.03); padding:10px; border-radius:10px; margin-bottom:10px; display:grid; grid-template-columns:1fr 1fr; gap:8px;"><div style="grid-column: span 2;"><label style="font-size:10px; font-weight:bold;">Логика монтажа</label><select id="montage-mode" style="margin:0; padding:8px;"><option value="classic">Классика (Распредкоробки)</option><option value="gyn">Гинекологический (В подрозетниках)</option></select></div><div><label style="font-size:10px; font-weight:bold;">Монтаж трассы</label><select id="g-routing" style="margin:0; padding:8px;"><option value="ceiling">Потолок</option><option value="floor">Пол</option></select></div><div><label style="font-size:10px; font-weight:bold;">Стена</label><select id="g-wall" style="margin:0; padding:8px;"><option value="Бетон">Бетон</option><option value="Кирпич">Кирпич</option><option value="Панелька">Панелька</option><option value="Мягкий мат.">Мягкий мат.</option></select></div></div>
-<div class="chk-grid" style="grid-template-columns:1fr;"><label class="chk-row"><input type="checkbox" id="pool-cable-channel"> В кабель-канале (без штробы)</label><label class="chk-row"><input type="checkbox" id="pool-surface"> Накладные розетки (без сверления)</label></div>
-<div style="margin-bottom:10px;"><label style="font-size:10px; font-weight:bold;">БАЗОВЫЙ ПОДРОЗЕТНИК:</label><div style="display:flex; gap:5px; margin-top:4px;"><button class="btn-ghost active" id="btn-podr-std" style="flex:1; padding:8px; font-size:11px;" onclick="setPodr('std')">45мм</button><button class="btn-ghost" id="btn-podr-deep" style="flex:1; padding:8px; font-size:11px;" onclick="setPodr('deep')">64мм</button><button class="btn-ghost" id="btn-podr-kopos" style="flex:1; padding:8px; font-size:11px;" onclick="setPodr('kopos')">Kopos 75мм</button></div></div><div style="margin-bottom:10px;"><label style="font-size:10px; font-weight:bold;">Высота (см):</label><div style="display:flex; gap:5px; margin-top:4px;"><button class="btn-ghost active" id="btn-h-30" style="flex:1; padding:8px; font-size:11px;" onclick="setH(30)">30</button><button class="btn-ghost" id="btn-h-90" style="flex:1; padding:8px; font-size:11px;" onclick="setH(90)">90</button><button class="btn-ghost" id="btn-h-110" style="flex:1; padding:8px; font-size:11px;" onclick="setH(110)">110</button><input type="number" id="c-h-custom" placeholder="Своя" style="flex:1; margin:0; padding:8px; font-size:11px;" oninput="setH(this.value)"></div></div><div style="margin-bottom:10px;"><label style="font-size:10px; font-weight:bold;">Постов в рамке:</label><div style="display:flex; gap:5px; margin-top:4px;"><button class="btn-ghost active" id="btn-p-1" style="flex:1; padding:8px; font-size:11px;" onclick="setP(1)">1</button><button class="btn-ghost" id="btn-p-2" style="flex:1; padding:8px; font-size:11px;" onclick="setP(2)">2</button><button class="btn-ghost" id="btn-p-3" style="flex:1; padding:8px; font-size:11px;" onclick="setP(3)">3</button><button class="btn-ghost" id="btn-p-4" style="flex:1; padding:8px; font-size:11px;" onclick="setP(4)">4</button><button class="btn-ghost" id="btn-p-5" style="flex:1; padding:8px; font-size:11px;" onclick="setP(5)">5</button></div></div><div style="background:rgba(255,255,255,0.4); padding:10px; border-radius:10px; border:1px solid var(--border);"><div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; font-size:12px;"><span>Розетки 220В</span><div style="display:flex; align-items:center; gap:8px;"><button class="btn-ghost" style="padding:4px 10px;" onclick="modM('soc',-1)">-</button><b id="v-soc">1</b><button class="btn-ghost" style="padding:4px 10px;" onclick="modM('soc',1)">+</button></div></div><div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; font-size:12px;"><span>Выключатели</span><div style="display:flex; align-items:center; gap:8px;"><button class="btn-ghost" style="padding:4px 10px;" onclick="modM('sw',-1)">-</button><b id="v-sw">0</b><button class="btn-ghost" style="padding:4px 10px;" onclick="modM('sw',1)">+</button></div></div><div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; font-size:12px;"><span>Проходные</span><div style="display:flex; align-items:center; gap:8px;"><button class="btn-ghost" style="padding:4px 10px;" onclick="modM('pass',-1)">-</button><b id="v-pass">0</b><button class="btn-ghost" style="padding:4px 10px;" onclick="modM('pass',1)">+</button></div></div><div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; font-size:12px;"><span>Перекрестные</span><div style="display:flex; align-items:center; gap:8px;"><button class="btn-ghost" style="padding:4px 10px;" onclick="modM('cross',-1)">-</button><b id="v-cross">0</b><button class="btn-ghost" style="padding:4px 10px;" onclick="modM('cross',1)">+</button></div></div><div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; font-size:12px;"><span>ТВ/Инет (RJ-45)</span><div style="display:flex; align-items:center; gap:8px;"><button class="btn-ghost" style="padding:4px 10px;" onclick="modM('tv',-1)">-</button><b id="v-tv">0</b><button class="btn-ghost" style="padding:4px 10px;" onclick="modM('tv',1)">+</button></div></div><div style="display:flex; justify-content:space-between; align-items:center; font-size:12px; color:var(--danger);"><span>Т.Пол</span><div style="display:flex; align-items:center; gap:8px;"><button class="btn-ghost" style="padding:4px 10px;" onclick="modM('tpol',-1)">-</button><b id="v-tpol">0</b><button class="btn-ghost" style="padding:4px 10px;" onclick="modM('tpol',1)">+</button></div></div></div><div style="display:flex; justify-content:space-between; align-items:center; margin-top: 10px; padding-top:10px; border-top:1px solid var(--border);"><b style="font-size:12px;">Кол-во таких рамок:</b><div style="display:flex; align-items:center; gap:8px;"><button class="btn-ghost" style="padding:6px 12px; font-size:14px;" onclick="st_q=Math.max(1,st_q-1); upUI();">-</button><b id="v-q" style="color:var(--primary); font-size:16px;">1</b><button class="btn-ghost" style="padding:6px 12px; font-size:14px;" onclick="st_q++; upUI();">+</button></div></div><div class="grid-3" style="margin-top:15px;"><button class="btn-danger" style="background:var(--gray); font-size:18px; margin:0;" onclick="popPool()">↺</button><button class="btn-success" style="margin:0;" onclick="addGrp()">В Пул</button><button class="btn-shield" style="margin:0;" onclick="applyPoolToEstimate()">Смета</button></div><div id="pool-disp" style="margin-top:15px; max-height:150px; overflow-y:auto; font-size:11px;"></div></div></div>
-
-<div class="modal" id="recalcModal"><div class="modal-content glass"><div class="close-x" onclick="closeModal('recalcModal')">×</div><h3 style="color:var(--primary); margin: 0 0 10px 0;">Сведение трасс</h3><div style="background:rgba(0,0,0,0.03); padding:12px; border-radius:10px; margin-bottom:15px; font-size:12px; font-weight:bold; border:1px solid var(--border);"><div style="display:flex; justify-content:space-between; margin-bottom:6px;">ВВГ/Кабель (всего): <span id="r-cab" style="color:var(--primary);">0</span></div><div style="display:flex; justify-content:space-between;">Штробы (всего): <span id="r-sht" style="color:var(--orange);">0</span></div></div><label style="font-size:11px; font-weight:bold;">Кабеля ПО ПОТОЛКУ (м): </label><input type="number" id="r-ceil-input" value="0" oninput="updateRecalcUI()" style="margin-top:5px; margin-bottom:15px; border:2px solid var(--primary);"><div style="background:rgba(79,70,229,0.05); padding:12px; border-radius:10px; margin-bottom:15px; font-size:12px; font-weight:bold; border:1px solid var(--primary); color:var(--primary);"><div style="display:flex; justify-content:space-between; margin-bottom:6px;">Кабель в штробе: <span id="r-res-sht">0</span></div><div style="display:flex; justify-content:space-between; margin-bottom:6px;">Кабель по потолку: <span id="r-res-ceil">0</span></div><div style="display:flex; justify-content:space-between; margin-top:8px; padding-top:8px; border-top:2px solid var(--primary); font-size:14px;">ПО ПОЛУ (в гофре): <span id="r-res-floor">0</span></div></div><button class="btn-success" style="width:100%;" onclick="doRecalculate()">Пересчитать расходники</button></div></div>
-
-<div class="modal" id="settModal"><div class="modal-content glass"><div class="close-x" onclick="closeModal('settModal')">×</div><h3 style="margin-top:0; color:var(--primary);">🗄 База данных</h3><div class="grid-2"><button class="btn-ghost active" id="btnTabMat" onclick="switchDbTab('mat')">Материалы</button><button class="btn-ghost" id="btnTabWork" onclick="switchDbTab('work')">Работы</button></div><div id="editor-mat" style="max-height:50vh; overflow-y:auto; padding-bottom:20px;"></div><div id="editor-work" style="max-height:50vh; overflow-y:auto; display:none; padding-bottom:20px;"></div><div style="border-top:1px solid var(--border); padding-top:10px; margin-top:10px;"><h4 style="margin:0 0 10px 0; font-size:13px;">+ Добавить в БД</h4><div class="grid-2" style="margin-bottom:8px;"><select id="new-db-type" style="margin:0; padding:10px;"><option value="mat">Материал</option><option value="work">Работа</option></select><input type="text" id="new-db-category" placeholder="Папка" style="margin:0; padding:10px;"></div><input type="text" id="new-db-name" placeholder="Название позиции" style="padding:10px; margin-bottom:8px;"><div class="grid-2" style="margin-bottom:10px;"><input type="number" id="new-db-price" placeholder="Цена (P)" style="margin:0; padding:10px;"><input type="text" id="new-db-unit" placeholder="Ед.изм (шт/м)" style="margin:0; padding:10px;"></div><button class="btn-success" style="width:100%;" onclick="addCustomDbItem()">Добавить в базу</button></div></div></div>
-
-<div class="modal" id="matCatModal"><div class="modal-content glass"><div class="close-x" onclick="closeModal('matCatModal')">×</div><h3 style="color:var(--primary); margin-top:0;">Материалы (Каталог)</h3><input type="text" id="cat-search-mat" placeholder="Поиск..." oninput="filterCatalog('mat')" style="padding:10px; font-size:12px;"><div id="mat-cat-list" style="max-height:60vh; overflow-y:auto;"></div></div></div>
-<div class="modal" id="workCatModal"><div class="modal-content glass"><div class="close-x" onclick="closeModal('workCatModal')">×</div><h3 style="color:var(--orange); margin-top:0;">Работы (Каталог)</h3><input type="text" id="cat-search-work" placeholder="Поиск..." oninput="filterCatalog('work')" style="padding:10px; font-size:12px;"><div id="work-cat-list" style="max-height:60vh; overflow-y:auto;"></div></div></div>
 
 <div class="modal" id="settingsModal">
     <div class="modal-content glass">
         <div class="close-x" onclick="closeModal('settingsModal')">×</div>
-        <h3 style="color: var(--primary); margin-top:0;">🛠 Настройки Системы</h3>
-        <h4 style="color:var(--gray); margin: 15px 0 8px 0; font-size:12px;">🛒 Магазины для ИИ (Сравнение)</h4><input type="text" id="ai-shops" value="Лемана ПРО, ВсеИнструменты, Петрович" onchange="saveSysSettings()">
-        <h4 style="color:var(--gray); margin: 15px 0 8px 0; font-size:12px;">🎨 Тема и Масштаб</h4><div class="grid-2"><select id="theme-select" onchange="changeTheme(this.value)"><option value="light">Светлая</option><option value="dark">Темная</option><option value="emerald">Изумруд</option></select><input type="range" id="ui-scale" min="0.8" max="1.3" step="0.05" value="1" oninput="changeScale(this.value)"></div>
-        <h4 style="color:var(--gray); margin: 15px 0 8px 0; font-size:12px;">📱 QR Контакты для PDF</h4><input type="text" id="qr-tg" placeholder="Telegram (t.me/...)" onchange="saveSysSettings()"><input type="text" id="qr-wa" placeholder="WhatsApp (wa.me/...)" onchange="saveSysSettings()">
+        <h2 style="color: var(--primary);">Настройки</h2>
         
-        <div id="admin-panel" style="display:none; padding-top:20px; border-top:1px dashed var(--gray); margin-top:20px;">
-            <h3 style="color:var(--danger); margin:0 0 15px 0;">👑 Админ Панель</h3>
-            <h4 style="font-size:12px; margin:0 0 8px 0;">🔑 Ключ Gemini API</h4><input type="password" id="api-key-input" placeholder="Ключ API" onchange="saveApiKey(this.value)">
-            <h4 style="font-size:12px; margin:15px 0 8px 0; color:var(--orange);">Заявки на изменение цен (БД)</h4><div id="admin-price-reqs" style="max-height:150px; overflow-y:auto; font-size:11px;"></div>
-            <h4 style="font-size:12px; margin:15px 0 8px 0;">Сотрудники</h4><div id="admin-users-list" style="max-height:150px; overflow-y:auto; margin-bottom:10px;"></div>
-            <div class="grid-2"><input type="tel" id="add-user-phone" placeholder="Телефон"><input type="text" id="add-user-name" placeholder="ФИО"><input type="password" id="add-user-pin" placeholder="PIN"><select id="add-user-role"><option value="master">Мастер</option><option value="admin">Админ</option></select></div><button class="btn-danger" style="width:100%;" onclick="adminAddUser()">+ Добавить сотрудника</button>
+        <h4 style="color:var(--gray); margin-bottom: 8px; margin-top:15px;">🛒 ИИ: Магазины для сравнения цен</h4>
+        <input type="text" id="ai-shops" value="Лемана ПРО, ВсеИнструменты, Петрович" onchange="saveQRs()" placeholder="Через запятую">
+
+        <h4 style="color:var(--gray); margin-bottom: 8px; margin-top:15px;">🎨 Внешний вид</h4>
+        <select id="theme-select" onchange="changeTheme(this.value)"><option value="light">Светлая (Glass)</option><option value="dark">Темная (Неон)</option><option value="emerald">Изумруд (Emerald)</option><option value="sunset">Закат (Sunset)</option><option value="mono">Монохром (Minimal)</option></select>
+        
+        <h4 style="color:var(--gray); margin-bottom: 8px; margin-top:15px;">🔍 Масштаб интерфейса</h4>
+        <div style="display:flex; align-items:center; gap:10px;"><span style="font-size:12px;">Меньше</span><input type="range" id="ui-scale" min="0.8" max="1.3" step="0.05" value="1" oninput="changeScale(this.value)"><span style="font-size:12px;">Больше</span></div>
+        
+        <h4 style="color:var(--gray); margin-bottom: 8px; margin-top:15px;">🔒 Безопасность</h4>
+        <input type="password" id="my-new-pin" placeholder="Введите новый PIN-код">
+        <button class="btn-info" style="width:100%; padding:12px;" onclick="changeMyPin()">Сменить мой PIN</button>
+        
+        <h4 style="color:var(--gray); margin-bottom: 8px; margin-top:15px;">📱 Ссылки для QR в Смете</h4>
+        <input type="text" id="qr-tg" placeholder="Ссылка Telegram (t.me/...)" onchange="saveQRs()">
+        <input type="text" id="qr-wa" placeholder="Ссылка WhatsApp (wa.me/...)" onchange="saveQRs()">
+        
+        <div id="admin-panel" style="display:none; padding-top:20px; border-top: 1px dashed var(--gray); margin-top:20px;">
+            <h3 style="color:var(--danger); margin-bottom: 10px;">👑 Панель Руководителя</h3>
+            
+            <h4 style="color:var(--text); margin-bottom: 10px; margin-top:15px;">👀 Текущие сметы мастеров</h4>
+            <div id="admin-drafts-list" style="margin-bottom:15px; max-height:200px; overflow-y:auto; border:1px solid var(--border); border-radius:8px; padding:8px;"></div>
+
+            <h4 style="color:var(--orange); margin-bottom: 10px; margin-top:15px;">💰 Заявки на изменение цен</h4>
+            <div id="admin-price-reqs" style="margin-bottom:15px; max-height:200px; overflow-y:auto; border:1px solid var(--border); border-radius:8px; padding:8px;"></div>
+
+            <button class="btn-shield" style="width:100%; padding:14px; margin-bottom:15px;" onclick="analyzeMastersAI()">🤖 ИИ-Анализ Штаба</button>
+            
+            <h4 style="color:var(--text); margin-bottom: 10px;">🔑 Системный ИИ-Ключ</h4>
+            <input type="password" id="api-key-input" placeholder="Ключ Gemini API" onchange="saveApiKey(this.value)">
+            
+            <h4 style="color:var(--text); margin-bottom: 10px; margin-top:15px;">Штат сотрудников</h4>
+            <div id="admin-users-list" style="margin-bottom:15px; max-height:150px; overflow-y:auto; border:1px solid var(--border); border-radius:8px; padding:8px;"></div>
+            
+            <h4 style="color:var(--text); margin-bottom: 10px;">Добавить сотрудника</h4>
+            <input type="tel" id="add-user-phone" placeholder="Телефон (+7...)"><input type="text" id="add-user-name" placeholder="ФИО Мастера"><input type="password" id="add-user-pin" placeholder="PIN-код для входа"><select id="add-user-role"><option value="master">Роль: Мастер</option><option value="admin">Роль: Администратор</option></select>
+            <button class="btn-danger" style="width:100%; padding:14px;" onclick="adminAddUser()">Зарегистрировать</button>
         </div>
     </div>
 </div>
 
+<div class="modal" id="buhModal"><div class="modal-content glass"><div class="close-x" onclick="closeModal('buhModal')">×</div><h2 style="color:var(--primary); margin: 0 0 15px 0;"> Бухгалтерия</h2><div id="buh-calc" style="background:rgba(0,0,0,0.03); padding:15px; border-radius: 16px; font-size: 14px; font-weight:600; border:1px solid var(--border);"><div style="display: flex; justify-content:space-between; font-size:18px; color:var(--primary); border-bottom:1px solid var(--border); padding-bottom:8px; margin-bottom:8px; font-weight: 800;"><span>ОБЩАЯ ПРИБЫЛЬ: </span> <span id="p-total">0 P</span></div><div style="display:flex; justify-content:space-between; color:var(--gray);"><span>Работы:</span> <span id="b-work">0 P</span></div><div style="display:flex; justify-content:space-between; color:var(--gray);"><span>Материалы:</span> <span id="b-mat">0 P</span></div></div><div style="margin-top:15px;"><input type="number" id="b-discount" value="0" placeholder="Скидка заказчику (Р)" oninput="updateBuhUI()"><input type="number" id="b-prepay" value="0" placeholder="Аванс получен (Р)" oninput="updateBuhUI()"><div style="background: var(--orange); color:white; padding: 16px; border-radius:14px; text-align:center; font-size: 18px; font-weight:bold; box-shadow: 0 8px 20px rgba(245,158,11,0.3); margin-bottom:15px;">К ОПЛАТЕ: <span id="b-final">0 P</span></div></div><button onclick="saveHist()" class="btn-success" style="width:100%; padding: 16px; font-size: 15px; margin:0;"> Сохранить в Историю</button><h4 style="margin-top:20px; color:var(--gray);">История объектов:</h4><div id="h-stat" style="max-height:250px; overflow-y:auto; font-size:13px; padding-right:5px;"></div></div></div>
+
+<div class="modal" id="settModal"><div class="modal-content glass"><div class="close-x" onclick="closeModal('settModal')">×</div><h2 style="margin-top:0; color: var(--primary);"> База данных</h2><div class="tabs-container"><button class="tab-btn active" id="btnTabMat" onclick="switchDbTab('mat')">Материалы</button><button class="tab-btn" id="btnTabWork" onclick="switchDbTab('work')">Работы</button></div><div id="editor-mat" style="max-height:40vh; overflow-y:auto; padding-bottom: 20px;"></div><div id="editor-work" style="max-height:40vh; overflow-y:auto; display:none; padding-bottom: 20px;"></div><div style="background: rgba(255,255,255,0.4); padding: 16px; border-radius:14px; margin-top:15px; border: 1px solid var(--border);"><h4 style="margin:0 0 12px 0; color:var(--primary); font-size: 15px;">+ Добавить вручную</h4><div style="display: flex; gap:8px; margin-bottom:10px;"><select id="new-db-type" onchange="updateCategoryList()" style="flex:1; margin:0; padding:12px;"><option value="mat">Материал</option><option value="work">Работа</option></select><input type="text" id="new-db-category" list="db-cat-list" placeholder="Впишите или выберите Папку" style="flex:1; margin:0; padding:12px;"><datalist id="db-cat-list"></datalist></div><input type="text" id="new-db-name" placeholder="Название позици" style="padding:12px; margin-bottom:10px;"><div style="display: flex; gap:8px; margin-bottom:15px;"><input type="number" id="new-db-price" placeholder="Цена (P)" style="margin:0; padding:12px;"><input type="text" id="new-db-unit" placeholder="Ед.изм" style="margin:0; padding:12px; width:40%;"></div><button class="btn-success" onclick="addCustomDbItem()" style="width:100%; padding: 14px; font-size: 14px; margin:0;">Добавить в базу</button></div></div></div>
+
+<div class="modal" id="matCatModal"><div class="modal-content glass"><div class="close-x" onclick="closeModal('matCatModal')">×</div><h2 style="color:var(--primary); margin-top:0;"> Выбор материала</h2><input type="text" id="cat-search-mat" placeholder="Поиск..." oninput="filterCatalog('mat')" style="padding:14px; font-size:14px;"><div id="mat-cat-list" style="max-height:60vh; overflow-y:auto; padding-bottom:10px;"></div></div></div>
+<div class="modal" id="workCatModal"><div class="modal-content glass"><div class="close-x" onclick="closeModal('workCatModal')">×</div><h2 style="color:var(--orange); margin-top:0;"> Выбор работы</h2><input type="text" id="cat-search-work" placeholder="Поиск..." oninput="filterCatalog('work')" style="padding:14px; font-size:14px;"><div id="work-cat-list" style="max-height:60vh; overflow-y:auto; padding-bottom:10px;"></div></div></div>
+
+<div class="modal" id="configModal"><div class="modal-content glass"><div class="close-x" onclick="closeModal('configModal')">×</div><h2 style="color:var(--primary); margin: 0 0 10px 0;"> Сборка щита (PRO)</h2><div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px;"><div><label style="font-size: 10px; font-weight:bold; color:var(--gray);">Корпус: </label><select id="cfg-brand-box" style="margin:0;"><option>Tekfor</option><option>ABB</option><option>Schneider</option><option>IEK</option></select></div><div><label style="font-size:10px; font-weight:bold; color:var(--gray);">Автоматы:</label><select id="cfg-brand-auto" style="margin:0;"><option>IEK</option><option>ABB</option><option>Schneider</option></select></div></div><select id="cfg-phase" style="margin-bottom:10px;"><option value="1">220В (1 фаза)</option><option value="3">380B (3 фазы)</option></select><div style="background:rgba(0,0,0,0.03); padding:10px; border-radius:12px; margin-bottom: 10px;"><div class="mech-row" style="padding-top:0;"><span> Комнаты (шт)</span><div class="counter-box"><button class="c-btn" onclick="modV('rms',-1)">-</button><span id="v-rms" class="c-val">1</span><button class="c-btn" onclick="modV('rms', 1)">+</button></div></div><div class="mech-row"><span> Кондиционеры</span><div class="counter-box"><button class="c-btn" onclick="modV('acs',-1)">-</button><span id="v-acs" class="c-val">0</span><button class="c-btn" onclick="modV('acs', 1)">+</button></div></div><div class="mech-row"><span> Теплые полы</span><div class="counter-box"><button class="c-btn" onclick="modV('fls',-1)">-</button><span id="v-fls" class="c-val">0</span><button class="c-btn" onclick="modV('fls', 1)">+</button></div></div><div class="mech-row" style="border-bottom:none; padding-bottom:0;"><span> Балконы</span><div class="counter-box"><button class="c-btn" onclick="modV('bals',-1)">-</button><span id="v-bals" class="c-val">0</span><button class="c-btn" onclick="modV('bals', 1)">+</button></div></div></div><div class="chk-grid"><label class="chk-row"><input type="checkbox" id="c-oven" checked> Плита/Дух.</label><label class="chk-row"><input type="checkbox" id="c-fridge" checked> Холод-к</label><label class="chk-row"><input type="checkbox" id="c-apron" checked> Фартук</label><label class="chk-row"><input type="checkbox" id="c-dish" checked> Посудом-ка</label><label class="chk-row"><input type="checkbox" id="c-washer" checked> Стиралка</label><label class="chk-row"><input type="checkbox" id="c-boiler"> Бойлер</label><label class="chk-row"><input type="checkbox" id="c-neptun"> Нептун</label><label class="chk-row"><input type="checkbox" id="cfg-master"> Мастер-кнопка</label></div><h4 style="font-size:12px; margin:15px 0 10px 0; color:var(--orange);">🛡 Дополнительная Защита:</h4><div class="chk-grid"><label class="chk-row"><input type="checkbox" id="cfg-uzm"> Реле напряж. (УЗМ)</label><label class="chk-row"><input type="checkbox" id="cfg-uzdp"> УЗДП (От дуги)</label><label class="chk-row"><input type="checkbox" id="cfg-var"> ВАР (Вольтамперметр)</label><label class="chk-row"><input type="checkbox" id="cfg-revers"> Реверсивный рубильник</label><label class="chk-row"><input type="checkbox" id="cfg-fireuzo"> Вводное УЗО (Противопож)</label><label class="chk-row"><input type="checkbox" id="cfg-cross"> Кросс-модуль</label><label class="chk-row"><input type="checkbox" id="cfg-meter"> Счетчик</label></div><label style="font-size: 11px; font-weight:bold; color:var(--gray);">Тип монтажа Щита: </label><select id="cfg-shield-wall" style="margin-bottom:10px;"><option value="Бетон">Встраиваемый (Бетон)</option><option value="Кирпич">Встраиваемый (Кирпич)</option><option value="Панелька">Встраиваемый (Панелька)</option><option value="Мягкий мат.">Встраиваемый (ГКЛ)</option><option value="Накладной">Накладной (без ниши)</option></select><button onclick="generateCascadePanel()" class="btn-shield" style="width:100%; padding: 14px; margin:0;">Сгенерировать щит</button></div></div>
+
+<div class="modal" id="roughModal"><div class="modal-content glass"><div class="close-x" onclick="closeModal('roughModal')">×</div><h2 style="color:var(--orange); margin: 0 0 10px 0;"> Пул розеток</h2><div style="background:rgba(0,0,0,0.03); padding:12px; border-radius: 12px; margin-bottom: 10px; display:grid; grid-template-columns:1fr 1fr; gap:8px;"><div style="grid-column: span 2;"><label style="font-size:10px; font-weight:bold; color:var(--gray);">Логика монтажа</label><select id="montage-mode" style="margin:0; padding:10px;"><option value="classic">Классика (Распредкоробки)</option><option value="gyn">Гинекологический (В подрозетниках)</option></select></div><div><label style="font-size:10px; font-weight:bold; color:var(--gray);">Монтаж трассы</label><select id="g-routing" style="margin:0; padding:10px;"><option value="ceiling">Потолок</option><option value="floor">Пол</option></select></div><div><label style="font-size:10px; font-weight:bold; color:var(--gray);">Материал Стены</label><select id="g-wall" style="margin:0; padding:10px;"><option value="Бетон">Бетон</option><option value="Кирпич">Кирпич</option><option value="Панелька">Панелька</option><option value="Мягкий мат.">Мягкий мат.</option></select></div></div>
+<div class="chk-grid" style="grid-template-columns:1fr;"><label class="chk-row"><input type="checkbox" id="pool-cable-channel"> 💡 В кабель-канале (без штробы)</label><label class="chk-row"><input type="checkbox" id="pool-surface"> 🔌 Накладные розетки (без алмаз. сверления)</label></div>
+<label style="font-size:11px; font-weight:bold; color:var(--gray);">БАЗОВЫЙ ПОДРОЗЕТНИК: </label><div class="tile-grid" id="podr-tiles" style="margin-top:5px;"><div class="tile active" onclick="setPodr('std', this)">Стандарт 45мм</div><div class="tile" onclick="setPodr('deep', this)"> Глубокий 64мм</div><div class="tile" onclick="setPodr('kopos', this)">Коров 75мм</div></div><label style="font-size:11px; font-weight:bold; color:var(--gray); margin-top:5px; display:block;">Высота от пола (см)</label><div class="tile-grid" id="h-tiles"><div class="tile active" onclick="setH(30, this)">30</div><div class="tile" onclick="setH(90, this)">90</div><div class="tile" onclick="setH(110, this)">110</div><input type="number" id="c-h-custom" placeholder="Своя" style="width:70px; margin:0; padding:6px; font-size:12px;" oninput="setH(this.value, null)"></div><label style="font-size:11px; font-weight:bold; color:var(--gray);">Постов в рамке</label><div class="tile-grid" id="p-tiles"><div class="tile active" id="p1" onclick="setP(1)">1</div><div class="tile" id="p2" onclick="setP(2)">2</div><div class="tile" id="p3" onclick="setP(3)">3</div><div class="tile" id="p4" onclick="setP(4)">4</div><div class="tile" id="p5" onclick="setP(5)">5</div></div><div style="background:rgba(255,255,255,0.4); padding:10px; border-radius:12px; border:1px solid var(--border);"><div class="mech-row"><span> Розетки 220В</span><div class="counter-box"><button class="c-btn" onclick="modM('soc',-1)">-</button><span id="v-soc" class="c-val">1</span><button class="c-btn" onclick="modM('soc', 1)">+</button></div></div><div class="mech-row"><span> Выключатели</span><div class="counter-box"><button class="c-btn" onclick="modM('sw',-1)">-</button><span id="v-sw" class="c-val">0</span><button class="c-btn" onclick="modM('sw', 1)">+</button></div></div><div class="mech-row"><span> Проходные</span><div class="counter-box"><button class="c-btn" onclick="modM('pass',-1)">-</button><span id="v-pass" class="c-val">0</span><button class="c-btn" onclick="modM('pass', 1)">+</button></div></div><div class="mech-row"><span> Перекрестные</span><div class="counter-box"><button class="c-btn" onclick="modM('cross',-1)">-</button><span id="v-cross" class="c-val">0</span><button class="c-btn" onclick="modM('cross', 1)">+</button></div></div><div class="mech-row"><span> ТВ/Инет</span><div class="counter-box"><button class="c-btn" onclick="modM('tv',-1)">-</button><span id="v-tv" class="c-val">0</span><button class="c-btn" onclick="modM('tv', 1)">+</button></div></div><div class="mech-row" style="border:none; color:var(--danger);"><span>Т.Пол</span><div class="counter-box"><button class="c-btn" onclick="modM('tpol',-1)">-</button><span id="v-tpol" class="c-val">0</span><button class="c-btn" onclick="modM('tpol', 1)">+</button></div></div></div><div style="display:flex; justify-content:space-between; align-items:center; margin-top: 10px; padding-top:10px;"><b style="font-size:13px;">Кол-во таких рамок:</b><div class="counter-box"><button class="c-btn" onclick="st_q=Math.max(1,st_q-1); upUI();">-</button><span id="v-q" class="c-val" style="color:var(--primary);">1</span><button class="c-btn" onclick="st_q++; upUI();">+</button></div></div><div style="display:grid; grid-template-columns: 1fr 2.5fr 1.2fr; gap:6px; margin-top:15px;"><button class="btn-danger" style="background:var(--gray); font-size:18px; margin:0;" onclick="popPool()">↺</button><button class="btn-success" style="margin:0;" onclick="addGrp()">В Пул</button><button class="btn-shield" style="margin:0;" onclick="applyPoolToEstimate()">Смета</button></div><div id="pool-disp" style="margin-top:15px; max-height:150px; overflow-y:auto;"></div></div></div>
+
+<div class="modal" id="recalcModal"><div class="modal-content glass"><div class="close-x" onclick="closeModal('recalcModal')">×</div><h2 style="color:var(--primary); margin: 0 0 10px 0;"> Сведение трасс</h2><div style="background:rgba(0,0,0,0.03); padding: 12px; border-radius: 12px; margin-bottom: 15px; font-size: 13px; font-weight:bold; border:1px solid var(--border);"><div style="display: flex; justify-content:space-between; margin-bottom: 6px;">ВВГ / Кабель (всего): <span id="r-cab" style="color:var(--primary);">0</span></div><div style="display: flex; justify-content:space-between;">Штробы (всего): <span id="r-sht" style="color:var(--orange);">0</span></div></div><label style="font-size:12px; font-weight:bold; color:var(--gray);">Кабеля ПО ПОТОЛКУ (м): </label><input type="number" id="r-ceil-input" value="0" oninput="updateRecalcUI()" style="margin-top:5px; margin-bottom:15px; padding: 12px; border: 2px solid var(--primary);"><div style="background:rgba(79, 70, 229, 0.05); padding: 12px; border-radius: 12px; margin-bottom: 15px; font-size: 13px; font-weight:bold; border:1px solid var(--primary); color: var(--primary);"><div style="display:flex; justify-content:space-between; margin-bottom: 6px;">Кабель в штробе: <span id="r-res-sht">0</span></div><div style="display: flex; justify-content:space-between; margin-bottom: 6px;">Кабель по потолку: <span id="r-res-ceil">0</span></div><div style="display: flex; justify-content:space-between; margin-top:8px; padding-top:8px; border-top:2px solid var(--primary); font-size:15px;">ПО ПОЛУ (в гофре): <span id="r-res-floor">0</span></div></div><button onclick="doRecalculate()" class="btn-success" style="width:100%; padding: 14px; margin:0;">Выполнить перерасчет</button></div></div>
+
 <script>
-// === КОНСТАНТЫ БД ===
-const FULL_MAT_INIT=[{"id":"m1","c":"Кабель","n":"Кабель ВВГнг-LS 3х1.5 (Конкорд) круглый","p":57,"u":"м.п."},{"id":"m2","c":"Кабель","n":"Кабель ВВГнг-LS 3х2.5 (Конкорд) круглый","p":87,"u":"м.п."},{"id":"m3","c":"Кабель","n":"Кабель ВВГнг(п)-LS 3х1.5 (Конкорд) плоский","p":62,"u":"м.п."},{"id":"m4","c":"Кабель","n":"Кабель ВВГнг(п)-LS 3х2.5 (Конкорд) плоский","p":95,"u":"м.п."},{"id":"m5","c":"Кабель","n":"Кабель ВВГ-Пнг(А)-LS 3x4 (Лептон)","p":146,"u":"м.п."},{"id":"m6","c":"Кабель","n":"Кабель ВВГ-Пнг(А)-LS 3х6 (Лептон)","p":217,"u":"м.п."},{"id":"m7","c":"Кабель","n":"Провод ПуГВ (ПВ-3) 1х6 синий","p":85,"u":"м.п."},{"id":"m8","c":"Кабель","n":"Провод ПуГВ (ПВ-3) 1х6 белый","p":85,"u":"м.п."},{"id":"m9","c":"Слаботочка","n":"Кабель TV SAT-703","p":75,"u":"м.п."},{"id":"m10","c":"Слаботочка","n":"Витая пара FTP4 CAT5E","p":32,"u":"м.п."},{"id":"m11","c":"Трубы","n":"Труба гофрированная ПВХ 20мм","p":8,"u":"м.п."},{"id":"m13","c":"Трубы","n":"Гофра ПВХ/ПНД с протяжкой","p":25,"u":"м.п."},{"id":"m14","c":"Расходники","n":"Подрозетник глубокий для бетона 68х64","p":12,"u":"шт"},{"id":"m15","c":"Расходники","n":"Подрозетник стандарт 45мм","p":20,"u":"шт"},{"id":"m16k","c":"Расходники","n":"Подрозетник Kopos 75мм","p":95,"u":"шт"},{"id":"m17","c":"Расходники","n":"Коробка распределительная 100х100х40","p":120,"u":"шт"},{"id":"m18","c":"Расходники","n":"Площадка под стяжку для прямого монтажа","p":5,"u":"шт"},{"id":"m19","c":"Расходники","n":"Стяжки нейлоновые КСС 3*100","p":40,"u":"упак."},{"id":"m21","c":"Расходники","n":"Газовый баллон 80 мл 165 мм","p":550,"u":"шт"},{"id":"m22","c":"Расходники","n":"Гвозди для прямого монтажа 3х19 мм","p":1905,"u":"упак."},{"id":"m23","c":"Расходники","n":"Лента монтажная (перфолента)","p":580,"u":"шт"},{"id":"m27","c":"Расходники","n":"Гильза ГМЛ 4","p":12,"u":"шт"},{"id":"m28","c":"Расходники","n":"Гильза ГМЛ 6","p":18,"u":"шт"},{"id":"m29","c":"Расходники","n":"Термоусадка (м)","p":80,"u":"м"},{"id":"wago3","c":"Расходники","n":"Клемма WAGO 3-pin","p":25,"u":"шт"},{"id":"wago5","c":"Расходники","n":"Клемма WAGO 5-pin","p":35,"u":"шт"},{"id":"m30","c":"Автоматика","n":"Автомат 1P 10A (ABB)","p":265,"u":"шт"},{"id":"m31","c":"Автоматика","n":"Автомат 1P 16A (ABB)","p":265,"u":"шт"},{"id":"m32","c":"Автоматика","n":"Автомат 1P 40A (ABB)","p":410,"u":"шт"},{"id":"m33","c":"Автоматика","n":"ДИФ Автомат 32A 30mA (ABB)","p":3100,"u":"шт"},{"id":"m36","c":"Щитовое","n":"Шкаф внутрь. на 36М (ABB)","p":6510,"u":"шт"},{"id":"m38","c":"Автоматика","n":"Автомат 1P 10A (ИЭК)","p":172,"u":"шт"},{"id":"m39","c":"Автоматика","n":"Автомат 1P 16A (ИЭК)","p":150,"u":"шт"},{"id":"m41","c":"Автоматика","n":"УЗО 2P 40A 30мА (ИЭК)","p":1195,"u":"шт"},{"id":"m44","c":"Автоматика","n":"Реле напряжения УЗМ-50Ц","p":4500,"u":"шт"},{"id":"m_uzdp","c":"Автоматика","n":"УЗДП (Защита от дуги)","p":5500,"u":"шт"},{"id":"m_var","c":"Щитовое","n":"Вольтамперметр ВАР","p":2200,"u":"шт"},{"id":"m_rev","c":"Щитовое","n":"Реверсивный рубильник 40А","p":1800,"u":"шт"},{"id":"m_fire","c":"Автоматика","n":"Противопожарное УЗО 100/300мА","p":3200,"u":"шт"},{"id":"m_cross","c":"Щитовое","n":"Кросс-модуль 2х7","p":450,"u":"шт"},{"id":"m_meter","c":"Щитовое","n":"Счетчик ЭЭ на DIN рейку","p":1500,"u":"шт"},{"id":"m_rj45","c":"Слаботочка","n":"Коннектор RJ-45","p":15,"u":"шт"},{"id":"m_kup_b","c":"КУП","n":"Коробка уравнивания потенциалов (КУП)","p":250,"u":"шт"},{"id":"m_kup_p","c":"КУП","n":"Пружинка ППД для труб","p":45,"u":"шт"},{"id":"m_mix","c":"Расходники","n":"Смесь штукатурная (кг)","p":40,"u":"кг"},{"id":"m_crn","c":"Расходники","n":"Амортизация: Коронка алмазная","p":3500,"u":"шт"},{"id":"m_dsk","c":"Расходники","n":"Амортизация: Диск алмазный","p":1200,"u":"шт"},{"id":"m_bag","c":"Расходники","n":"Мешок для пылесоса","p":250,"u":"шт"},{"id":"f_soc","c":"Чистовая","n":"Розетка 220В (механизм)","p":250,"u":"шт"},{"id":"f_sw","c":"Чистовая","n":"Выключатель (механизм)","p":280,"u":"шт"},{"id":"f_tv","c":"Чистовая","n":"Слаботочная розетка (механизм)","p":350,"u":"шт"},{"id":"f_r1","c":"Чистовая","n":"Рамка 1 пост","p":50,"u":"шт"},{"id":"f_r2","c":"Чистовая","n":"Рамка 2 поста","p":100,"u":"шт"},{"id":"f_r5","c":"Чистовая","n":"Рамка 5 постов","p":250,"u":"шт"}];
-const FULL_WORK_INIT=[{"id":"w44","c":"Штробление","n":"Штроба 25х30 (Бетон)","p":550,"u":"м.п."},{"id":"w45","c":"Штробление","n":"Штроба 25х30 (Кирпич)","p":400,"u":"м.п."},{"id":"w46","c":"Штробление","n":"Штроба 25х30 (Панелька)","p":700,"u":"м.п."},{"id":"w48","c":"Штробление","n":"Штроба 50х50 (Бетон)","p":1500,"u":"м.п."},{"id":"w52","c":"Штробление","n":"Штроба ВВОДНАЯ (Бетон)","p":2200,"u":"м.п."},{"id":"w56","c":"Сверление","n":"Высверливание подр. 45мм (Бетон)","p":600,"u":"шт"},{"id":"w71","c":"Сверление","n":"Высверливание подр. 64мм (Бетон)","p":650,"u":"шт"},{"id":"w75","c":"Сверление","n":"Высверливание подр. Kopos 75мм (Бетон)","p":800,"u":"шт"},{"id":"w60","c":"Черновая","n":"Вклейка подрозетников","p":100,"u":"шт"},{"id":"w61","c":"Сверление","n":"Вырубка ниши щита (Бетон)","p":400,"u":"мод."},{"id":"w65","c":"Прокладка","n":"Прокладка кабеля (Без гофры)","p":120,"u":"м.п."},{"id":"w66","c":"Прокладка","n":"Прокладка кабеля в гофре","p":150,"u":"м.п."},{"id":"wkk","c":"Прокладка","n":"Монтаж кабель-канала","p":150,"u":"м.п."},{"id":"w67","c":"Коммутация","n":"Сборка распред. коробки / коммутация","p":800,"u":"шт"},{"id":"w68","c":"Чистовая","n":"Установка розетки 220В","p":500,"u":"шт"},{"id":"w69","c":"Чистовая","n":"Установка выключателя","p":550,"u":"шт"},{"id":"w_nakl","c":"Чистовая","n":"Установка накладного механизма (Розетка/Выкл)","p":680,"u":"шт"},{"id":"w87","c":"Щит","n":"Сборка щита (модуль)","p":500,"u":"мод."},{"id":"w_kup","c":"Спец","n":"Монтаж КУП","p":1500,"u":"шт"}];
+// === БАЗА И ИНИЦИАЛИЗАЦИЯ ===
+const FULL_MAT_INIT=[{"id":"m1","c":"Кабель","n":"Кабель ВВГнг-LS 3х1.5 (Конкорд) круглый","p":57,"u":"м.п."},{"id":"m2","c":"Кабель","n":"Кабель ВВГнг-LS 3х2.5 (Конкорд) круглый","p":87,"u":"м.п."},{"id":"m3","c":"Кабель","n":"Кабель ВВГнг(п)-LS 3х1.5 (Конкорд) плоский","p":62,"u":"м.п."},{"id":"m4","c":"Кабель","n":"Кабель ВВГнг(п)-LS 3х2.5 (Конкорд) плоский","p":95,"u":"м.п."},{"id":"m5","c":"Кабель","n":"Кабель ВВГ-Пнг(А)-LS 3x4 (Лептон)","p":146,"u":"м.п."},{"id":"m6","c":"Кабель","n":"Кабель ВВГ-Пнг(А)-LS 3х6 (Лептон)","p":217,"u":"м.п."},{"id":"m7","c":"Кабель","n":"Провод ПуГВ (ПВ-3) 1х6 синий","p":85,"u":"м.п."},{"id":"m8","c":"Кабель","n":"Провод ПуГВ (ПВ-3) 1х6 белый","p":85,"u":"м.п."},{"id":"m9","c":"Слаботочка","n":"Кабель TV SAT-703","p":75,"u":"м.п."},{"id":"m10","c":"Слаботочка","n":"Витая пара FTP4 CAT5E","p":32,"u":"м.п."},{"id":"m11","c":"Трубы","n":"Труба гофрированная ПВХ 20мм","p":8,"u":"м.п."},{"id":"m13","c":"Трубы","n":"Гофра ПВХ/ПНД с протяжкой","p":25,"u":"м.п."},{"id":"m14","c":"Расходники","n":"Подрозетник глубокий 68х64","p":12,"u":"шт"},{"id":"m15","c":"Расходники","n":"Подрозетник стандарт 45мм","p":20,"u":"шт"},{"id":"m16k","c":"Расходники","n":"Подрозетник Kopos 75мм","p":95,"u":"шт"},{"id":"m17","c":"Расходники","n":"Коробка распределительная 100х100х40","p":120,"u":"шт"},{"id":"m18","c":"Расходники","n":"Площадка под стяжку для прямого монтажа","p":5,"u":"шт"},{"id":"m19","c":"Расходники","n":"Стяжки нейлоновые КСС 3*100","p":40,"u":"упак."},{"id":"m21","c":"Расходники","n":"Газовый баллон 80 мл 165 мм","p":550,"u":"шт"},{"id":"m22","c":"Расходники","n":"Гвозди для прямого монтажа 3х19 мм","p":1905,"u":"упак."},{"id":"m23","c":"Расходники","n":"Лента монтажная (перфолента)","p":580,"u":"шт"},{"id":"m27","c":"Расходники","n":"Гильза ГМЛ 4","p":12,"u":"шт"},{"id":"m28","c":"Расходники","n":"Гильза ГМЛ 6","p":18,"u":"шт"},{"id":"m29","c":"Расходники","n":"Термоусадка (м)","p":80,"u":"м"},{"id":"wago3","c":"Расходники","n":"Клемма WAGO 3-pin","p":25,"u":"шт"},{"id":"wago5","c":"Расходники","n":"Клемма WAGO 5-pin","p":35,"u":"шт"},{"id":"m30","c":"Автоматика","n":"Автомат 1P 10A (ABB)","p":265,"u":"шт"},{"id":"m31","c":"Автоматика","n":"Автомат 1P 16A (ABB)","p":265,"u":"шт"},{"id":"m32","c":"Автоматика","n":"Автомат 1P 40A (ABB)","p":410,"u":"шт"},{"id":"m33","c":"Автоматика","n":"ДИФ Автомат 32A 30mA (ABB)","p":3100,"u":"шт"},{"id":"m36","c":"Щитовое","n":"Шкаф внутрь. на 36М (ABB)","p":6510,"u":"шт"},{"id":"m38","c":"Автоматика","n":"Автомат 1P 10A (ИЭК)","p":172,"u":"шт"},{"id":"m39","c":"Автоматика","n":"Автомат 1P 16A (ИЭК)","p":150,"u":"шт"},{"id":"m41","c":"Автоматика","n":"УЗО 2P 40A 30мА (ИЭК)","p":1195,"u":"шт"},{"id":"m44","c":"Автоматика","n":"Реле напряжения УЗМ-50Ц","p":4500,"u":"шт"},{"id":"m_uzdp","c":"Автоматика","n":"УЗДП (Защита от дуги)","p":5500,"u":"шт"},{"id":"m_var","c":"Щитовое","n":"Вольтамперметр ВАР","p":2200,"u":"шт"},{"id":"m_rev","c":"Щитовое","n":"Реверсивный рубильник 40А","p":1800,"u":"шт"},{"id":"m_fire","c":"Автоматика","n":"Противопожарное УЗО 100/300мА","p":3200,"u":"шт"},{"id":"m_cross","c":"Щитовое","n":"Кросс-модуль 2х7","p":450,"u":"шт"},{"id":"m_meter","c":"Щитовое","n":"Счетчик ЭЭ на DIN рейку","p":1500,"u":"шт"},{"id":"m_rj45","c":"Слаботочка","n":"Коннектор RJ-45","p":15,"u":"шт"},{"id":"m_kup_b","c":"КУП","n":"Коробка уравнивания потенциалов (КУП)","p":250,"u":"шт"},{"id":"m_kup_p","c":"КУП","n":"Пружинка ППД для труб","p":45,"u":"шт"},{"id":"m_mix","c":"Расходники","n":"Смесь штукатурная (кг)","p":40,"u":"кг"},{"id":"m_crn","c":"Расходники","n":"Амортизация: Коронка алмазная","p":3500,"u":"шт"},{"id":"m_dsk","c":"Расходники","n":"Амортизация: Диск алмазный","p":1200,"u":"шт"},{"id":"m_bag","c":"Расходники","n":"Мешок для пылесоса","p":250,"u":"шт"},{"id":"f_soc","c":"Чистовая","n":"Розетка 220В (механизм)","p":250,"u":"шт"},{"id":"f_sw","c":"Чистовая","n":"Выключатель (механизм)","p":280,"u":"шт"},{"id":"f_tv","c":"Чистовая","n":"Слаботочная розетка (механизм)","p":350,"u":"шт"},{"id":"f_r1","c":"Чистовая","n":"Рамка 1 пост","p":50,"u":"шт"},{"id":"f_r2","c":"Чистовая","n":"Рамка 2 поста","p":100,"u":"шт"},{"id":"f_r5","c":"Чистовая","n":"Рамка 5 постов","p":250,"u":"шт"}];
+const FULL_WORK_INIT=[{"id":"w44","c":"Штробление","n":"Штроба 25х30 (Бетон)","p":550,"u":"м.п."},{"id":"w45","c":"Штробление","n":"Штроба 25х30 (Кирпич)","p":400,"u":"м.п."},{"id":"w46","c":"Штробление","n":"Штроба 25х30 (Панелька)","p":700,"u":"м.п."},{"id":"w48","c":"Штробление","n":"Штроба 50х50 (Бетон)","p":1500,"u":"м.п."},{"id":"w52","c":"Штробление","n":"Штроба ВВОДНАЯ (Бетон)","p":2200,"u":"м.п."},{"id":"w56","c":"Сверление","n":"Высверливание подр. 45мм (Бетон)","p":600,"u":"шт"},{"id":"w71","c":"Сверление","n":"Высверливание подр. 64мм (Бетон)","p":650,"u":"шт"},{"id":"w75","c":"Сверление","n":"Высверливание подр. Kopos 75мм (Бетон)","p":800,"u":"шт"},{"id":"w60","c":"Черновая","n":"Вклейка подрозетников","p":100,"u":"шт"},{"id":"w61","c":"Сверление","n":"Вырубка ниши щита (Бетон)","p":400,"u":"мод."},{"id":"w65","c":"Прокладка","n":"Прокладка кабеля (Без гофры)","p":120,"u":"м.п."},{"id":"w66","c":"Прокладка","n":"Прокладка кабеля в гофре","p":150,"u":"м.п."},{"id":"wkk","c":"Прокладка","n":"Монтаж кабель-канала","p":150,"u":"м.п."},{"id":"w67","c":"Коммутация","n":"Сборка распред. коробки / коммутация","p":800,"u":"шт"},{"id":"w68","c":"Чистовая","n":"Установка розетки 220В","p":500,"u":"шт"},{"id":"w69","c":"Чистовая","n":"Установка выключателя","p":550,"u":"шт"},{"id":"w70","c":"Чистовая","n":"Установка терморегулятора","p":900,"u":"шт"},{"id":"w_nakl","c":"Чистовая","n":"Установка накладного механизма (Розетка/Выкл)","p":680,"u":"шт"},{"id":"w87","c":"Щит","n":"Сборка щита (модуль)","p":500,"u":"мод."},{"id":"w_kup","c":"Спец","n":"Монтаж КУП","p":1500,"u":"шт"}];
 
 // === ЛОГИКА ПРИЛОЖЕНИЯ ===
 let db;
@@ -542,7 +727,7 @@ function openPreviewPrint(mode) {
     let title = mode==='vendor' ? 'СПИСОК ПОСТАВЩИКУ' : (mode==='details' ? 'ДЕТАЛИЗАЦИЯ ЩИТА' : 'СМЕТА ОБЪЕКТA');
     let qrH = ""; if(mode==='client') { let tg=localStorage.getItem('qr_tg_v31'), wa=localStorage.getItem('qr_wa_v31'); if(tg) qrH+=`<div class="qr-box"><img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(tg)}"><br>Telegram</div>`; if(wa) qrH+=`<div class="qr-box"><img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(wa)}"><br>WhatsApp</div>`; }
     let header = `<div class="pdf-header"><h1>${title}</h1><p>Заказчик: <b>${cust.name}</b> | Объект: ${cust.addr}</p></div>`;
-    let footer = mode==='client' ? `<div class="pdf-footer"><div><p style="margin:0; font-weight:bold; color:var(--primary);">ИСПОЛНИТЕЛЬ:</p><p style="margin:5px 0;">ФИО: ${appUser.name}</p><p style="margin:0;">Тел: ${appUser.phone}</p></div><div class="qr-codes" style="display:flex; gap:15px; text-align:center; font-size:10px;">${qrH}</div></div>` : '';
+    let footer = mode==='client' ? `<div class="pdf-footer"><div><p style="margin:0; font-weight:bold; color:var(--primary);">ИСПОЛНИТЕЛЬ:</p><p style="margin:5px 0;">ФИО: ${appUser.name}</p><p style="margin:0;">Тел: ${appUser.phone}</p></div><div class="qr-codes">${qrH}</div></div>` : '';
 
     let html = header;
     if(mode === 'details') {
@@ -600,7 +785,7 @@ function updateBuhUI() { let sW=0, sM=0, mW=0, mM=0; currentEstimate.forEach(i =
 async function saveHist() { let act = { id: Date.now(), name: cust.name||'Без имени', total: parseInt(document.getElementById('b-final').innerText)||0, date: new Date().toLocaleDateString(), estimate: JSON.parse(JSON.stringify(currentEstimate)), masterName: appUser.name, masterPhone: appUser.phone }; hDB.push(act); localStorage.setItem('h_v31', JSON.stringify(hDB)); updateHistList(); try { if(db) { await db.collection('history').doc(String(act.id)).set(act); await db.collection('drafts').doc(appUser.phone).delete(); currentEstimate=[]; renderMainTable(); } } catch(e){} showToast("Акт сохранен!"); closeModal('buhModal'); }
 function updateHistList() { let v = appUser.role==='admin'?hDB:hDB.filter(h=>h.masterPhone===appUser.phone); document.getElementById('h-stat').innerHTML = v.map(h=>`<div style="background:rgba(255,255,255,0.6); padding:10px; border-radius:10px; border:1px solid var(--border); margin-bottom:8px; cursor:pointer;" onclick="openObjCard(${h.id})"><div style="display:flex; justify-content:space-between;"><b>${h.name}</b><b style="color:var(--primary);">${h.total} P</b></div><div style="font-size:10px; color:var(--gray);">${h.date} ${appUser.role==='admin'?`<br><span style="color:var(--orange);">${h.masterName}</span>`:''}</div></div>`).join(""); }
 function openObjCard(id) { closeModal('buhModal'); currentCardId = id; const obj = hDB.find(x => x.id === id); if(!obj) return; document.getElementById('card-obj-name').innerText = obj.name || 'Без имени'; let c = 0, sh = 0, p = 0, mechs = { soc: 0, sw: 0, tv: 0, frames: 0, extraHTML: "" }; if(obj.estimate) { obj.estimate.forEach(it => { let n = it.n.toLowerCase(); if(n.includes('кабель') || n.includes('провод') || n.includes('ввг')) c += Number(it.q); if(n.includes('штроб') && !n.includes('вводная')) sh += Number(it.q); if(n.includes('подрозетник') && it.type === 'work') p += Number(it.q); if(n.includes('розетки 220в') || n.includes('накладной розетки')) mechs.soc += Number(it.q); if(n.includes('выключателя') || n.includes('проходн') || n.includes('перекрест')) mechs.sw += Number(it.q); if(n.includes('слаботочн') || n.includes('тв/инет')) mechs.tv += Number(it.q); if(n.includes('рамка')) mechs.frames += Number(it.q); if(it.tag === 'extra') mechs.extraHTML += `<div style="display:flex; justify-content:space-between; border-bottom:1px solid var(--border); padding:4px 0;"><span>${it.n}</span><b>${it.p} Р</b></div>`; }); } document.getElementById('card-stats-work').innerHTML = `Проложено кабеля: <b style="color:var(--primary);">${c} м</b><br>Нарезано штроб: <b style="color:var(--orange);">${sh} м</b><br>Высверлено точек: <b>${p} шт</b>` + (mechs.extraHTML ? `<br><br><b style="color:var(--success);">Доп. работы:</b>${mechs.extraHTML}` : ''); document.getElementById('card-stats-finish').innerHTML = `Выключатели: <b>${mechs.sw} шт</b><br>Розетки: <b>${mechs.soc} шт</b><br>Слаботочные: <b>${mechs.tv} шт</b><br><hr style="border:0; border-top: 1px solid rgba(79, 70, 229, 0.3); margin:8px 0;"><i>Всего чистовых рамок: <b style="color:var(--success);">${mechs.frames}</b></i>`; openModal('objCardModal'); }
-async function addExtraWork() { const n = document.getElementById('extra-w-n').value.trim(); const p = Number(document.getElementById('extra-w-p').value); if(!n || !p) return showToast("❌ Введите название и стоимость"); const obj = hDB.find(x => x.id === currentCardId); if(obj) { if(!obj.estimate) obj.estimate = []; obj.estimate.push({ n: n, p: p, q: 1, type: 'work', tag: 'extra' }); obj.total += p; localStorage.setItem('h_v31', JSON.stringify(hDB)); updateHistList(); openObjCard(currentCardId); document.getElementById('extra-w-n').value = ""; document.getElementById('extra-w-p').value = ""; showToast("✅ Доп. работа добавлена!"); try { if(db) await db.collection('history').doc(String(obj.id)).update({ estimate: obj.estimate, total: obj.total }); } catch(e){} } }
+async function addExtraWork() { const n = document.getElementById('extra-work-name').value.trim(); const p = Number(document.getElementById('extra-work-price').value); if(!n || !p) return showToast("❌ Введите название и стоимость"); const obj = hDB.find(x => x.id === currentCardId); if(obj) { if(!obj.estimate) obj.estimate = []; obj.estimate.push({ n: n, p: p, q: 1, type: 'work', tag: 'extra' }); obj.total += p; localStorage.setItem('h_v31', JSON.stringify(hDB)); updateHistList(); openObjCard(currentCardId); document.getElementById('extra-work-name').value = ""; document.getElementById('extra-work-price').value = ""; showToast("✅ Доп. работа добавлена!"); try { if(db) await db.collection('history').doc(String(obj.id)).update({ estimate: obj.estimate, total: obj.total }); } catch(e){} } }
 
 function switchDbTab(t) { document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active')); document.getElementById(t==='mat'?'btnTabMat':'btnTabWork').classList.add('active'); document.getElementById('editor-mat').style.display = t==='mat'?'block':'none'; document.getElementById('editor-work').style.display = t==='work'?'block':'none'; }
 function renderDbEditors() { let r = (t) => { let dbArr = t==='mat'?matDB:workDB; let cats={}; dbArr.forEach(i=>{let c=i.c||"ОБЩИЕ"; if(!cats[c]) cats[c]=[]; cats[c].push(i);}); let html=""; let idx=0; for(let c in cats) { html += `<div class="cat-header" onclick="document.getElementById('db_cat_${t}_${idx}').classList.toggle('active')">${c}</div><div class="cat-body" id="db_cat_${t}_${idx++}">` + cats[c].map(i => `<div class="mat-item"><div style="flex:1;"><b>${i.n}</b></div><div style="display:flex; align-items:center; gap:5px;"><input type="number" value="${i.p}" onchange="reqPriceChange('${t}','${i.id}','${i.n}',this.value)" style="width:70px; padding:6px; margin:0; text-align:center;"><b>Р</b></div></div>`).join('') + `</div>`; } return html; }; document.getElementById('editor-mat').innerHTML = r('mat'); document.getElementById('editor-work').innerHTML = r('work'); }
