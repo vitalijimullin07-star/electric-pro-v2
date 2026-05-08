@@ -1,9 +1,10 @@
+
 <!DOCTYPE html>
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Электрик PRO v13.2 (Control & Auth)</title>
+    <title>Электрик PRO v14.0 (Cloud DB)</title>
     
     <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore-compat.js"></script>
@@ -289,7 +290,7 @@
 
 <div class="modal" id="buhModal"><div class="modal-content glass"><div class="close-x" onclick="closeModal('buhModal')">×</div><h2 style="color:var(--primary); margin: 0 0 15px 0;"> Бухгалтерия</h2><div id="buh-calc" style="background:rgba(0,0,0,0.03); padding:15px; border-radius: 16px; font-size: 14px; font-weight:600; border:1px solid var(--border);"><div style="display: flex; justify-content:space-between; font-size:18px; color:var(--primary); border-bottom:1px solid var(--border); padding-bottom:8px; margin-bottom:8px; font-weight: 800;"><span>ОБЩАЯ ПРИБЫЛЬ: </span> <span id="p-total">0 P</span></div><div style="display:flex; justify-content:space-between; color:var(--gray);"><span>Работы:</span> <span id="b-work">0 P</span></div><div style="display:flex; justify-content:space-between; color:var(--gray);"><span>Материалы:</span> <span id="b-mat">0 P</span></div></div><div style="margin-top:15px;"><input type="number" id="b-discount" value="0" placeholder="Скидка заказчику (Р)" oninput="updateBuhUI()"><input type="number" id="b-prepay" value="0" placeholder="Аванс получен (Р)" oninput="updateBuhUI()"><div style="background: var(--orange); color:white; padding: 16px; border-radius:14px; text-align:center; font-size: 18px; font-weight:bold; box-shadow: 0 8px 20px rgba(245,158,11,0.3); margin-bottom:15px;">К ОПЛАТЕ: <span id="b-final">0 P</span></div></div><button onclick="saveHist()" class="btn-success" style="width:100%; padding: 16px; font-size: 15px;"> Сохранить в Историю</button><h4 style="margin-top:20px; color:var(--gray);">История объектов:</h4><div id="h-stat" style="max-height:250px; overflow-y:auto; font-size:13px; padding-right:5px;"></div></div></div>
 
-<div class="modal" id="settModal"><div class="modal-content glass"><div class="close-x" onclick="closeModal('settModal')">×</div><h2 style="margin-top:0; color: var(--primary);"> База данных</h2><div style="background: linear-gradient(135deg, #8B5CF6, #6D28D9); padding:16px; border-radius: 14px; margin-bottom: 15px; color: white; box-shadow: 0 6px 15px rgba(139,92,246,0.3);"><h4 style="margin:0 0 8px 0; font-size: 16px;">🤖 ИИ-Снабженец (PDF/Фото)</h4><p style="font-size:12px; margin:0 0 12px 0; opacity:0.9;">Загрузите фото накладной. ИИ вытащит материалы.</p><input type="file" accept="image/*, application/pdf" onchange="handleInvoiceUpload(this)" style="font-size:13px; padding:10px; background:rgba(255,255,255,0.2); color:white; width: 100%; border-radius:8px; margin:0; border:1px solid rgba(255,255,255,0.4);"></div><div style="background: rgba(255,255,255,0.4); padding: 16px; border-radius:14px; margin-bottom:15px; border: 1px solid var(--border);"><h4 style="margin:0 0 12px 0; color:var(--primary); font-size: 15px;">+ Добавить вручную</h4><div style="display: flex; gap:8px; margin-bottom:10px;"><select id="new-db-type" onchange="updateCategoryList()" style="flex:1; margin:0; padding:12px;"><option value="mat">Материал</option><option value="work">Работа</option></select><input type="text" id="new-db-category" list="db-cat-list" placeholder="Впишите или выберите Папку" style="flex:1; margin:0; padding:12px;"><datalist id="db-cat-list"></datalist></div><input type="text" id="new-db-name" placeholder="Название позиции" style="padding:12px; margin-bottom:10px;"><div style="display: flex; gap:8px; margin-bottom:15px;"><input type="number" id="new-db-price" placeholder="Цена (P)" style="margin:0; padding:12px;"><input type="text" id="new-db-unit" placeholder="Ед.изм" style="margin:0; padding:12px; width:40%;"></div><button class="btn-success" onclick="addCustomDbItem()" style="width:100%; padding: 14px; font-size: 14px;">Добавить в базу</button></div><div class="tabs-container"><button class="tab-btn active" id="btnTabMat" onclick="switchDbTab('mat')">Материалы</button><button class="tab-btn" id="btnTabWork" onclick="switchDbTab('work')">Работы</button></div><div id="editor-mat" style="max-height:40vh; overflow-y:auto; padding-bottom: 20px;"></div><div id="editor-work" style="max-height:40vh; overflow-y:auto; display:none; padding-bottom: 20px;"></div></div></div>
+<div class="modal" id="settModal"><div class="modal-content glass"><div class="close-x" onclick="closeModal('settModal')">×</div><h2 style="margin-top:0; color: var(--primary);"> База данных</h2><div style="background: linear-gradient(135deg, #8B5CF6, #6D28D9); padding:16px; border-radius: 14px; margin-bottom: 15px; color: white; box-shadow: 0 6px 15px rgba(139,92,246,0.3);"><h4 style="margin:0 0 8px 0; font-size: 16px;">🤖 ИИ-Снабженец (PDF/Фото)</h4><p style="font-size:12px; margin:0 0 12px 0; opacity:0.9;">Загрузите фото накладной. ИИ вытащит материалы.</p><input type="file" accept="image/*, application/pdf" onchange="handleInvoiceUpload(this)" style="font-size:13px; padding:10px; background:rgba(255,255,255,0.2); color:white; width: 100%; border-radius:8px; margin:0; border:1px solid rgba(255,255,255,0.4);"></div><div style="background: rgba(255,255,255,0.4); padding: 16px; border-radius:14px; margin-bottom:15px; border: 1px solid var(--border);"><h4 style="margin:0 0 12px 0; color:var(--primary); font-size: 15px;">+ Добавить вручную</h4><div style="display: flex; gap:8px; margin-bottom:10px;"><select id="new-db-type" onchange="updateCategoryList()" style="flex:1; margin:0; padding:12px;"><option value="mat">Материал</option><option value="work">Работа</option></select><input type="text" id="new-db-category" list="db-cat-list" placeholder="Впишите или выберите Папку" style="flex:1; margin:0; padding:12px;"><datalist id="db-cat-list"></datalist></div><input type="text" id="new-db-name" placeholder="Название позици" style="padding:12px; margin-bottom:10px;"><div style="display: flex; gap:8px; margin-bottom:15px;"><input type="number" id="new-db-price" placeholder="Цена (P)" style="margin:0; padding:12px;"><input type="text" id="new-db-unit" placeholder="Ед.изм" style="margin:0; padding:12px; width:40%;"></div><button class="btn-success" onclick="addCustomDbItem()" style="width:100%; padding: 14px; font-size: 14px;">Добавить в базу</button></div><div class="tabs-container"><button class="tab-btn active" id="btnTabMat" onclick="switchDbTab('mat')">Материалы</button><button class="tab-btn" id="btnTabWork" onclick="switchDbTab('work')">Работы</button></div><div id="editor-mat" style="max-height:40vh; overflow-y:auto; padding-bottom: 20px;"></div><div id="editor-work" style="max-height:40vh; overflow-y:auto; display:none; padding-bottom: 20px;"></div></div></div>
 
 <div class="modal" id="matCatModal"><div class="modal-content glass"><div class="close-x" onclick="closeModal('matCatModal')">×</div><h2 style="color:var(--primary); margin-top:0;"> Выбор материала</h2><div id="mat-cat-list" style="max-height:65vh; overflow-y:auto; padding-bottom:10px;"></div></div></div>
 <div class="modal" id="workModal"><div class="modal-content glass"><div class="close-x" onclick="closeModal('workModal')">×</div><h2 style="color:var(--orange); margin-top:0;"> Выбор работы</h2><div id="work-cat-list" style="max-height:65vh; overflow-y:auto; padding-bottom:10px;"></div></div></div>
@@ -303,8 +304,6 @@
 <div class="modal" id="previewModal"><div class="modal-content glass" style="max-width:800px; width:95%;"><div class="close-x no-print" onclick="closeModal('previewModal')">×</div><button class="btn-shield no-print" style="width:100%; margin-bottom:15px; padding:14px;" onclick="window.print()">🖨 Печать PDF</button><div id="p-cont"></div></div></div>
 
 <script>
-const CLOUD_URL = "https://script.google.com/macros/s/AKfycbxTagqj0lAsYZsSjCqQ89bSQkBtKxSoaF6gSOZICek57M4eW4j3mpoDrAj8Np-xORzr/exec";
-
 let db;
 try {
     firebase.initializeApp({
@@ -355,14 +354,19 @@ function showToast(msg) { let t = document.getElementById('toast'); t.innerText 
 async function saveApiKey(val) { 
     GEMINI_API_KEY = val.trim(); 
     localStorage.setItem('gemini_key_v31', GEMINI_API_KEY); 
-    if(db) {
-        try { await db.collection('settings').doc('keys').set({gemini: GEMINI_API_KEY}); } catch(e){}
-    }
+    if(db) { try { await db.collection('settings').doc('keys').set({gemini: GEMINI_API_KEY}); } catch(e){} }
     showToast("🔑 Ключ ИИ загружен в Облако!"); 
 }
 
 function saveQRs() { localStorage.setItem('qr_tg_v31', document.getElementById('qr-tg').value); localStorage.setItem('qr_wa_v31', document.getElementById('qr-wa').value); showToast("📱 Ссылки сохранены"); }
 function changeScale(val) { document.body.style.zoom = val; localStorage.setItem('scale_v31', val); }
+
+async function syncGlobalDb() {
+    localStorage.setItem('cachedDB_v31', JSON.stringify({matDB, workDB}));
+    if(db && appUser && appUser.role === 'admin') {
+        try { await db.collection('settings').doc('global_db').set({matDB: matDB, workDB: workDB}); } catch(e){}
+    }
+}
 
 async function loginApp() {
     let phone = document.getElementById('auth-phone').value.trim();
@@ -392,9 +396,7 @@ async function loginApp() {
         return;
     }
 
-    try {
-        await firebase.auth().signInWithEmailAndPassword(email, pin);
-    } catch(error) {
+    try { await firebase.auth().signInWithEmailAndPassword(email, pin); } catch(error) {
         if(error.code === 'auth/user-not-found' || error.code === 'auth/invalid-credential') {
             try { await firebase.auth().createUserWithEmailAndPassword(email, pin); } catch(err) { hideLoader(); return showToast("❌ Ошибка сейфа."); }
         } else { hideLoader(); return showToast("❌ Сбой авторизации."); }
@@ -416,26 +418,30 @@ async function finishLoginSetup() {
     document.getElementById('admin-panel').style.display = appUser.role === 'admin' ? 'block' : 'none';
 
     showLoader('Синхронизация с сервером...', '☁️');
-    try {
-        const resp = await fetch(CLOUD_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify({ action: "get_db" }) });
-        const dbData = JSON.parse(await resp.text());
-        if (dbData && dbData.status === "ok" && dbData.db) { matDB = dbData.db.matDB || []; workDB = dbData.db.workDB || []; localStorage.setItem('cachedDB_v31', JSON.stringify({matDB, workDB})); }
-    } catch(e) { 
-        let cached = localStorage.getItem('cachedDB_v31');
-        if (cached) { let parsed = JSON.parse(cached); matDB = parsed.matDB || []; workDB = parsed.workDB || []; } 
-    }
+    
+    // 1. Грузим из локального кэша (если база осталась с Chrome)
+    let cached = localStorage.getItem('cachedDB_v31');
+    if (cached) { let parsed = JSON.parse(cached); matDB = parsed.matDB || []; workDB = parsed.workDB || []; }
 
+    // 2. Идем в Firebase за Справочником
     try {
         if(db) {
+            const dbDoc = await db.collection('settings').doc('global_db').get();
+            if(dbDoc.exists && (dbDoc.data().matDB?.length > 0 || dbDoc.data().workDB?.length > 0)) {
+                // Если в облаке есть данные - берем их (это загрузится в пустой APK)
+                matDB = dbDoc.data().matDB || [];
+                workDB = dbDoc.data().workDB || [];
+                localStorage.setItem('cachedDB_v31', JSON.stringify({matDB, workDB}));
+            } else if (appUser.role === 'admin' && (matDB.length > 0 || workDB.length > 0)) {
+                // Если в облаке пусто, но у Админа есть данные в кэше Chrome - льем в облако!
+                await db.collection('settings').doc('global_db').set({matDB: matDB, workDB: workDB});
+            }
+            
             const logicDoc = await db.collection('settings').doc('global_logic').get();
             if(logicDoc.exists) appLogic = logicDoc.data();
             
             const keysDoc = await db.collection('settings').doc('keys').get();
-            if(keysDoc.exists && keysDoc.data().gemini) {
-                GEMINI_API_KEY = keysDoc.data().gemini;
-                localStorage.setItem('gemini_key_v31', GEMINI_API_KEY);
-                document.getElementById('api-key-input').value = GEMINI_API_KEY;
-            }
+            if(keysDoc.exists && keysDoc.data().gemini) { GEMINI_API_KEY = keysDoc.data().gemini; localStorage.setItem('gemini_key_v31', GEMINI_API_KEY); document.getElementById('api-key-input').value = GEMINI_API_KEY; }
 
             const overrideDoc = await db.collection('settings').doc('price_overrides').get();
             if(overrideDoc.exists) priceOverrides = overrideDoc.data().overrides || {};
@@ -447,16 +453,12 @@ async function finishLoginSetup() {
         }
     } catch(e) { hDB = JSON.parse(localStorage.getItem('h_v31')) || []; currentEstimate = JSON.parse(localStorage.getItem('est_v31')) || []; }
 
-    // Применяем глобальные изменения цен
     matDB.forEach(item => { if(priceOverrides[item.id]) item.p = priceOverrides[item.id]; });
     workDB.forEach(item => { if(priceOverrides[item.id]) item.p = priceOverrides[item.id]; });
 
     hideLoader(); renderAdminUsers();
     
-    if(appUser.role === 'admin') {
-        loadAdminData();
-        loadMasterDrafts();
-    }
+    if(appUser.role === 'admin') { loadAdminData(); loadMasterDrafts(); }
 
     let IsCust = localStorage.getItem('cust_v31');
     if(IsCust && cust.name) { updateMasterBadge(); renderMainTable(); updateHistList(); } 
@@ -481,12 +483,8 @@ async function loadMasterDrafts() {
         snap.forEach(doc => {
             if(doc.id === '89776230182') return;
             let data = doc.data();
-            let master = users.find(u => u.phone === doc.id);
-            let mName = master ? master.name : doc.id;
-            let total = 0;
-            if(data.estimate) {
-                data.estimate.forEach(it => { total += fPrice(it) * it.q; });
-            }
+            let master = users.find(u => u.phone === doc.id); let mName = master ? master.name : doc.id; let total = 0;
+            if(data.estimate) { data.estimate.forEach(it => { total += fPrice(it) * it.q; }); }
             draftsHtml += `<div class="emp-row" style="flex-direction:column; align-items:flex-start;">
                 <div style="width:100%; display:flex; justify-content:space-between;"><b>${mName}</b> <span style="color:var(--primary); font-weight:bold;">${total} Р</span></div>
                 <span style="font-size:11px; color:var(--gray);">Объект: ${data.cust ? data.cust.name : 'Не указан'} | Позиций: ${data.estimate ? data.estimate.length : 0}</span>
@@ -494,6 +492,13 @@ async function loadMasterDrafts() {
         });
         document.getElementById('admin-drafts-list').innerHTML = draftsHtml || "<span style='font-size:12px; color:gray;'>Активных смет у мастеров пока нет</span>";
     } catch(e) {}
+}
+
+function switchDbTab(tab) {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById(tab === 'mat' ? 'btnTabMat' : 'btnTabWork').classList.add('active');
+    document.getElementById('editor-mat').style.display = tab === 'mat' ? 'block' : 'none';
+    document.getElementById('editor-work').style.display = tab === 'work' ? 'block' : 'none';
 }
 
 function renderDbEditors() {
@@ -505,10 +510,9 @@ async function requestPriceChange(type, id, name, newPrice) {
     newPrice = Number(newPrice);
     if (appUser.role === 'admin') {
         let dbArr = type === 'mat' ? matDB : workDB;
-        let item = dbArr.find(x => x.id === id);
-        if (item) item.p = newPrice;
+        let item = dbArr.find(x => x.id === id); if (item) item.p = newPrice;
         priceOverrides[id] = newPrice;
-        localStorage.setItem('cachedDB_v31', JSON.stringify({matDB, workDB}));
+        syncGlobalDb();
         try { if(db) await db.collection('settings').doc('price_overrides').set({overrides: priceOverrides}); } catch(e){}
         showToast("✅ Цена изменена для всех (Админ)");
     } else {
@@ -516,8 +520,7 @@ async function requestPriceChange(type, id, name, newPrice) {
         try {
             if(db) {
                 const snap = await db.collection('settings').doc('price_requests').get();
-                let reqs = snap.exists ? snap.data().reqs || [] : [];
-                reqs.push(req);
+                let reqs = snap.exists ? snap.data().reqs || [] : []; reqs.push(req);
                 await db.collection('settings').doc('price_requests').set({reqs: reqs});
             }
             showToast("📤 Заявка на изменение цены отправлена Админу!");
@@ -537,19 +540,11 @@ async function approvePrice(reqId) {
     if(req) {
         req.status = 'approved';
         let dbArr = req.type === 'mat' ? matDB : workDB;
-        let item = dbArr.find(x => x.id === req.itemId);
-        if(item) item.p = req.newPrice;
+        let item = dbArr.find(x => x.id === req.itemId); if(item) item.p = req.newPrice;
         priceOverrides[req.itemId] = req.newPrice;
-        localStorage.setItem('cachedDB_v31', JSON.stringify({matDB, workDB}));
-        try {
-            if(db) {
-                await db.collection('settings').doc('price_requests').set({reqs: priceReqs});
-                await db.collection('settings').doc('price_overrides').set({overrides: priceOverrides});
-            }
-        } catch(e){}
-        renderPriceReqs();
-        renderDbEditors();
-        showToast("✅ Цена обновлена для всех мастеров!");
+        syncGlobalDb();
+        try { if(db) { await db.collection('settings').doc('price_requests').set({reqs: priceReqs}); await db.collection('settings').doc('price_overrides').set({overrides: priceOverrides}); } } catch(e){}
+        renderPriceReqs(); renderDbEditors(); showToast("✅ Цена обновлена для всех!");
     }
 }
 
@@ -558,8 +553,7 @@ async function rejectPrice(reqId) {
     if(req) {
         req.status = 'rejected';
         try { if(db) await db.collection('settings').doc('price_requests').set({reqs: priceReqs}); } catch(e){}
-        renderPriceReqs();
-        showToast("❌ Заявка отклонена");
+        renderPriceReqs(); showToast("❌ Заявка отклонена");
     }
 }
 
@@ -572,15 +566,13 @@ async function adminAddUser() {
         if(db) await db.collection('users').doc(p).set(userObj);
         let users = JSON.parse(localStorage.getItem('users_v31')) || []; users.push(userObj); localStorage.setItem('users_v31', JSON.stringify(users));
         showToast(`✅ Сотрудник ${n} добавлен в Облако!`); renderAdminUsers();
-    } catch(e) { showToast("❌ Ошибка записи в Облако. Настройте правила Firebase."); }
+    } catch(e) { showToast("❌ Ошибка записи в Облако."); }
 }
 
 async function renderAdminUsers() {
     if(appUser.role !== 'admin') return;
     let users = [];
-    try {
-        if(db) { const snap = await db.collection('users').get(); users = snap.docs.map(doc => doc.data()); localStorage.setItem('users_v31', JSON.stringify(users)); } 
-        else users = JSON.parse(localStorage.getItem('users_v31')) || [];
+    try { if(db) { const snap = await db.collection('users').get(); users = snap.docs.map(doc => doc.data()); localStorage.setItem('users_v31', JSON.stringify(users)); } else users = JSON.parse(localStorage.getItem('users_v31')) || [];
     } catch(e) { users = JSON.parse(localStorage.getItem('users_v31')) || []; }
 
     let html = users.map(u => `<div class="emp-row"><div><b>${u.name}</b><br><span style="font-size:11px; color:var(--gray);">${u.phone} (${u.role})</span></div><button onclick="fireUser('${u.phone}', '${u.name}')" class="btn-danger" style="padding:6px 12px; border-radius:6px; font-size:11px;">Уволить ✕</button></div>`).join('');
@@ -627,7 +619,8 @@ function updateCategoryList() {
 function addCustomDbItem() {
     let t = document.getElementById('new-db-type').value, c = document.getElementById('new-db-category').value.trim() || 'Моя Папка', n = document.getElementById('new-db-name').value.trim(), p = document.getElementById('new-db-price').value, u = document.getElementById('new-db-unit').value || (t==='mat'?'шт':'ед');
     if(!n || !p) return showToast("❌ Название и цена обязательны"); let item = { id: 'c_'+Date.now(), c: c, n: n, p: Number(p), u: u, type: t };
-    if(t === 'mat') matDB.push(item); else workDB.push(item); showToast(`✅ ${n} добавлен в папку ${c}`); document.getElementById('new-db-name').value=''; document.getElementById('new-db-price').value=''; updateCategoryList();
+    if(t === 'mat') matDB.push(item); else workDB.push(item); 
+    syncGlobalDb(); showToast(`✅ ${n} добавлен в базу`); document.getElementById('new-db-name').value=''; document.getElementById('new-db-price').value=''; updateCategoryList();
 }
 function openMatCatalog() { 
     let cats = {}; matDB.forEach(m => { let c = m.c || "ОБЩЕЕ"; if(!cats[c]) cats[c] = []; cats[c].push(m); }); let html = ""; let idx = 0; 
@@ -709,7 +702,7 @@ function saveInvoiceData() {
         let i = cb.value, finalName = document.getElementById(`inv-name-${i}`).value, finalPrice = Number(document.getElementById(`inv-price-${i}`).value), matchId = document.getElementById(`inv-match-${i}`).value;
         if (matchId === "NEW") { matDB.push({ id: 'ai_' + Date.now(), c: document.getElementById(`inv-cat-${i}`).value, n: finalName, p: finalPrice, u: tempInvoiceItems[i].u || 'шт', type: 'mat' }); added++; } 
         else { let existing = matDB.find(m => m.id === matchId); if (existing && existing.p !== finalPrice) { existing.p = finalPrice; updated++; } }
-    }); localStorage.setItem('cachedDB_v31', JSON.stringify({matDB, workDB})); closeModal('invoiceReviewModal'); showToast(`✅ Добавлено: ${added}, Обновлено: ${updated}`);
+    }); syncGlobalDb(); closeModal('invoiceReviewModal'); showToast(`✅ Добавлено: ${added}, Обновлено: ${updated}`);
 }
 
 async function runAiCheck() {
