@@ -123,7 +123,7 @@
 </head>
 <body>
 
-<div id="global-loader" class="global-loader"><div id="loader-icon" class="loader-icon">☁️</div><div id="loader-text" style="font-weight:bold;">Загрузка...</div></div>
+<div id="global-loader" class="global-loader show"><div id="loader-icon" class="loader-icon">⏳</div><div id="loader-text" style="font-weight:bold;">Инициализация...</div></div>
 <div id="toast" class="toast">Уведомление</div>
 
 <div class="burger-overlay" id="burger-overlay" onclick="toggleMenu()"></div>
@@ -197,13 +197,17 @@
     </div>
 </div>
 
-<div class="modal" id="authModal" style="background: rgba(0,0,0,0.9); display: flex;">
+<div class="modal" id="authModal" style="background: rgba(0,0,0,0.9); display: none;">
     <div class="modal-content glass" style="max-width: 350px; text-align:center; padding: 30px 20px; margin: auto;">
         <h2 style="color: var(--primary); margin-top:0; font-size: 24px; font-weight:900;">Электрик PRO</h2>
         <p style="color:var(--gray); font-size:12px; margin-bottom:20px;">Рабочая среда v16.6</p>
         
-        <button id="btn-google-login" class="btn-primary no-print" style="width:100%; background:#4285F4; padding:14px; font-size:14px; margin-bottom:20px; font-weight:bold;">
-            Войти через Google
+        <button id="btn-google-login" class="btn-primary no-print" style="width:100%; background:#4285F4; padding:14px; font-size:14px; margin-bottom:10px; font-weight:bold;">
+            🔑 Войти через Google
+        </button>
+        
+        <button id="btn-google-reg" class="btn-primary no-print" style="width:100%; background:#34A853; padding:14px; font-size:14px; margin-bottom:20px; font-weight:bold;">
+            📝 Регистрация через Google
         </button>
 
         <div style="border-top: 1px dashed var(--gray); padding-top: 20px;">
@@ -527,25 +531,29 @@ try {
     db.enablePersistence().catch(err => console.warn("Offline cache failed", err));
 } catch(e) { console.error("Firebase error", e); }
 
-// === GOOGLE AUTH (МГНОВЕННАЯ ПРИВЯЗКА) ===
-document.getElementById('btn-google-login').addEventListener('click', () => {
+// === GOOGLE AUTH ===
+async function handleGoogleAuth() {
     if(!auth) return alert("Ошибка: Firebase не загружен. Проверьте интернет-соединение.");
-    showLoader("Переход в Google...", "🔄");
-    const provider = new firebase.auth.GoogleAuthProvider();
-    auth.signInWithRedirect(provider).catch(e => {
+    showLoader("Подключение к Google...", "🔄");
+    try { 
+        const provider = new firebase.auth.GoogleAuthProvider();
+        provider.setCustomParameters({ prompt: 'select_account' });
+        await auth.signInWithPopup(provider); 
+    } catch(e) { 
         hideLoader();
-        alert("Сбой запуска Google Auth:\n" + e.message);
-    });
-});
+        if(e.code !== 'auth/popup-closed-by-user') {
+            alert("Сбой Google Auth:\n" + e.message); 
+        }
+    }
+}
+
+document.getElementById('btn-google-login').addEventListener('click', handleGoogleAuth);
+document.getElementById('btn-google-reg').addEventListener('click', handleGoogleAuth);
 
 if(auth) {
-    auth.getRedirectResult().catch(e => {
-        alert("Сбой авторизации Google:\n" + e.message + "\n\nВажно: Убедитесь, что ваш домен (например, .github.io) добавлен в Firebase Console -> Authentication -> Settings -> Authorized domains");
-    });
-
     auth.onAuthStateChanged(async (user) => {
         if (user) {
-            showLoader("Загрузка...", "🔒");
+            showLoader("Загрузка профиля...", "🔒");
             try {
                 const userRef = db.collection('users').doc(user.uid);
                 const docSnap = await userRef.get();
@@ -560,10 +568,12 @@ if(auth) {
                 }
             } catch(e) { hideLoader(); alert("Ошибка связи с БД: " + e.message); }
         } else {
+            hideLoader();
             checkLocalPinUser();
         }
     });
 } else {
+    hideLoader();
     checkLocalPinUser();
 }
 
