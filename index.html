@@ -185,7 +185,6 @@
     </div>
 </div>
 
-<!-- МОДАЛКА УВЕДОМЛЕНИЙ -->
 <div id="custom-modal-overlay" style="position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.6); backdrop-filter:blur(5px); z-index:99999; display:none; align-items:center; justify-content:center; padding: 20px;">
     <div class="card glass" style="max-width: 400px; width:100%; padding: 25px; text-align: center; margin:0; box-sizing: border-box;">
         <h3 id="cm-title" style="margin-top:0; color: var(--primary);">Уведомление</h3>
@@ -198,13 +197,11 @@
     </div>
 </div>
 
-<!-- АВТОРИЗАЦИЯ -->
 <div class="modal" id="authModal" style="background: rgba(0,0,0,0.9); display: flex;">
     <div class="modal-content glass" style="max-width: 350px; text-align:center; padding: 30px 20px; margin: auto;">
         <h2 style="color: var(--primary); margin-top:0; font-size: 24px; font-weight:900;">Электрик PRO</h2>
         <p style="color:var(--gray); font-size:12px; margin-bottom:20px;">Рабочая среда v16.6</p>
         
-        <!-- КНОПКА GOOGLE ВОССТАНОВЛЕНА И ПРИВЯЗАНА ЖЕСТКО -->
         <button id="btn-google-login" class="btn-primary no-print" style="width:100%; background:#4285F4; padding:14px; font-size:14px; margin-bottom:20px; font-weight:bold;">
             Войти через Google
         </button>
@@ -226,7 +223,6 @@
     </div>
 </div>
 
-<!-- МОДАЛКИ ВВОДА -->
 <div class="modal" id="qtyPromptModal" style="z-index: 3000;">
     <div class="modal-content glass" style="max-width: 280px; text-align:center; padding: 20px; margin: auto;">
         <h3 style="color:var(--primary); margin-top:0; font-size:16px;">Количество</h3>
@@ -256,7 +252,6 @@
     </div>
 </div>
 
-<!-- АДМИНКА, ИИ, НАСТРОЙКИ -->
 <div class="modal" id="settingsModal">
     <div class="modal-content glass">
         <div class="close-x" onclick="closeModal('settingsModal')">×</div>
@@ -327,7 +322,6 @@
     </div>
 </div>
 
-<!-- БАЗА ДАННЫХ И КАТАЛОГИ -->
 <div class="modal" id="settModal">
     <div class="modal-content glass">
         <div class="close-x" onclick="closeModal('settModal')">×</div>
@@ -346,7 +340,6 @@
 
 <div class="modal" id="aiModal"><div class="modal-content glass"><div class="close-x" onclick="closeModal('aiModal')">×</div><h2 style="color:var(--ai); margin-top:0; font-size:18px;" id="ai-modal-title">✨ ИИ-Аналитика</h2><div id="ai-suggestions" style="overflow-x:auto;"></div></div></div>
 
-<!-- КАЛЬКУЛЯТОРЫ -->
 <div class="modal" id="logicModal">
     <div class="modal-content glass">
         <div class="close-x" onclick="closeModal('logicModal')">×</div>
@@ -535,22 +528,21 @@ try {
 } catch(e) { console.error("Firebase error", e); }
 
 // === GOOGLE AUTH (МГНОВЕННАЯ ПРИВЯЗКА) ===
-document.getElementById('btn-google-login').addEventListener('click', async () => {
+document.getElementById('btn-google-login').addEventListener('click', () => {
     if(!auth) return alert("Ошибка: Firebase не загружен. Проверьте интернет-соединение.");
-    showLoader("Подключение к Google...", "🔄");
-    try { 
-        const provider = new firebase.auth.GoogleAuthProvider();
-        await auth.signInWithPopup(provider); 
-    } catch(e) { 
+    showLoader("Переход в Google...", "🔄");
+    const provider = new firebase.auth.GoogleAuthProvider();
+    auth.signInWithRedirect(provider).catch(e => {
         hideLoader();
-        alert("Сбой Google Auth:
-" + e.message + "
-
-(Убедитесь, что ваш домен добавлен в Firebase Authorized Domains)"); 
-    }
+        alert("Сбой запуска Google Auth:\n" + e.message);
+    });
 });
 
 if(auth) {
+    auth.getRedirectResult().catch(e => {
+        alert("Сбой авторизации Google:\n" + e.message + "\n\nВажно: Убедитесь, что ваш домен (например, .github.io) добавлен в Firebase Console -> Authentication -> Settings -> Authorized domains");
+    });
+
     auth.onAuthStateChanged(async (user) => {
         if (user) {
             showLoader("Загрузка...", "🔒");
@@ -915,8 +907,7 @@ async function runAiCheck() {
         const response = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
         const data = await response.json(); hideLoader();
         if(data.error) throw new Error(data.error.message);
-        let aiText = data.candidates[0].content.parts[0].text.replace(/```[a-z]*
-?/g, '').replace(/```/g, '').trim();
+        let aiText = data.candidates[0].content.parts[0].text.replace(/```[a-z]*\n?/g, '').replace(/```/g, '').trim();
         const suggestions = JSON.parse(aiText);
         if (suggestions.length === 0) return showToast("✨ Всё идеально! Смета полная.");
         document.getElementById('ai-modal-title').innerText = "✨ ИИ-Аналитика";
@@ -934,8 +925,7 @@ async function aiPueHelper() {
         const payload = { contents: [{ parts: [{text: promptText }] }] };
         const response = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
         const data = await response.json(); hideLoader();
-        let aiText = data.candidates[0].content.parts[0].text.replace(/```[a-z]*
-?/g, '').replace(/```/g, '').trim();
+        let aiText = data.candidates[0].content.parts[0].text.replace(/```[a-z]*\n?/g, '').replace(/```/g, '').trim();
         document.getElementById('ai-modal-title').innerText = "📚 ПУЭ Справка";
         document.getElementById('ai-suggestions').innerHTML = `<div style="font-size:13px; line-height:1.5;">${aiText}</div>`;
         openModal('aiModal');
@@ -952,8 +942,7 @@ async function compareShopsAI() {
         const payload = { contents: [{ parts: [{text: promptText }] }] };
         const response = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
         const data = await response.json(); hideLoader();
-        let aiText = data.candidates[0].content.parts[0].text.replace(/```[a-z]*
-?/g, '').replace(/```/g, '').trim();
+        let aiText = data.candidates[0].content.parts[0].text.replace(/```[a-z]*\n?/g, '').replace(/```/g, '').trim();
         document.getElementById('ai-modal-title').innerText = "🛒 Цены ГОСТ";
         document.getElementById('ai-suggestions').innerHTML = `<div style="overflow-x:auto;">${aiText}</div>`;
         openModal('aiModal');
@@ -973,8 +962,7 @@ async function analyzeMastersAI() {
         const data = await response.json(); hideLoader(); 
         let aiText = data.candidates[0].content.parts[0].text; 
         document.getElementById('ai-modal-title').innerText = "📊 ИИ-Аналитика Штат"; 
-        document.getElementById('ai-suggestions').innerHTML = `<div style="font-size:13px; line-height:1.5;">${aiText.replace(/
-/g, '<br>')}</div>`; 
+        document.getElementById('ai-suggestions').innerHTML = `<div style="font-size:13px; line-height:1.5;">${aiText.replace(/\n/g, '<br>')}</div>`; 
         openModal('aiModal'); 
     } catch (error) { hideLoader(); showToast("❌ Ошибка ИИ."); }
 }
