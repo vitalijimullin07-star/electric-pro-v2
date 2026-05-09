@@ -408,6 +408,7 @@
 <div class="modal" id="recalcModal"><div class="modal-content glass"><div class="close-x" onclick="closeModal('recalcModal')">×</div><h2 style="color:var(--primary); margin: 0 0 10px 0;"> Сведение трасс</h2><div style="background:rgba(0,0,0,0.03); padding: 12px; border-radius: 12px; margin-bottom: 15px; font-size: 13px; font-weight:bold; border:1px solid var(--border);"><div style="display: flex; justify-content:space-between; margin-bottom: 6px;">ВВГ / Кабель (всего): <span id="r-cab" style="color:var(--primary);">0</span></div><div style="display: flex; justify-content:space-between;">Штробы (всего): <span id="r-sht" style="color:var(--orange);">0</span></div></div><label style="font-size:12px; font-weight:bold; color:var(--gray);">Кабеля ПО ПОТОЛКУ (м): </label><input type="number" id="r-ceil-input" value="0" oninput="updateRecalcUI()" style="margin-top:5px; margin-bottom:15px; padding: 12px; border: 2px solid var(--primary);"><div style="background:rgba(79, 70, 229, 0.05); padding: 12px; border-radius: 12px; margin-bottom: 15px; font-size: 13px; font-weight:bold; border:1px solid var(--primary); color: var(--primary);"><div style="display:flex; justify-content:space-between; margin-bottom: 6px;">Кабель в штробе: <span id="r-res-sht">0</span></div><div style="display: flex; justify-content:space-between; margin-bottom: 6px;">Кабель по потолку: <span id="r-res-ceil">0</span></div><div style="display: flex; justify-content:space-between; margin-top:8px; padding-top:8px; border-top:2px solid var(--primary); font-size:15px;">ПО ПОЛУ (в гофре): <span id="r-res-floor">0</span></div></div><button onclick="doRecalculate()" class="btn-success" style="width:100%; padding: 14px; margin:0;">Выполнить перерасчет</button></div></div>
 
 <div class="modal" id="previewModal"><div class="modal-content glass" style="max-width:800px; width:95%;"><div class="close-x no-print" onclick="closeModal('previewModal')">×</div><button class="btn-shield no-print" style="width:100%; margin-bottom:15px; padding:14px;" onclick="window.print()">🖨 Печать PDF</button><div id="p-cont"></div></div></div>
+
 <script>
 let db, auth;
 
@@ -497,30 +498,45 @@ function showLoader(text, icon = '☁️') { document.getElementById('loader-ico
 function hideLoader() { document.getElementById('global-loader').classList.remove('show'); }
 function showToast(msg) { let t = document.getElementById('toast'); t.innerText = msg; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 3000); }
 
-// === АВТОРИЗАЦИЯ GOOGLE ===
+// === АВТОРИЗАЦИЯ GOOGLE (БРОНЕБОЙНАЯ ДЛЯ ТЕЛЕФОНОВ) ===
 document.getElementById('btn-google-login').onclick = async () => {
     const provider = new firebase.auth.GoogleAuthProvider();
-    try { await auth.signInWithPopup(provider); } catch(e) { showToast("Ошибка входа: " + e.message); }
+    try { 
+        await auth.signInWithRedirect(provider); 
+    } catch(e) { 
+        window.alert("Ошибка вызова Google: " + e.message); 
+    }
 };
 
 auth.onAuthStateChanged(async (user) => {
     if (user) {
-        showLoader("Проверка доступа...", "🔒");
-        const userRef = db.collection('users').doc(user.uid);
-        const docSnap = await userRef.get();
-        
-        if (!docSnap.exists) {
-            await userRef.set({ name: user.displayName, email: user.email, role: 'master', isApproved: false, geminiKey: '', phone: '' });
-            hideLoader(); openModal('waitingModal'); closeModal('authModal');
-        } else {
-            appUser = docSnap.data(); appUser.uid = user.uid;
-            hideLoader();
-            if (appUser.isApproved || appUser.role === 'admin') {
-                closeModal('authModal'); closeModal('waitingModal');
-                finishLoginSetup();
+        showLoader("Проверка профиля...", "🔒");
+        try {
+            const userRef = db.collection('users').doc(user.uid);
+            const docSnap = await userRef.get();
+            
+            if (!docSnap.exists) {
+                await userRef.set({ name: user.displayName || "Мастер", email: user.email, role: 'master', isApproved: false, geminiKey: '', phone: '' });
+                hideLoader(); 
+                closeModal('authModal');
+                openModal('waitingModal'); 
             } else {
-                openModal('waitingModal'); closeModal('authModal');
+                appUser = docSnap.data(); 
+                appUser.uid = user.uid;
+                hideLoader();
+                
+                if (appUser.isApproved === true || appUser.role === 'admin') {
+                    closeModal('authModal'); 
+                    closeModal('waitingModal');
+                    finishLoginSetup();
+                } else {
+                    closeModal('authModal');
+                    openModal('waitingModal'); 
+                }
             }
+        } catch (err) {
+            hideLoader();
+            window.alert("Ошибка связи с базой данных: " + err.message);
         }
     } else {
         openModal('authModal');
