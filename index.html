@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Электрик PRO v16.5 ERP</title>
+    <title>Электрик PRO v16.6 ERP</title>
     
     <script>
         window.onerror = function(message, source, lineno, colno, error) {
             console.error("Критическая ошибка:", message, lineno);
             let loader = document.getElementById('global-loader');
             if(loader) loader.classList.remove('show');
-            return false; 
+            return true; 
         };
     </script>
 
@@ -185,6 +185,7 @@
     </div>
 </div>
 
+<!-- МОДАЛКА УВЕДОМЛЕНИЙ -->
 <div id="custom-modal-overlay" style="position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.6); backdrop-filter:blur(5px); z-index:99999; display:none; align-items:center; justify-content:center; padding: 20px;">
     <div class="card glass" style="max-width: 400px; width:100%; padding: 25px; text-align: center; margin:0; box-sizing: border-box;">
         <h3 id="cm-title" style="margin-top:0; color: var(--primary);">Уведомление</h3>
@@ -201,8 +202,9 @@
 <div class="modal" id="authModal" style="background: rgba(0,0,0,0.9); display: flex;">
     <div class="modal-content glass" style="max-width: 350px; text-align:center; padding: 30px 20px; margin: auto;">
         <h2 style="color: var(--primary); margin-top:0; font-size: 24px; font-weight:900;">Электрик PRO</h2>
-        <p style="color:var(--gray); font-size:12px; margin-bottom:20px;">Рабочая среда v16.5</p>
+        <p style="color:var(--gray); font-size:12px; margin-bottom:20px;">Рабочая среда v16.6</p>
         
+        <!-- КНОПКА GOOGLE ВОССТАНОВЛЕНА И ПРИВЯЗАНА ЖЕСТКО -->
         <button id="btn-google-login" class="btn-primary no-print" style="width:100%; background:#4285F4; padding:14px; font-size:14px; margin-bottom:20px; font-weight:bold;">
             Войти через Google
         </button>
@@ -481,7 +483,7 @@
 </div>
 
 <script>
-// === БЕЗОПАСНАЯ ОБОЛОЧКА ДЛЯ APK (ИЗБЕГАЕМ БЕЛЫХ ЭКРАНОВ) ===
+// === БЕЗОПАСНАЯ ОБОЛОЧКА ===
 function safeGet(key, def) { try { return localStorage.getItem(key) || def; } catch(e) { return def; } }
 function safeSet(key, val) { try { localStorage.setItem(key, val); } catch(e) {} }
 
@@ -489,99 +491,96 @@ let db, auth;
 let GEMINI_API_KEY = safeGet('gemini_key_v31', "");
 let appUser = null; 
 let cust = {name:"", phone:"", addr:"", ceil:270};
+try { let c = JSON.parse(safeGet('cust_v31', '{}')); if(c && c.name) cust = c; } catch(e){}
+
 let hDB = []; 
+try { hDB = JSON.parse(safeGet('h_v31', '[]')); } catch(e) { hDB = []; }
 let currentEstimate = []; 
+try { currentEstimate = JSON.parse(safeGet('est_v31', '[]')); } catch(e) { currentEstimate = []; }
+
 let matDB = [], workDB = []; 
 let pool = []; 
 let coeffs = {mat:0, work:0};
-let priceOverrides = {};
-let cfg = {rms: 1, acs: 0, fls: 0, bals: 0 };
-var st_soc = 1, st_sw = 0, st_pass = 0, st_cross = 0, st_tv = 0, st_tpol = 0, st_q = 1, st_h = 30, st_p = 1, st_podr = 'std';
-let globalRecalcCab = 0, globalRecalcSht = 0; let pendingAdd = null; let currentCardId = null;
+try { let c = JSON.parse(safeGet('coeffs_v31', '{"mat":0,"work":0}')); coeffs = c; } catch(e){}
 
 let appLogic = { 
     cabRes: 1.1, gofraRes: 1.05, basesPerM: 3, clipsPerM: 3, packSize: 100, mixPerBox: 0.3, crownLife: 80,
     priceSoc: 500, priceShield: 500, priceDrill: 600, priceShtroba: 550, priceCabCeil: 120 
 };
+try { let logic = JSON.parse(safeGet('appLogic_v31', '{}')); appLogic = Object.assign(appLogic, logic); } catch(e){}
 
-// БАЗА ДАННЫХ 141 ПОЗИЦИЯ
+let priceOverrides = {};
+let cfg = {rms: 1, acs: 0, fls: 0, bals: 0 };
+var st_soc = 1, st_sw = 0, st_pass = 0, st_cross = 0, st_tv = 0, st_tpol = 0, st_q = 1, st_h = 30, st_p = 1, st_podr = 'std';
+let globalRecalcCab = 0, globalRecalcSht = 0; let pendingAdd = null; let currentCardId = null;
+
+// === БАЗА ДАННЫХ 141 ПОЗИЦИЯ ===
 const FULL_MAT_INIT=[{"id":"m1","c":"Кабель","n":"Кабель ВВГнг-LS 3х1.5 (Конкорд) круглый","p":57,"u":"м.п."},{"id":"m2","c":"Кабель","n":"Кабель ВВГнг-LS 3х2.5 (Конкорд) круглый","p":87,"u":"м.п."},{"id":"m3","c":"Кабель","n":"Кабель ВВГнг(п)-LS 3х1.5 (Конкорд) плоский","p":62,"u":"м.п."},{"id":"m4","c":"Кабель","n":"Кабель ВВГнг(п)-LS 3х2.5 (Конкорд) плоский","p":95,"u":"м.п."},{"id":"m5","c":"Кабель","n":"Кабель ВВГ-Пнг(А)-LS 3x4 (Лептон)","p":146,"u":"м.п."},{"id":"m6","c":"Кабель","n":"Кабель ВВГ-Пнг(А)-LS 3х6 (Лептон)","p":217,"u":"м.п."},{"id":"m7","c":"Кабель","n":"Провод ПуГВ (ПВ-3) 1х6 синий (ЦВЕТЛИТ)","p":85,"u":"м.п."},{"id":"m8","c":"Кабель","n":"Провод ПуГВ (ПВ-3) 1х6 белый (ЦВЕТЛИТ)","p":85,"u":"м.п."},{"id":"m9","c":"Слаботочка","n":"Кабель TV SAT-703 (Cavel)","p":75,"u":"м.п."},{"id":"m10","c":"Слаботочка","n":"Витая пара комп. экран. FTP4 CAT5E 24AWG Cu","p":32,"u":"м.п."},{"id":"m11","c":"Трубы","n":"Труба гофрированная ПВХ 20мм серая","p":8,"u":"м.п."},{"id":"m12","c":"Трубы","n":"Труба гофрированная ПНД 20мм черная","p":10,"u":"м.п."},{"id":"m13","c":"Трубы","n":"Гофра ПВХ/ПНД с протяжкой","p":25,"u":"м.п."},{"id":"m14","c":"Расходники","n":"Подрозетник глубокий для бетона 68х64","p":12,"u":"шт"},{"id":"m15","c":"Расходники","n":"Подрозетник стандарт (ГКЛ)","p":20,"u":"шт"},{"id":"m16","c":"Расходники","n":"Подрозетник глубокий (ГКЛ)","p":35,"u":"шт"},{"id":"m17","c":"Расходники","n":"Коробка распределительная 100х100х40","p":120,"u":"шт"},{"id":"m18","c":"Расходники","n":"Площадка под стяжку для прямого монтажа","p":5,"u":"шт"},{"id":"m19","c":"Расходники","n":"Стяжки нейлоновые КСС 3*100 (100шт)","p":40,"u":"упак."},{"id":"m20","c":"Расходники","n":"Стяжки нейлоновые КСС 5*400 (100шт)","p":410,"u":"упак."},{"id":"m21","c":"Расходники","n":"Газовый баллон 80 мл 165 мм","p":550,"u":"шт"},{"id":"m22","c":"Расходники","n":"Гвозди для прямого монтажа 3х19 мм (1000 шт)","p":1905,"u":"упак."},{"id":"m23","c":"Расходники","n":"Лента монтажная (перфолента)","p":580,"u":"шт"},{"id":"m24","c":"Расходники","n":"Лента монтажная текстильная 20 мм (50м)","p":880,"u":"упак."},{"id":"m25","c":"Щитовое","n":"Наконечник НШВИ 6.0-12 (упак)","p":225,"u":"упак."},{"id":"m26","c":"Щитовое","n":"Наконечник НШВИ(2) 6.0-14 (упак)","p":365,"u":"упак."},{"id":"m27","c":"Расходники","n":"Гильза ГМЛ 4","p":12,"u":"шт"},{"id":"m28","c":"Расходники","n":"Гильза ГМЛ 6","p":18,"u":"шт"},{"id":"m29","c":"Расходники","n":"Термоусадка 12/4 (м)","p":80,"u":"м"},{"id":"m30","c":"Автоматика","n":"Автомат 1P 10A (ABB SH201)","p":265,"u":"шт"},{"id":"m31","c":"Автоматика","n":"Автомат 1P 16A (ABB SH201)","p":265,"u":"шт"},{"id":"m32","c":"Автоматика","n":"Автомат 1P 40A (ABB SH201)","p":410,"u":"шт"},{"id":"m33","c":"Автоматика","n":"ДИФ Автомат DSH201 C32 AC30 (ABB)","p":3100,"u":"шт"},{"id":"m34","c":"Щитовое","n":"Клеммник винтовой N 5x16 (ABB)","p":345,"u":"шт"},{"id":"m35","c":"Щитовое","n":"Клеммник винтовой PE 11x16 (ABB)","p":770,"u":"шт"},{"id":"m36","c":"Щитовое","n":"Шкаф внутрь. на 36М UK636E3 (ABB)","p":6510,"u":"шт"},{"id":"m37","c":"Щитовое","n":"Шкаф мультимедийный UK620MV (ABB)","p":11025,"u":"шт"},{"id":"m38","c":"Автоматика","n":"Автомат 1P 10A (ИЭК ВА47-29)","p":172,"u":"шт"},{"id":"m39","c":"Автоматика","n":"Автомат 1P 16A (ИЭК ВА47-29)","p":150,"u":"шт"},{"id":"m40","c":"Автоматика","n":"Автомат 2P 40A (ИЭК ВА47-29)","p":380,"u":"шт"},{"id":"m41","c":"Автоматика","n":"УЗО 2P 40A 30мА (ИЭК ВД1-63)","p":1195,"u":"шт"},{"id":"m42","c":"Щитовое","n":"Шина N ноль на DIN-изол (ИЭК)","p":285,"u":"шт"},{"id":"m43","c":"Щитовое","n":"Корпус пластиковый ЩРВ-П-24 (TEKFOR)","p":2660,"u":"шт"},{"id":"m44","c":"Автоматика","n":"Реле напряжения УЗМ-50Ц","p":4500,"u":"шт"}];
 const FULL_WORK_INIT=[{"id":"w44","c":"Алмазная резка","n":"Штроба 25х30 (Бетон)","p":550,"u":"м.п."},{"id":"w45","c":"Алмазная резка","n":"Штроба 25х30 (Кирпич)","p":400,"u":"м.п."},{"id":"w48","c":"Алмазная резка","n":"Штроба 50х50 (Бетон)","p":1500,"u":"м.п."},{"id":"w52","c":"Алмазная резка","n":"Штроба 100х50 ВВОДНАЯ (Бетон)","p":2200,"u":"м.п."},{"id":"w56","c":"Алмазная резка","n":"Высверливание подр. стандарт (Бетон)","p":600,"u":"шт"},{"id":"w60","c":"Черновая электрика","n":"Вклейка подрозетников","p":100,"u":"шт"},{"id":"w61","c":"Алмазная резка","n":"Вырубка ниши щита (Бетон)","p":400,"u":"мод."},{"id":"w65","c":"Монтаж","n":"Прокладка кабеля Без гофры (Потолок)","p":120,"u":"м.п."},{"id":"w66","c":"Монтаж","n":"Прокладка кабеля В гофре (Пол)","p":150,"u":"м.п."},{"id":"w67","c":"Монтаж","n":"Сборка распред. коробки / коммутация","p":800,"u":"шт"},{"id":"w68","c":"Чистовая установка","n":"Установка розетки 220В","p":500,"u":"шт"},{"id":"w69","c":"Чистовая установка","n":"Установка выключателя","p":550,"u":"шт"},{"id":"w70","c":"Чистовая установка","n":"Установка терморегулятора","p":900,"u":"шт"},{"id":"w71","c":"Алмазная резка","n":"Высверливание подрозетников глубокий (Бетон)","p":650,"u":"шт"},{"id":"w75","c":"Алмазная резка","n":"Высверливание подрозетников копос 74х75 (Бетон)","p":800,"u":"шт"},{"id":"w79","c":"Алмазная резка","n":"Отверстие 132 ММ L= до 450 (Бетон)","p":6000,"u":"шт"},{"id":"w83","c":"Алмазная резка","n":"Отверстие 52мм L=до 450мм (Бетон)","p":2500,"u":"шт"},{"id":"w87","c":"Щитовое","n":"Сборка щита (мод)","p":500,"u":"мод."},{"id":"w89","c":"Щитовое","n":"Установка БП в щит","p":900,"u":"ед"},{"id":"w91","c":"Монтаж","n":"Подключение нагревателя","p":4000,"u":"ед"},{"id":"w92","c":"Монтаж","n":"Система КУП","p":5000,"u":"ед"},{"id":"s_r1","c":"Щитовое","n":"Установка реле времени","p":1250,"u":"шт"},{"id":"s_r5","c":"Щитовое","n":"Установка реле напряжения","p":1150,"u":"шт"},{"id":"s_m1","c":"Щитовое","n":"Установка электросчетчика 220-240В на DIN","p":1000,"u":"шт"},{"id":"s_p1","c":"Чистовая установка","n":"Установка накладной розетки/выкл на бетон","p":680,"u":"шт"},{"id":"s_p7","c":"Чистовая установка","n":"Установка встраиваемой розетки/выкл в подрозетник","p":300,"u":"шт"},{"id":"s_p8","c":"Чистовая установка","n":"Установка блока розеток/выкл","p":1200,"u":"шт"},{"id":"s_d1","c":"Черновая электрика","n":"Установка накладного подрозетника","p":300,"u":"шт"},{"id":"s_d3","c":"Черновая электрика","n":"Установка накладной распаечной коробки","p":450,"u":"шт"},{"id":"s_sh1","c":"Щитовое","n":"Монтаж электрощитка накладного 2 модуля","p":180,"u":"шт"},{"id":"s_l1","c":"Освещение","n":"Монтаж светодиодной ленты на кухне под шкафами","p":270,"u":"м.п."},{"id":"s_c1","c":"Освещение","n":"Сборка простой люстры","p":630,"u":"шт"},{"id":"s_c10","c":"Освещение","n":"Установка точечного светильника","p":750,"u":"шт"},{"id":"s_dem3","c":"Демонтаж","n":"Демонтаж розетки","p":200,"u":"шт"},{"id":"s_dem8","c":"Демонтаж","n":"Демонтаж электрощитка до 8 модулей","p":110,"u":"шт"}];
 
-// ИНИЦИАЛИЗАЦИЯ И AUTH
-document.addEventListener("DOMContentLoaded", function() {
-    try {
-        firebase.initializeApp({
-            apiKey: "AIzaSyBr_LVhNKtiNb--Vh5WHhvFuR-r47N3iCw",
-            authDomain: "electric-489f7.firebaseapp.com",
-            projectId: "electric-489f7",
-            storageBucket: "electric-489f7.firebasestorage.app",
-            messagingSenderId: "674960586951",
-            appId: "1:674960586951:web:522b0557e75bb97dea26e2"
-        });
-        db = firebase.firestore();
-        auth = firebase.auth();
-        db.settings({ cacheSizeBytes: firebase.firestore.CACHE_SIZE_UNLIMITED });
-        db.enablePersistence().catch(err => console.warn("Offline cache failed"));
-    } catch(e) { console.error("Firebase error", e); }
+// === FIREBASE INIT ===
+try {
+    firebase.initializeApp({
+        apiKey: "AIzaSyBr_LVhNKtiNb--Vh5WHhvFuR-r47N3iCw",
+        authDomain: "electric-489f7.firebaseapp.com",
+        projectId: "electric-489f7",
+        storageBucket: "electric-489f7.firebasestorage.app",
+        messagingSenderId: "674960586951",
+        appId: "1:674960586951:web:522b0557e75bb97dea26e2"
+    });
+    db = firebase.firestore();
+    auth = firebase.auth();
+    db.settings({ cacheSizeBytes: firebase.firestore.CACHE_SIZE_UNLIMITED });
+    db.enablePersistence().catch(err => console.warn("Offline cache failed", err));
+} catch(e) { console.error("Firebase error", e); }
 
-    document.getElementById('btn-google-login').onclick = async () => {
-        if(!auth) return window.customAlert("Ошибка", "Firebase не загружен");
-        showLoader("Подключение к Google...", "🔄");
+// === GOOGLE AUTH (МГНОВЕННАЯ ПРИВЯЗКА) ===
+document.getElementById('btn-google-login').addEventListener('click', async () => {
+    if(!auth) return alert("Ошибка: Firebase не загружен. Проверьте интернет-соединение.");
+    showLoader("Подключение к Google...", "🔄");
+    try { 
         const provider = new firebase.auth.GoogleAuthProvider();
-        try { 
-            await auth.signInWithPopup(provider); 
-        } catch(e) { 
-            hideLoader();
-            window.customAlert("Сбой Google", "Ошибка: " + e.message + "
-Убедитесь, что домен добавлен в Firebase."); 
-        }
-    };
+        await auth.signInWithPopup(provider); 
+    } catch(e) { 
+        hideLoader();
+        alert("Сбой Google Auth:
+" + e.message + "
 
-    if(auth) {
-        auth.onAuthStateChanged(async (user) => {
-            if (user) {
-                showLoader("Загрузка...", "🔒");
-                try {
-                    const userRef = db.collection('users').doc(user.uid);
-                    const docSnap = await userRef.get();
-                    if (!docSnap.exists) {
-                        await userRef.set({ name: user.displayName || "Мастер", email: user.email, role: 'master', isApproved: false, geminiKey: '', phone: '', pin: '' });
-                        hideLoader(); document.getElementById('authModal').style.display='none'; document.getElementById('waitingModal').style.display='flex';
-                    } else {
-                        appUser = docSnap.data(); appUser.uid = user.uid; hideLoader();
-                        if (appUser.isApproved || appUser.role === 'admin') {
-                            finishLoginSetup();
-                        } else { document.getElementById('authModal').style.display='none'; document.getElementById('waitingModal').style.display='flex'; }
-                    }
-                } catch(e) { hideLoader(); window.customAlert("Ошибка связи", e.message); }
-            } else {
-                checkLocalPinUser();
-            }
-        });
-    } else {
-        checkLocalPinUser();
+(Убедитесь, что ваш домен добавлен в Firebase Authorized Domains)"); 
     }
 });
+
+if(auth) {
+    auth.onAuthStateChanged(async (user) => {
+        if (user) {
+            showLoader("Загрузка...", "🔒");
+            try {
+                const userRef = db.collection('users').doc(user.uid);
+                const docSnap = await userRef.get();
+                if (!docSnap.exists) {
+                    await userRef.set({ name: user.displayName || "Мастер", email: user.email, role: 'master', isApproved: false, geminiKey: '', phone: '', pin: '' });
+                    hideLoader(); document.getElementById('authModal').style.display='none'; document.getElementById('waitingModal').style.display='flex';
+                } else {
+                    appUser = docSnap.data(); appUser.uid = user.uid; hideLoader();
+                    if (appUser.isApproved || appUser.role === 'admin') {
+                        document.getElementById('authModal').style.display='none'; document.getElementById('waitingModal').style.display='none'; finishLoginSetup();
+                    } else { document.getElementById('authModal').style.display='none'; document.getElementById('waitingModal').style.display='flex'; }
+                }
+            } catch(e) { hideLoader(); alert("Ошибка связи с БД: " + e.message); }
+        } else {
+            checkLocalPinUser();
+        }
+    });
+} else {
+    checkLocalPinUser();
+}
 
 function checkLocalPinUser() {
     let pinUser = safeGet('authUser_v31_pin', null);
     if (pinUser) { 
-        try { 
-            appUser = JSON.parse(pinUser); 
-            finishLoginSetup(); 
-        } catch(e){ document.getElementById('authModal').style.display='flex'; } 
-    } else { 
-        document.getElementById('authModal').style.display='flex'; 
-    }
+        try { appUser = JSON.parse(pinUser); finishLoginSetup(); } catch(e){ document.getElementById('authModal').style.display='flex'; } 
+    } else { document.getElementById('authModal').style.display='flex'; }
 }
-
-// === СТАРТ ПРИЛОЖЕНИЯ ===
-try { let c = JSON.parse(safeGet('cust_v31', '{}')); if(c && c.name) cust = c; } catch(e){}
-try { hDB = JSON.parse(safeGet('h_v31', '[]')); } catch(e) { hDB = []; }
-try { currentEstimate = JSON.parse(safeGet('est_v31', '[]')); } catch(e) { currentEstimate = []; }
-try { let c = JSON.parse(safeGet('coeffs_v31', '{"mat":0,"work":0}')); coeffs = c; } catch(e){}
-try { let logic = JSON.parse(safeGet('appLogic_v31', '{}')); appLogic = Object.assign(appLogic, logic); } catch(e){}
 
 window.customAlert = (title, text) => {
     return new Promise(resolve => {
@@ -676,17 +675,16 @@ async function finishLoginSetup() {
             const logicDoc = await db.collection('settings').doc('global_logic').get();
             if(logicDoc.exists) appLogic = Object.assign(appLogic, logicDoc.data());
             
-            // Восстановление истории и синхронизации
             const histSnap = await db.collection('history').get();
             hDB = histSnap.docs.map(doc => doc.data());
             const draftDoc = await db.collection('drafts').doc(appUser.uid).get();
             if(draftDoc.exists && currentEstimate.length === 0) { 
                 currentEstimate = draftDoc.data().estimate || []; 
-                cust = draftDoc.data().cust || {name:"", phone:"", addr:"", ceil:270}; 
-                safeSet('cust_v31', JSON.stringify(cust)); 
+                let c = draftDoc.data().cust;
+                if(c) { cust = c; safeSet('cust_v31', JSON.stringify(cust)); }
             }
         } else { matDB = FULL_MAT_INIT; workDB = FULL_WORK_INIT; }
-    } catch(e) { matDB = FULL_MAT_INIT; workDB = FULL_WORK_INIT; }
+    } catch(e) { matDB = FULL_MAT_INIT; workDB = FULL_WORK_INIT; console.error(e); }
     
     hideLoader(); updateMasterBadge(); renderMainTable(); updateHistList();
     if(!(cust && cust.name)) { setTimeout(() => { openModal('custModal'); }, 400); }
@@ -886,6 +884,15 @@ function generateCascadePanel() {
     if (cfg.fls > 0) { countDIF++; m.push({ n: `🔥 ДИФ (Т.Полы) ${bAuto}`, q: 1, p: bAuto==='ABB'?4500:3600, type:'mat' }); totalMod += 2; m.push({ n: `  ↳ Автомат C16 (Т.Пол) ${bAuto}`, q: cfg.fls, p: bAuto==='ABB'?350:155, type:'mat' }); count1P += cfg.fls; }
     if(document.getElementById('cfg-uzm').checked) { m.push({ n: `Реле напряжения УЗМ-50Ц`, q: ph===3?3:1, p: 4500, type:'mat' }); totalMod += (ph===3?6:2); }
     if(isMaster) { m.push({ n: `Контактор 25А`, q: 1, p: 2200, type:'mat' }); m.push({ n: `  ↳ Автомат 40А (Байпас) ${bAuto}`, q: 1, p: bAuto==='ABB'?600:380, type:'mat' }); count1P++; totalMod += 2; }
+    
+    m.push({ n: `Провод ПуГВ (ПВ-3) 1х6 синий`, q: 4, p: 85, type:'mat' }); m.push({ n: `Провод ПуГВ (ПВ-3) 1х6 белый`, q: 4, p: 85, type:'mat' }); m.push({ n: `Наконечник НШВИ 6.0-12 (упак)`, q: 1, p: 225, type:'mat' });
+    
+    if (bBox === 'ABB') { m.push({ n: `Клеммник винтовой N 5x16 (ABB)`, q: countDIF, p: 345, type:'mat' }); m.push({ n: `Клеммник винтовой PE 11x16 (ABB)`, q: 1, p: 770, type:'mat' }); } 
+    else { m.push({ n: `Шина N ноль на DIN-изол (ИЭК)`, q: countDIF, p: 285, type:'mat' }); }
+    
+    let comb1P = Math.ceil(count1P / 12); let comb2P = Math.ceil(countDIF / 6);
+    if (comb1P > 0) m.push({ n: `Гребенка 1P (25см)`, q: comb1P, p: 250, type:'mat' });
+    if (comb2P > 0) m.push({ n: `Гребенка 2Р (25см)`, q: comb2P, p: 450, type:'mat' });
     
     totalMod += count1P; let boxSize = [12, 24, 36, 48, 54, 72, 96].find(s => s >= (totalMod + 5)) || 96;
     m.unshift({ n: `📦 Щит ${sWall==='Накладной'?'накладной':'встраиваемый'} ${bBox} ${boxSize}М`, q: 1, p: bBox==='ABB'?6510:2660, type:'mat' });
