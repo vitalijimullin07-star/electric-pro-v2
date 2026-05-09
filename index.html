@@ -1104,6 +1104,8 @@ function generateCascadePanel() {
     
     addAuto(m.concat(w), 'shield'); closeModal('configModal'); showToast("✅ Щит сгенерирован!");
 }
+function openModal(id) { document.getElementById(id).style.display = 'block'; }
+function closeModal(id) { document.getElementById(id).style.display = 'none'; }
 
 </script>
 </body>
