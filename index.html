@@ -16,6 +16,7 @@
             --orange: #F59E0B; --gray: #64748B; --border: rgba(200, 210, 224, 0.6);
             --glass-shadow: 0 8px 32px rgba(31, 38, 135, 0.05);
             --modal-bg: rgba(255, 255, 255, 0.95); --blur: blur(16px);
+            --ai: #8B5CF6;
         }
         
         [data-theme="dark"] { --bg: #0F172A; --card: rgba(30, 41, 59, 0.75); --text: #F8FAFC; --primary: #6366F1; --success: #10B981; --danger: #F43F5E; --orange: #F59E0B; --gray: #94A3B8; --border: rgba(255, 255, 255, 0.08); --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.4); --modal-bg: rgba(15, 23, 42, 0.95); }
@@ -114,15 +115,11 @@
         .logic-label { font-size: 11px; font-weight: bold; color: var(--primary); display: block; margin-bottom: 5px; text-transform: uppercase; }
         .logic-row { margin-bottom: 10px; }
 
-        /* Step 2 Styles */
-        .erp-grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
-        .erp-grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
-
         @media print {
-            body, html { height: auto !important; overflow: visible !important; background: white; margin: 0; padding: 0; }
+            body, html { height: auto !important; overflow: visible !important; background: white; margin: 0; padding: 0; zoom: 1 !important; }
             .no-print, .container, .burger-menu, .burger-overlay { display: none !important; }
-            .modal { position: relative !important; inset: auto !important; display: block !important; background: white !important; padding: 0 !important; overflow: visible !important; }
-            .modal-content { border: none !important; box-shadow: none !important; max-width: 100% !important; margin: 0 !important; padding: 10px !important; animation: none !important; overflow: visible !important; position: relative !important; }
+            .modal { position: relative !important; inset: auto !important; display: block !important; background: white !important; padding: 0 !important; overflow: visible !important; backdrop-filter: none !important; }
+            .modal-content { border: none !important; box-shadow: none !important; max-width: 100% !important; margin: 0 !important; padding: 10px !important; animation: none !important; overflow: visible !important; position: relative !important; background: white !important; }
             .close-x { display: none !important; }
             #p-cont { background: white !important; border: none !important; box-shadow: none !important; padding: 0 !important; overflow: visible !important; page-break-inside: auto; }
             .pdf-header { text-align: center; border-bottom: 3px solid var(--primary); padding-bottom: 15px; margin-bottom: 20px; }
@@ -131,7 +128,7 @@
             .pdf-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 12px; page-break-inside: auto; }
             .pdf-table tr { page-break-inside: avoid; page-break-after: auto; }
             .pdf-table thead { display: table-header-group; }
-            .pdf-table th { background: #f8fafc !important; -webkit-print-color-adjust: exact; padding: 10px; border-bottom: 2px solid #cbd5e1; color: var(--text); }
+            .pdf-table th { background: #f8fafc !important; -webkit-print-color-adjust: exact; padding: 10px; border-bottom: 2px solid #cbd5e1; color: var(--text); text-align:left; }
             .pdf-table td { padding: 8px 10px; border-bottom: 1px solid #e2e8f0; }
             .pdf-footer { display: flex; justify-content: space-between; align-items: flex-end; margin-top: 40px; padding-top: 20px; border-top: 2px solid #e2e8f0; page-break-inside: avoid; }
             .qr-codes { display: flex; gap: 15px; }
@@ -141,6 +138,7 @@
     </style>
 </head>
 <body>
+
 <div id="global-loader" class="global-loader"><div id="loader-icon" class="loader-icon">☁️</div><div id="loader-text" class="loader-text">Синхронизация...</div></div>
 <div id="toast" class="toast">Уведомление</div>
 
@@ -155,48 +153,10 @@
     <div style="border-top: 1px solid var(--border); margin-top:15px; padding-top:15px;">
         <button class="btn-vendor" style="background: rgba(16,185,129,0.15); color: #10B981;" onclick="aiPueHelper(); toggleMenu();">📚 ИИ-Помощник (ПУЭ и Монтаж)</button>
         <button class="btn-vendor" style="background: rgba(244,63,94,0.1); color: var(--danger);" onclick="compareShopsAI(); toggleMenu();">🛒 ИИ-Сравнение цен в магазинах</button>
-        <button class="btn-vendor" style="background: rgba(100,116,139,0.15); color: var(--text);" onclick="openMatCatalog(); toggleMenu();">🛠 Ручная сборка щита (Каталог)</button>
+        <button class="btn-vendor" style="background: rgba(100,116,139,0.15); color: var(--text);" onclick="openMatCatalog(); toggleMenu();">🛠 Каталог Материалов</button>
         <button class="btn-vendor" style="background: rgba(79,70,229,0.1); color: var(--primary);" onclick="openModal('logicModal'); toggleMenu();">⚙️ Логика расчетов и Цены</button>
         <button class="btn-vendor" style="background: rgba(100,116,139,0.15); color: var(--text);" onclick="openModal('settingsModal'); toggleMenu();">🛠 Настройки системы</button>
-        <button class="btn-danger" style="margin-top:20px;" onclick="openLogoutModal(); toggleMenu();">🚪 Выйти</button>
-    </div>
-</div>
-
-<div id="custom-modal-overlay" style="position:fixed; inset:0; background:rgba(0,0,0,0.6); backdrop-filter:blur(5px); z-index:99999; display:none; align-items:center; justify-content:center; padding: 20px;">
-    <div class="card glass" style="max-width: 400px; width:100%; padding: 25px; text-align: center; margin:0;">
-        <h3 id="cm-title" style="margin-top:0; color: var(--primary);">Уведомление</h3>
-        <p id="cm-text" style="margin-bottom: 20px; font-size:14px;"></p>
-        <input type="text" id="cm-input" style="width:100%; display:none; margin-bottom:15px; padding:12px; border-radius:8px; border:1px solid var(--border);" placeholder="Введите значение...">
-        <div style="display:flex; gap:10px; justify-content:center;">
-            <button id="cm-cancel" class="btn-ghost" style="display:none; flex:1; margin:0;">Отмена</button>
-            <button id="cm-ok" class="btn-primary" style="flex:1; margin:0;">OK</button>
-        </div>
-    </div>
-</div>
-
-<div class="modal" id="authModal" style="background: rgba(0,0,0,0.85); backdrop-filter: blur(15px); display: block;">
-    <div class="modal-content glass" style="max-width: 400px; text-align:center; padding-top:40px; padding-bottom:40px;">
-        <h2 style="color: var(--primary); margin-top:0; font-size: 26px; font-weight:900;">Электрик PRO</h2>
-        <p style="color:var(--gray); font-size:13px; margin-bottom:25px;">Рабочая среда v16.0 ERP</p>
-        
-        <button id="btn-google-login" class="btn-primary" style="width:100%; background:#4285F4; padding:16px; font-size:16px; margin-bottom:20px; box-shadow: 0 8px 20px rgba(66, 133, 244, 0.4); color:white; border-radius:12px; border:none; font-weight:bold;">
-            Войти через Google
-        </button>
-
-        <div style="border-top: 1px dashed var(--gray); padding-top: 25px;">
-            <p style="color:var(--gray); font-size:12px; margin-top:0; margin-bottom:10px;">Для приложения (APK) или резервного входа:</p>
-            <input type="tel" id="auth-phone" placeholder="Телефон (+7...)" style="margin-bottom:10px; padding:14px; text-align:center;">
-            <input type="password" id="auth-pin" placeholder="PIN-код" style="margin-bottom:15px; padding:14px; text-align:center;">
-            <button class="btn-vendor" style="width:100%; padding:14px; font-size:14px;" onclick="loginWithPin()">Войти по ПИН-коду</button>
-        </div>
-    </div>
-</div>
-
-<div class="modal" id="waitingModal" style="background: rgba(0,0,0,0.85); backdrop-filter: blur(15px); display: none;">
-    <div class="modal-content glass" style="max-width: 400px; text-align:center; padding-top:40px; padding-bottom:40px;">
-        <h2 style="color: var(--orange); margin-top:0;">Заявка отправлена</h2>
-        <p style="color:var(--text); font-size:14px; margin-bottom:30px;">Ваш аккаунт создан, но еще не подтвержден. Ожидайте одобрения администратором.</p>
-        <button class="btn-danger" style="width:100%; padding:16px; margin:0;" onclick="confirmLogout()">Выйти</button>
+        <button class="btn-danger" style="margin-top:20px;" onclick="confirmLogout(); toggleMenu();">🚪 Выйти</button>
     </div>
 </div>
 
@@ -220,8 +180,8 @@
         </div>
 
         <div style="display: flex; gap:10px; background:rgba(0,0,0,0.03); padding:12px; border-radius:14px; margin-bottom:10px;">
-            <div style="flex: 1;"><label style="font-size: 11px; font-weight:bold; color:var(--primary); display:block; margin-bottom:6px;">Наценка МАТЕРИАЛ (%)</label><input type="number" id="m-coeff" value="0" style="margin:0; padding:10px; text-align:center;" onchange="coeffs.mat=Number(this.value); localStorage.setItem('coeffs_v31', JSON.stringify(coeffs)); renderMainTable();"></div>
-            <div style="flex:1;"><label style="font-size: 11px; font-weight:bold; color:var(--orange); display:block; margin-bottom:6px;">Наценка РАБОТА (%)</label><input type="number" id="w-coeff" value="0" style="margin:0; padding:10px; text-align:center;" onchange="coeffs.work=Number(this.value); localStorage.setItem('coeffs_v31', JSON.stringify(coeffs)); renderMainTable();"></div>
+            <div style="flex: 1;"><label style="font-size: 11px; font-weight:bold; color:var(--primary); display:block; margin-bottom:6px;">Наценка МАТЕРИАЛ (%)</label><input type="number" id="m-coeff" value="0" style="margin:0; padding:10px; text-align:center;" onchange="updateCoeffs()"></div>
+            <div style="flex:1;"><label style="font-size: 11px; font-weight:bold; color:var(--orange); display:block; margin-bottom:6px;">Наценка РАБОТА (%)</label><input type="number" id="w-coeff" value="0" style="margin:0; padding:10px; text-align:center;" onchange="updateCoeffs()"></div>
         </div>
 
         <div class="table-wrapper">
@@ -242,6 +202,46 @@
     </div>
 </div>
 
+<div id="custom-modal-overlay" style="position:fixed; inset:0; background:rgba(0,0,0,0.6); backdrop-filter:blur(5px); z-index:99999; display:none; align-items:center; justify-content:center; padding: 20px;">
+    <div class="card glass" style="max-width: 400px; width:100%; padding: 25px; text-align: center; margin:0;">
+        <h3 id="cm-title" style="margin-top:0; color: var(--primary);">Уведомление</h3>
+        <p id="cm-text" style="margin-bottom: 20px; font-size:14px;"></p>
+        <input type="text" id="cm-input" style="width:100%; display:none; margin-bottom:15px; padding:12px; border-radius:8px; border:1px solid var(--border);" placeholder="Введите значение...">
+        <div style="display:flex; gap:10px; justify-content:center;">
+            <button id="cm-cancel" class="btn-ghost" style="display:none; flex:1; margin:0;">Отмена</button>
+            <button id="cm-ok" class="btn-primary" style="flex:1; margin:0;">OK</button>
+        </div>
+    </div>
+</div>
+
+<!-- АВТОРИЗАЦИЯ -->
+<div class="modal" id="authModal" style="background: rgba(0,0,0,0.85); backdrop-filter: blur(15px); display: block;">
+    <div class="modal-content glass" style="max-width: 400px; text-align:center; padding-top:40px; padding-bottom:40px;">
+        <h2 style="color: var(--primary); margin-top:0; font-size: 26px; font-weight:900;">Электрик PRO</h2>
+        <p style="color:var(--gray); font-size:13px; margin-bottom:25px;">Рабочая среда v16.0 ERP</p>
+        
+        <button id="btn-google-login" class="btn-primary" style="width:100%; background:#4285F4; padding:16px; font-size:16px; margin-bottom:20px; box-shadow: 0 8px 20px rgba(66, 133, 244, 0.4); color:white; border-radius:12px; border:none; font-weight:bold;">
+            Войти через Google
+        </button>
+
+        <div style="border-top: 1px dashed var(--gray); padding-top: 25px;">
+            <p style="color:var(--gray); font-size:12px; margin-top:0; margin-bottom:10px;">Для приложения (APK) или резервного входа:</p>
+            <input type="tel" id="auth-phone" placeholder="Телефон (8977...)" style="margin-bottom:10px; padding:14px; text-align:center;">
+            <input type="password" id="auth-pin" placeholder="PIN-код" style="margin-bottom:15px; padding:14px; text-align:center;">
+            <button class="btn-vendor" style="width:100%; padding:14px; font-size:14px;" onclick="loginWithPin()">Войти по ПИН-коду</button>
+        </div>
+    </div>
+</div>
+
+<div class="modal" id="waitingModal" style="background: rgba(0,0,0,0.85); backdrop-filter: blur(15px); display: none;">
+    <div class="modal-content glass" style="max-width: 400px; text-align:center; padding-top:40px; padding-bottom:40px;">
+        <h2 style="color: var(--orange); margin-top:0;">Заявка отправлена</h2>
+        <p style="color:var(--text); font-size:14px; margin-bottom:30px;">Ваш аккаунт создан, но еще не подтвержден. Ожидайте одобрения администратором.</p>
+        <button class="btn-danger" style="width:100%; padding:16px; margin:0;" onclick="confirmLogout()">Выйти</button>
+    </div>
+</div>
+
+<!-- ОСТАЛЬНЫЕ МОДАЛКИ -->
 <div class="modal" id="qtyPromptModal" style="z-index: 3000;">
     <div class="modal-content glass" style="max-width: 300px; text-align:center;">
         <h3 style="color:var(--primary); margin-top:0;">Укажите количество</h3>
@@ -258,22 +258,11 @@
     </div>
 </div>
 
-<div class="modal" id="logoutModal" style="z-index: 3000;">
-    <div class="modal-content glass" style="text-align: center; max-width: 350px;">
-        <h3 style="color: var(--danger); margin-top: 0; font-size: 22px;">Выход из системы</h3>
-        <p style="color: var(--text); font-size: 14px; margin-bottom: 25px;">Вы уверены, что хотите выйти из профиля?</p>
-        <div style="display: flex; gap: 10px;">
-            <button class="btn-ghost" style="flex: 1; padding: 14px; margin:0;" onclick="closeModal('logoutModal')">Отмена</button>
-            <button class="btn-danger" style="flex: 1; padding: 14px; margin:0;" onclick="confirmLogout()">Выйти</button>
-        </div>
-    </div>
-</div>
-
 <div class="modal" id="custModal">
     <div class="modal-content glass">
         <div class="close-x" onclick="closeModal('custModal')">×</div>
         <h2 style="color: var(--primary); margin-top:0;"> Заказчик и Объект</h2>
-        <select id="c-history-select" onchange="loadCustFromHistory(this.value)" style="background:rgba(16, 185, 129, 0.1); border-color:var(--success); color:var(--success);"><option value="">📥 Загрузить существующего (История)</option></select>
+        <select id="c-history-select" onchange="loadCustFromHistory(this.value)" style="background:rgba(16, 185, 129, 0.1); border-color:var(--success); color:var(--success);"><option value="">📥 Загрузить (История)</option></select>
         <input type="text" id="c-name" placeholder="ФИО Заказчика (Объект)">
         <input type="tel" id="c-phone" placeholder="Телефон заказчика">
         <input type="text" id="c-addr" placeholder="Адрес объекта">
@@ -291,7 +280,6 @@
         <h3 id="card-obj-name" style="margin-top:0; color:var(--text);">Объект</h3>
         <div style="background:rgba(0,0,0,0.03); padding: 12px; border-radius: 12px; font-size:13px; border:1px solid var(--border); margin-bottom:15px;"><h4 style="margin:0 0 8px 0; color:var(--orange);">🔨 Выполненный объем (Черновая)</h4><div id="card-stats-work" style="margin-bottom:10px;"></div><h4 style="margin: 15px 0 8px 0; color:var(--primary);">💡 Нужно на чистовую:</h4><div id="card-stats-finish" style="background:rgba(255,255,255,0.6); padding:10px; border-radius:8px; border:1px solid rgba(79, 70, 229, 0.3); font-weight:bold;"></div></div>
         <div style="margin-top: 15px; border-top: 1px dashed var(--gray); padding-top: 15px;"><h4 style="margin: 0 0 10px 0; color:var(--success);">➕ Внести дополнительные работы</h4><input type="text" id="extra-work-name" placeholder="Название доп. работы" style="padding: 12px; margin-bottom: 8px;"><div style="display:flex; gap:8px; margin-bottom: 10px;"><input type="number" id="extra-work-price" placeholder="Стоимость (Р)" style="padding: 12px; margin:0;"><button class="btn-success" onclick="addExtraWork()" style="padding: 12px 20px; white-space: nowrap; margin:0;">Добавить</button></div></div>
-        <button onclick="printActPDF()" class="btn-info" style="width:100%; margin-top:10px; padding:14px;">🖨 Печать Акта (PDF)</button>
     </div>
 </div>
 
@@ -303,6 +291,7 @@
         <button onclick="saveInvoiceData()" class="btn-success" style="width:100%; margin-top:15px; padding: 16px; font-size:14px;">📥 Загрузить в Базу</button>
     </div>
 </div>
+
 <div class="modal" id="aiModal"><div class="modal-content glass"><div class="close-x" onclick="closeModal('aiModal')">×</div><h2 style="color:var(--ai);" id="ai-modal-title">✨ ИИ-Аналитика</h2><div id="ai-suggestions" style="overflow-x:auto;"></div></div></div>
 
 <div class="modal" id="logicModal">
@@ -332,7 +321,6 @@
         </div>
         
         <div class="logic-group"><span class="logic-label">Цены для авто-калькуляторов (Руб)</span>
-            <p style="font-size:10px; color:var(--gray); margin-top:0; margin-bottom:10px; line-height:1.2;">Здесь меняются переменные для формул сборки щита и трасс.</p>
             <div class="logic-row"><label style="font-size:12px; color:var(--gray);">Установка механизма:</label><input type="number" id="logic-price-soc" placeholder="500"></div>
             <div class="logic-row"><label style="font-size:12px; color:var(--gray);">Сборка щита (за 1 мод):</label><input type="number" id="logic-price-shield" placeholder="500"></div>
             <div class="logic-row"><label style="font-size:12px; color:var(--gray);">Высверливание (Бетон):</label><input type="number" id="logic-price-drill" placeholder="600"></div>
@@ -343,6 +331,11 @@
         <div class="logic-group"><span class="logic-label">Коэффициенты</span>
             <div class="logic-row"><label style="font-size:12px;">Запас кабеля (напр. 1.1):</label><input type="number" id="logic-cab-reserve" step="0.01"></div>
             <div class="logic-row"><label style="font-size:12px;">Запас гофры (напр. 1.05):</label><input type="number" id="logic-gofra-reserve" step="0.01"></div>
+            <div class="logic-row"><label style="font-size:12px;">Площадок на 1 м потолка:</label><input type="number" id="logic-bases-m"></div>
+            <div class="logic-row"><label style="font-size:12px;">Клипс на 1 м штробы:</label><input type="number" id="logic-clips-m"></div>
+            <div class="logic-row"><label style="font-size:12px;">Штук в 1 уп. крепежа:</label><input type="number" id="logic-pack-size"></div>
+            <div class="logic-row"><label style="font-size:12px;">Алебастр на 1 точку (кг):</label><input type="number" id="logic-mix-box" step="0.1"></div>
+            <div class="logic-row"><label style="font-size:12px;">Ресурс алмазной коронки:</label><input type="number" id="logic-crown-life"></div>
         </div>
 
         <button id="logic-save-btn" class="btn-primary" style="width:100%; padding:14px; margin-top:5px;" onclick="saveLogic()">Сохранить логику и Цены</button>
@@ -367,6 +360,7 @@
         <h4 style="color:var(--gray); margin-bottom: 8px; margin-top:15px;">📱 Ссылки для QR</h4>
         <input type="text" id="qr-tg" placeholder="Telegram (t.me/...)" onchange="saveQRs()">
         <input type="text" id="qr-wa" placeholder="WhatsApp (wa.me/...)" onchange="saveQRs()">
+        <input type="text" id="ai-shops" placeholder="Магазины (Лемана ПРО, ВсеИнструменты)" onchange="saveQRs()" style="margin-top:10px;">
         
         <div id="admin-panel" style="display:none; padding-top:20px; border-top: 1px dashed var(--gray); margin-top:20px;">
             <h3 style="color:var(--danger); margin-bottom: 10px;">👑 Панель Руководителя</h3>
@@ -383,7 +377,7 @@
             <div id="admin-users-list" style="margin-bottom:15px; max-height:150px; overflow-y:auto; border:1px solid var(--border); border-radius:8px; padding:8px;"></div>
             
             <h4 style="color:var(--text); margin-bottom: 10px;">Добавить вручную (для APK)</h4>
-            <input type="tel" id="add-user-phone" placeholder="Телефон (+7...)"><input type="password" id="add-user-pin" placeholder="PIN-код"><input type="text" id="add-user-name" placeholder="ФИО Мастера">
+            <input type="tel" id="add-user-phone" placeholder="Телефон (8977...)"><input type="password" id="add-user-pin" placeholder="PIN-код"><input type="text" id="add-user-name" placeholder="ФИО Мастера">
             <button class="btn-danger" style="width:100%; padding:14px;" onclick="adminAddUser()">Зарегистрировать</button>
         </div>
     </div>
@@ -396,13 +390,19 @@
 <div class="modal" id="matCatModal"><div class="modal-content glass"><div class="close-x" onclick="closeModal('matCatModal')">×</div><h2 style="color:var(--primary); margin-top:0;"> Выбор материала</h2><div id="mat-cat-list" style="max-height:65vh; overflow-y:auto; padding-bottom:10px;"></div></div></div>
 <div class="modal" id="workModal"><div class="modal-content glass"><div class="close-x" onclick="closeModal('workModal')">×</div><h2 style="color:var(--orange); margin-top:0;"> Выбор работы</h2><div id="work-cat-list" style="max-height:65vh; overflow-y:auto; padding-bottom:10px;"></div></div></div>
 
-<div class="modal" id="configModal"><div class="modal-content glass"><div class="close-x" onclick="closeModal('configModal')">×</div><h2 style="color:var(--primary); margin: 0 0 10px 0;"> Сборка щита (Авто)</h2><div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px;"><div><label style="font-size: 10px; font-weight:bold; color:var(--gray);">Корпус:</label><select id="cfg-brand-box"><option>Tekfor</option><option>ABB</option><option>Schneider</option><option>IEK</option></select></div><div><label style="font-size:10px; font-weight:bold; color:var(--gray);">Автоматы:</label><select id="cfg-brand-auto"><option>IEK</option><option>ABB</option><option>Schneider</option></select></div></div><select id="cfg-phase" style="margin-bottom:10px;"><option value="1">220В (1 фаза)</option><option value="3">380B (3 фазы)</option></select><div style="background:rgba(0,0,0,0.03); padding:10px; border-radius:12px; margin-bottom: 10px;"><div class="mech-row"><span> Комнаты (шт)</span><div class="counter-box"><button class="c-btn" onclick="modV('rms',-1)">-</button><span id="v-rms" class="c-val">1</span><button class="c-btn" onclick="modV('rms', 1)">+</button></div></div><div class="mech-row"><span> Кондиционеры</span><div class="counter-box"><button class="c-btn" onclick="modV('acs',-1)">-</button><span id="v-acs" class="c-val">0</span><button class="c-btn" onclick="modV('acs', 1)">+</button></div></div><div class="mech-row"><span> Теплые полы</span><div class="counter-box"><button class="c-btn" onclick="modV('fls',-1)">-</button><span id="v-fls" class="c-val">0</span><button class="c-btn" onclick="modV('fls', 1)">+</button></div></div></div><div class="chk-grid"><label class="chk-row"><input type="checkbox" id="c-oven" checked> Плита</label><label class="chk-row"><input type="checkbox" id="c-fridge" checked> Холод</label><label class="chk-row"><input type="checkbox" id="c-washer" checked> Стиралка</label><label class="chk-row"><input type="checkbox" id="cfg-uzm"> Реле напряж.</label></div><button onclick="generateCascadePanel()" class="btn-shield" style="width:100%; padding: 14px; margin:0;">Сгенерировать щит</button></div></div>
+<div class="modal" id="configModal"><div class="modal-content glass"><div class="close-x" onclick="closeModal('configModal')">×</div><h2 style="color:var(--primary); margin: 0 0 10px 0;"> Сборка щита (Авто)</h2><div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px;"><div><label style="font-size: 10px; font-weight:bold; color:var(--gray);">Корпус:</label><select id="cfg-brand-box"><option>Tekfor</option><option>ABB</option><option>Schneider</option><option>IEK</option></select></div><div><label style="font-size:10px; font-weight:bold; color:var(--gray);">Автоматы:</label><select id="cfg-brand-auto"><option>IEK</option><option>ABB</option><option>Schneider</option></select></div></div><select id="cfg-phase" style="margin-bottom:10px;"><option value="1">220В (1 фаза)</option><option value="3">380B (3 фазы)</option></select><div style="background:rgba(0,0,0,0.03); padding:10px; border-radius:12px; margin-bottom: 10px;"><div class="mech-row"><span> Комнаты (шт)</span><div class="counter-box"><button class="c-btn" onclick="modV('rms',-1)">-</button><span id="v-rms" class="c-val">1</span><button class="c-btn" onclick="modV('rms', 1)">+</button></div></div><div class="mech-row"><span> Кондиционеры</span><div class="counter-box"><button class="c-btn" onclick="modV('acs',-1)">-</button><span id="v-acs" class="c-val">0</span><button class="c-btn" onclick="modV('acs', 1)">+</button></div></div><div class="mech-row"><span> Теплые полы</span><div class="counter-box"><button class="c-btn" onclick="modV('fls',-1)">-</button><span id="v-fls" class="c-val">0</span><button class="c-btn" onclick="modV('fls', 1)">+</button></div></div><div class="mech-row" style="border-bottom:none; padding-bottom:0;"><span> Балконы</span><div class="counter-box"><button class="c-btn" onclick="modV('bals',-1)">-</button><span id="v-bals" class="c-val">0</span><button class="c-btn" onclick="modV('bals', 1)">+</button></div></div></div><div class="chk-grid"><label class="chk-row"><input type="checkbox" id="c-oven" checked> Плита/Дух.</label><label class="chk-row"><input type="checkbox" id="c-fridge" checked> Холод-к</label><label class="chk-row"><input type="checkbox" id="c-apron" checked> Фартук</label><label class="chk-row"><input type="checkbox" id="c-dish" checked> Посудом-ка</label><label class="chk-row"><input type="checkbox" id="c-washer" checked> Стиралка</label><label class="chk-row"><input type="checkbox" id="c-boiler"> Бойлер</label><label class="chk-row"><input type="checkbox" id="c-neptun"> Нептун</label><label class="chk-row"><input type="checkbox" id="cfg-master"> Мастер-кнопка</label><label class="chk-row"><input type="checkbox" id="cfg-uzm"> Реле напряж.</label></div><label style="font-size: 11px; font-weight:bold; color:var(--gray);">Тип монтажа Щита: </label><select id="cfg-shield-wall" style="margin-bottom:10px;"><option value="Бетон">Встраиваемый (Бетон)</option><option value="Кирпич">Встраиваемый (Кирпич)</option><option value="Панелька">Встраиваемый (Панелька)</option><option value="Мягкий мат.">Встраиваемый (ГКЛ)</option><option value="Накладной">Накладной (без ниши)</option></select><button onclick="generateCascadePanel()" class="btn-shield" style="width:100%; padding: 14px; margin:0;">Сгенерировать щит</button></div></div>
 
-<div class="modal" id="roughModal"><div class="modal-content glass"><div class="close-x" onclick="closeModal('roughModal')">×</div><h2 style="color:var(--orange); margin: 0 0 10px 0;"> Пул розеток</h2><div style="background:rgba(0,0,0,0.03); padding:12px; border-radius: 12px; margin-bottom: 10px; display:grid; grid-template-columns:1fr 1fr; gap:8px;"><div style="grid-column: span 2;"><label style="font-size:10px; font-weight:bold; color:var(--gray);">Логика монтажа</label><select id="montage-mode"><option value="classic">Классика</option><option value="gyn">В подрозетниках</option></select></div><div><label style="font-size:10px; font-weight:bold; color:var(--gray);">Трасса</label><select id="g-routing"><option value="ceiling">Потолок</option><option value="floor">Пол</option></select></div><div><label style="font-size:10px; font-weight:bold; color:var(--gray);">Стена</label><select id="g-wall"><option value="Бетон">Бетон</option><option value="Кирпич">Кирпич</option></select></div></div><div class="tile-grid" id="p-tiles"><div class="tile active" id="p1" onclick="setP(1)">1</div><div class="tile" id="p2" onclick="setP(2)">2</div><div class="tile" id="p3" onclick="setP(3)">3</div><div class="tile" id="p4" onclick="setP(4)">4</div><div class="tile" id="p5" onclick="setP(5)">5</div></div><div class="mech-row"><span> Розетки 220В</span><div class="counter-box"><button class="c-btn" onclick="modM('soc',-1)">-</button><span id="v-soc" class="c-val">1</span><button class="c-btn" onclick="modM('soc', 1)">+</button></div></div><div style="display:grid; grid-template-columns: 1fr 1.5fr 1fr; gap:6px; margin-top:15px;"><button class="btn-danger" style="background:var(--gray);" onclick="popPool()">↺</button><button class="btn-success" onclick="addGrp()">В Пул</button><button class="btn-shield" onclick="applyPoolToEstimate()">Смета</button></div><div id="pool-disp" style="margin-top:15px; max-height:100px; overflow-y:auto;"></div></div></div>
+<div class="modal" id="roughModal"><div class="modal-content glass"><div class="close-x" onclick="closeModal('roughModal')">×</div><h2 style="color:var(--orange); margin: 0 0 10px 0;"> Пул розеток</h2><div style="background:rgba(0,0,0,0.03); padding:12px; border-radius: 12px; margin-bottom: 10px; display:grid; grid-template-columns:1fr 1fr; gap:8px;"><div style="grid-column: span 2;"><label style="font-size:10px; font-weight:bold; color:var(--gray);">Логика монтажа</label><select id="montage-mode"><option value="classic">Классика (Распредкоробки)</option><option value="gyn">В подрозетниках (Гинекология)</option></select></div><div><label style="font-size:10px; font-weight:bold; color:var(--gray);">Трасса</label><select id="g-routing"><option value="ceiling">Потолок</option><option value="floor">Пол</option></select></div><div><label style="font-size:10px; font-weight:bold; color:var(--gray);">Стена</label><select id="g-wall"><option value="Бетон">Бетон</option><option value="Кирпич">Кирпич</option><option value="Панелька">Панелька</option><option value="Мягкий мат.">Мягкий мат.</option></select></div></div><div class="chk-grid" style="grid-template-columns:1fr;"><label class="chk-row"><input type="checkbox" id="pool-cable-channel"> 💡 В кабель-канале (без штробы)</label><label class="chk-row"><input type="checkbox" id="pool-surface"> 🔌 Накладные розетки (без алмаз. сверления)</label></div><label style="font-size:11px; font-weight:bold; color:var(--gray);">БАЗОВЫЙ ПОДРОЗЕТНИК: </label><div class="tile-grid" id="podr-tiles" style="margin-top:5px;"><div class="tile active" onclick="setPodr('std', this)">Стандарт 45мм</div><div class="tile" onclick="setPodr('deep', this)"> Глубокий 64мм</div><div class="tile" onclick="setPodr('kopos', this)">Коров 75мм</div></div><label style="font-size:11px; font-weight:bold; color:var(--gray); margin-top:5px; display:block;">Высота от пола (см)</label><div class="tile-grid" id="h-tiles"><div class="tile active" onclick="setH(30, this)">30</div><div class="tile" onclick="setH(90, this)">90</div><div class="tile" onclick="setH(110, this)">110</div><input type="number" id="c-h-custom" placeholder="Своя" style="width:70px; margin:0; padding:6px; font-size:12px;" oninput="setH(this.value, null)"></div><label style="font-size:11px; font-weight:bold; color:var(--gray);">Постов в рамке</label><div class="tile-grid" id="p-tiles"><div class="tile active" id="p1" onclick="setP(1)">1</div><div class="tile" id="p2" onclick="setP(2)">2</div><div class="tile" id="p3" onclick="setP(3)">3</div><div class="tile" id="p4" onclick="setP(4)">4</div><div class="tile" id="p5" onclick="setP(5)">5</div></div><div style="background:rgba(255,255,255,0.4); padding:10px; border-radius:12px; border:1px solid var(--border);"><div class="mech-row"><span> Розетки 220В</span><div class="counter-box"><button class="c-btn" onclick="modM('soc',-1)">-</button><span id="v-soc" class="c-val">1</span><button class="c-btn" onclick="modM('soc', 1)">+</button></div></div><div class="mech-row"><span> Выключатели</span><div class="counter-box"><button class="c-btn" onclick="modM('sw',-1)">-</button><span id="v-sw" class="c-val">0</span><button class="c-btn" onclick="modM('sw', 1)">+</button></div></div><div class="mech-row"><span> Проходные</span><div class="counter-box"><button class="c-btn" onclick="modM('pass',-1)">-</button><span id="v-pass" class="c-val">0</span><button class="c-btn" onclick="modM('pass', 1)">+</button></div></div><div class="mech-row"><span> Перекрестные</span><div class="counter-box"><button class="c-btn" onclick="modM('cross',-1)">-</button><span id="v-cross" class="c-val">0</span><button class="c-btn" onclick="modM('cross', 1)">+</button></div></div><div class="mech-row"><span> ТВ/Инет</span><div class="counter-box"><button class="c-btn" onclick="modM('tv',-1)">-</button><span id="v-tv" class="c-val">0</span><button class="c-btn" onclick="modM('tv', 1)">+</button></div></div><div class="mech-row" style="border:none; color:var(--danger);"><span>Т.Пол</span><div class="counter-box"><button class="c-btn" onclick="modM('tpol',-1)">-</button><span id="v-tpol" class="c-val">0</span><button class="c-btn" onclick="modM('tpol', 1)">+</button></div></div></div><div style="display:flex; justify-content:space-between; align-items:center; margin-top: 10px; padding-top:10px;"><b style="font-size:13px;">Кол-во таких рамок:</b><div class="counter-box"><button class="c-btn" onclick="st_q=Math.max(1,st_q-1); upUI();">-</button><span id="v-q" class="c-val" style="color:var(--primary);">1</span><button class="c-btn" onclick="st_q++; upUI();">+</button></div></div><div style="display:grid; grid-template-columns: 1fr 2.5fr 1.2fr; gap:6px; margin-top:15px;"><button class="btn-danger" style="background:var(--gray); font-size:18px; margin:0;" onclick="popPool()">↺</button><button class="btn-success" style="margin:0;" onclick="addGrp()">В Пул</button><button class="btn-shield" style="margin:0;" onclick="applyPoolToEstimate()">Смета</button></div><div id="pool-disp" style="margin-top:15px; max-height:150px; overflow-y:auto;"></div></div></div>
+
+<div class="modal" id="recalcModal"><div class="modal-content glass"><div class="close-x" onclick="closeModal('recalcModal')">×</div><h2 style="color:var(--primary); margin: 0 0 10px 0;"> Сведение трасс</h2><div style="background:rgba(0,0,0,0.03); padding: 12px; border-radius: 12px; margin-bottom: 15px; font-size: 13px; font-weight:bold; border:1px solid var(--border);"><div style="display: flex; justify-content:space-between; margin-bottom: 6px;">ВВГ / Кабель (всего): <span id="r-cab" style="color:var(--primary);">0</span></div><div style="display: flex; justify-content:space-between;">Штробы (всего): <span id="r-sht" style="color:var(--orange);">0</span></div></div><label style="font-size:12px; font-weight:bold; color:var(--gray);">Кабеля ПО ПОТОЛКУ (м): </label><input type="number" id="r-ceil-input" value="0" oninput="updateRecalcUI()" style="margin-top:5px; margin-bottom:15px; padding: 12px; border: 2px solid var(--primary);"><div style="background:rgba(79, 70, 229, 0.05); padding: 12px; border-radius: 12px; margin-bottom: 15px; font-size: 13px; font-weight:bold; border:1px solid var(--primary); color: var(--primary);"><div style="display:flex; justify-content:space-between; margin-bottom: 6px;">Кабель в штробе: <span id="r-res-sht">0</span></div><div style="display: flex; justify-content:space-between; margin-bottom: 6px;">Кабель по потолку: <span id="r-res-ceil">0</span></div><div style="display: flex; justify-content:space-between; margin-top:8px; padding-top:8px; border-top:2px solid var(--primary); font-size:15px;">ПО ПОЛУ (в гофре): <span id="r-res-floor">0</span></div></div><button onclick="doRecalculate()" class="btn-success" style="width:100%; padding: 14px; margin:0;">Выполнить перерасчет</button></div></div>
+
+<div class="modal" id="previewModal"><div class="modal-content glass" style="max-width:800px; width:95%;"><div class="close-x no-print" onclick="closeModal('previewModal')">×</div><button class="btn-shield no-print" style="width:100%; margin-bottom:15px; padding:14px;" onclick="window.print()">🖨 Печать PDF</button><div id="p-cont"></div></div></div>
+
 <script>
-let db, auth;
+function safeGet(key, def) { try { return localStorage.getItem(key) || def; } catch(e) { return def; } }
+function safeSet(key, val) { try { localStorage.setItem(key, val); } catch(e) {} }
 
-// === ИНИЦИАЛИЗАЦИЯ FIREBASE С ОФФЛАЙН КЭШЕМ ===
+let db, auth;
 try {
     firebase.initializeApp({
         apiKey: "AIzaSyBr_LVhNKtiNb--Vh5WHhvFuR-r47N3iCw",
@@ -414,35 +414,44 @@ try {
     });
     db = firebase.firestore();
     auth = firebase.auth();
-    
-    // Включаем оффлайн-режим
     db.settings({ cacheSizeBytes: firebase.firestore.CACHE_SIZE_UNLIMITED });
-    db.enablePersistence().catch(err => console.warn("Оффлайн-кэш недоступен:", err));
+    db.enablePersistence().catch(err => console.warn("Offline cache failed", err));
 } catch(e) { console.error("Firebase error", e); }
 
-let GEMINI_API_KEY = "";
+let GEMINI_API_KEY = safeGet('gemini_key_v31', "");
 
-// === ЗАВОДСКАЯ БАЗА (ВСЕ 140+ ПОЗИЦИЙ) ===
 const FULL_MAT_INIT=[{"id":"m1","c":"Кабель","n":"Кабель ВВГнг-LS 3х1.5 (Конкорд) круглый","p":57,"u":"м.п."},{"id":"m2","c":"Кабель","n":"Кабель ВВГнг-LS 3х2.5 (Конкорд) круглый","p":87,"u":"м.п."},{"id":"m3","c":"Кабель","n":"Кабель ВВГнг(п)-LS 3х1.5 (Конкорд) плоский","p":62,"u":"м.п."},{"id":"m4","c":"Кабель","n":"Кабель ВВГнг(п)-LS 3х2.5 (Конкорд) плоский","p":95,"u":"м.п."},{"id":"m5","c":"Кабель","n":"Кабель ВВГ-Пнг(А)-LS 3x4 (Лептон)","p":146,"u":"м.п."},{"id":"m6","c":"Кабель","n":"Кабель ВВГ-Пнг(А)-LS 3х6 (Лептон)","p":217,"u":"м.п."},{"id":"m7","c":"Кабель","n":"Провод ПуГВ (ПВ-3) 1х6 синий (ЦВЕТЛИТ)","p":85,"u":"м.п."},{"id":"m8","c":"Кабель","n":"Провод ПуГВ (ПВ-3) 1х6 белый (ЦВЕТЛИТ)","p":85,"u":"м.п."},{"id":"m9","c":"Слаботочка","n":"Кабель TV SAT-703 (Cavel)","p":75,"u":"м.п."},{"id":"m10","c":"Слаботочка","n":"Витая пара комп. экран. FTP4 CAT5E 24AWG Cu","p":32,"u":"м.п."},{"id":"m11","c":"Трубы","n":"Труба гофрированная ПВХ 20мм серая","p":8,"u":"м.п."},{"id":"m12","c":"Трубы","n":"Труба гофрированная ПНД 20мм черная","p":10,"u":"м.п."},{"id":"m13","c":"Трубы","n":"Гофра ПВХ/ПНД с протяжкой","p":25,"u":"м.п."},{"id":"m14","c":"Расходники","n":"Подрозетник глубокий для бетона 68х64","p":12,"u":"шт"},{"id":"m15","c":"Расходники","n":"Подрозетник стандарт (ГКЛ)","p":20,"u":"шт"},{"id":"m16","c":"Расходники","n":"Подрозетник глубокий (ГКЛ)","p":35,"u":"шт"},{"id":"m17","c":"Расходники","n":"Коробка распределительная 100х100х40","p":120,"u":"шт"},{"id":"m18","c":"Расходники","n":"Площадка под стяжку для прямого монтажа","p":5,"u":"шт"},{"id":"m19","c":"Расходники","n":"Стяжки нейлоновые КСС 3*100 (100шт)","p":40,"u":"упак."},{"id":"m20","c":"Расходники","n":"Стяжки нейлоновые КСС 5*400 (100шт)","p":410,"u":"упак."},{"id":"m21","c":"Расходники","n":"Газовый баллон 80 мл 165 мм","p":550,"u":"шт"},{"id":"m22","c":"Расходники","n":"Гвозди для прямого монтажа 3х19 мм (1000 шт)","p":1905,"u":"упак."},{"id":"m23","c":"Расходники","n":"Лента монтажная (перфолента)","p":580,"u":"шт"},{"id":"m24","c":"Расходники","n":"Лента монтажная текстильная 20 мм (50м)","p":880,"u":"упак."},{"id":"m25","c":"Щитовое","n":"Наконечник НШВИ 6.0-12 (упак)","p":225,"u":"упак."},{"id":"m26","c":"Щитовое","n":"Наконечник НШВИ(2) 6.0-14 (упак)","p":365,"u":"упак."},{"id":"m27","c":"Расходники","n":"Гильза ГМЛ 4","p":12,"u":"шт"},{"id":"m28","c":"Расходники","n":"Гильза ГМЛ 6","p":18,"u":"шт"},{"id":"m29","c":"Расходники","n":"Термоусадка (м)","p":80,"u":"м"},{"id":"m30","c":"Автоматика","n":"Автомат 1P 10A (ABB SH201)","p":265,"u":"шт"},{"id":"m31","c":"Автоматика","n":"Автомат 1P 16A (ABB SH201)","p":265,"u":"шт"},{"id":"m32","c":"Автоматика","n":"Автомат 1P 40A (ABB SH201)","p":410,"u":"шт"},{"id":"m33","c":"Автоматика","n":"ДИФ Автомат DSH201 C32 AC30 (ABB)","p":3100,"u":"шт"},{"id":"m34","c":"Щитовое","n":"Клеммник винтовой N 5x16 (ABB)","p":345,"u":"шт"},{"id":"m35","c":"Щитовое","n":"Клеммник винтовой PE 11x16 (ABB)","p":770,"u":"шт"},{"id":"m36","c":"Щитовое","n":"Шкаф внутрь. на 36М UK636E3 (ABB)","p":6510,"u":"шт"},{"id":"m37","c":"Щитовое","n":"Шкаф мультимедийный UK620MV (ABB)","p":11025,"u":"шт"},{"id":"m38","c":"Автоматика","n":"Автомат 1P 10A (ИЭК ВА47-29)","p":172,"u":"шт"},{"id":"m39","c":"Автоматика","n":"Автомат 1P 16A (ИЭК ВА47-29)","p":150,"u":"шт"},{"id":"m40","c":"Автоматика","n":"Автомат 2P 40A (ИЭК ВА47-29)","p":380,"u":"шт"},{"id":"m41","c":"Автоматика","n":"УЗО 2P 40A 30мА (ИЭК ВД1-63)","p":1195,"u":"шт"},{"id":"m42","c":"Щитовое","n":"Шина N ноль на DIN-изол (ИЭК)","p":285,"u":"шт"},{"id":"m43","c":"Щитовое","n":"Корпус пластиковый ЩРВ-П-24 (TEKFOR)","p":2660,"u":"шт"},{"id":"m44","c":"Автоматика","n":"Реле напряжения УЗМ-50Ц","p":4500,"u":"шт"}];
 const FULL_WORK_INIT=[{"id":"w44","c":"Алмазная резка","g":"Штроба 25х30","n":"Бетон","p":550,"u":"м.п."},{"id":"w45","c":"Алмазная резка","g":"Штроба 25х30","n":"Кирпич","p":400,"u":"м.п."},{"id":"w46","c":"Алмазная резка","g":"Штроба 25х30","n":"Панелька","p":700,"u":"м.п."},{"id":"w47","c":"Алмазная резка","g":"Штроба 25х30","n":"Мягкий мат.","p":400,"u":"м.п."},{"id":"w48","c":"Алмазная резка","g":"Штроба 50х50","n":"Бетон","p":1500,"u":"м.п."},{"id":"w49","c":"Алмазная резка","g":"Штроба 50х50","n":"Кирпич","p":1300,"u":"м.п."},{"id":"w50","c":"Алмазная резка","g":"Штроба 50х50","n":"Панелька","p":1900,"u":"м.п."},{"id":"w51","c":"Алмазная резка","g":"Штроба 50х50","n":"Мягкий мат.","p":900,"u":"м.п."},{"id":"w52","c":"Алмазная резка","g":"Штроба 100х50 ВВОДНАЯ","n":"Бетон","p":2200,"u":"м.п."},{"id":"w53","c":"Алмазная резка","g":"Штроба 100х50 ВВОДНАЯ","n":"Кирпич","p":1550,"u":"м.п."},{"id":"w54","c":"Алмазная резка","g":"Штроба 100х50 ВВОДНАЯ","n":"Панелька","p":2500,"u":"м.п."},{"id":"w55","c":"Алмазная резка","g":"Штроба 100х50 ВВОДНАЯ","n":"Мягкий мат.","p":1400,"u":"м.п."},{"id":"w56","c":"Алмазная резка","g":"Высверливание подр. стандарт","n":"Бетон","p":600,"u":"шт"},{"id":"w57","c":"Алмазная резка","g":"Высверливание подр. стандарт","n":"Кирпич","p":500,"u":"шт"},{"id":"w58","c":"Алмазная резка","g":"Высверливание подр. стандарт","n":"Панелька","p":650,"u":"шт"},{"id":"w59","c":"Алмазная резка","g":"Высверливание подр. стандарт","n":"Мягкий мат.","p":400,"u":"шт"},{"id":"w60","c":"Черновая электрика","g":"Вклейка подрозетников","n":"Все типы","p":100,"u":"шт"},{"id":"w61","c":"Алмазная резка","g":"Вырубка ниши щита","n":"Бетон","p":400,"u":"мод."},{"id":"w62","c":"Алмазная резка","g":"Вырубка ниши щита","n":"Кирпич","p":300,"u":"мод."},{"id":"w63","c":"Алмазная резка","g":"Вырубка ниши щита","n":"Панелька","p":500,"u":"мод."},{"id":"w64","c":"Алмазная резка","g":"Вырубка ниши щита","n":"Мягкий мат.","p":250,"u":"мод."},{"id":"w65","c":"Монтаж","g":"Прокладка кабеля","n":"Без гофры (Потолок)","p":120,"u":"м.п."},{"id":"w66","c":"Монтаж","g":"Прокладка кабеля","n":"В гофре (Пол)","p":150,"u":"м.п."},{"id":"w67","c":"Монтаж","g":"Распаячная коробка","n":"Сборка распред. коробки / коммутация","p":800,"u":"шт"},{"id":"w68","c":"Чистовая установка","g":"Механизмы","n":"Установка розетки 220В","p":500,"u":"шт"},{"id":"w69","c":"Чистовая установка","g":"Механизмы","n":"Установка выключателя","p":550,"u":"шт"},{"id":"w70","c":"Чистовая установка","g":"Механизмы","n":"Установка терморегулятора","p":900,"u":"шт"},{"id":"w71","c":"Алмазная резка","g":"Высверливание подрозетников глубокий","n":"Бетон","p":650,"u":"шт"},{"id":"w72","c":"Алмазная резка","g":"Высверливание подрозетников глубокий","n":"Кирпич","p":550,"u":"шт"},{"id":"w73","c":"Алмазная резка","g":"Высверливание подрозетников глубокий","n":"Панелька","p":750,"u":"шт"},{"id":"w74","c":"Алмазная резка","g":"Высверливание подрозетников глубокий","n":"Мягкий мат.","p":450,"u":"шт"},{"id":"w75","c":"Алмазная резка","g":"Высверливание подрозетников копос 74х75","n":"Бетон","p":800,"u":"шт"},{"id":"w76","c":"Алмазная резка","g":"Высверливание подрозетников копос 74х75","n":"Кирпич","p":700,"u":"шт"},{"id":"w77","c":"Алмазная резка","g":"Высверливание подрозетников копос 74х75","n":"Панелька","p":850,"u":"шт"},{"id":"w78","c":"Алмазная резка","g":"Высверливание подрозетников копос 74х75","n":"Мягкий мат.","p":500,"u":"шт"},{"id":"w79","c":"Алмазная резка","g":"Отверстие 132 ММ L= до 450","n":"Бетон","p":6000,"u":"шт"},{"id":"w80","c":"Алмазная резка","g":"Отверстие 132 ММ L= до 450","n":"Кирпич","p":4500,"u":"шт"},{"id":"w81","c":"Алмазная резка","g":"Отверстие 132 ММ L= до 450","n":"Панелька","p":7000,"u":"шт"},{"id":"w82","c":"Алмазная резка","g":"Отверстие 132 ММ L= до 450","n":"Мягкий мат.","p":4000,"u":"шт"},{"id":"w83","c":"Алмазная резка","g":"Отверстие 52мм L=до 450мм","n":"Бетон","p":2500,"u":"шт"},{"id":"w84","c":"Алмазная резка","g":"Отверстие 52мм L=до 450мм","n":"Кирпич","p":2000,"u":"шт"},{"id":"w85","c":"Алмазная резка","g":"Отверстие 52мм L=до 450мм","n":"Панелька","p":3000,"u":"шт"},{"id":"w86","c":"Алмазная резка","g":"Отверстие 52мм L=до 450мм","n":"Мягкий мат.","p":1900,"u":"шт"},{"id":"w87","c":"Щитовое","g":"Монтаж","n":"Сборка щита","p":500,"u":"мод."},{"id":"w89","c":"Щитовое","g":"Монтаж","n":"Установка БП в щит","p":900,"u":"ед"},{"id":"w91","c":"Монтаж","g":"Спецоборудование","n":"Подключение нагревателя","p":4000,"u":"ед"},{"id":"w92","c":"Монтаж","g":"Спецоборудование","n":"Система КУП","p":5000,"u":"ед"},{"id":"s_r1","c":"Щитовое","g":"Автоматика и Реле","n":"Установка реле времени","p":1250,"u":"шт"},{"id":"s_r2","c":"Щитовое","g":"Автоматика и Реле","n":"Установка реле освещения (в щите)","p":1250,"u":"шт"},{"id":"s_r3","c":"Щитовое","g":"Автоматика и Реле","n":"Установка реле температуры/жидкости","p":1700,"u":"шт"},{"id":"s_r4","c":"Щитовое","g":"Автоматика и Реле","n":"Установка реле контроля фаз","p":1450,"u":"шт"},{"id":"s_r5","c":"Щитовое","g":"Автоматика и Реле","n":"Установка реле напряжения","p":1150,"u":"шт"},{"id":"s_r6","c":"Щитовое","g":"Автоматика и Реле","n":"Установка реле управления нагрузкой","p":2050,"u":"шт"},{"id":"s_m1","c":"Щитовое","g":"Счетчики","n":"Установка электросчетчика 220-240В на DIN","p":1000,"u":"шт"},{"id":"s_m2","c":"Щитовое","g":"Счетчики","n":"Установка электросчетчика 220-240В на монтажную панель","p":1250,"u":"шт"},{"id":"s_m3","c":"Щитовое","g":"Счетчики","n":"Установка электросчетчика 380-400В на DIN","p":1700,"u":"шт"},{"id":"s_m4","c":"Щитовое","g":"Счетчики","n":"Установка электросчетчика 380-400В на монтажную панель","p":2200,"u":"шт"},{"id":"s_m5","c":"Щитовое","g":"Счетчики","n":"Установка электросчетчика под трансформаторы тока","p":2400,"u":"шт"},{"id":"s_m6","c":"Щитовое","g":"Счетчики","n":"Установка трансформатора тока (без подкл)","p":720,"u":"шт"},{"id":"s_p1","c":"Чистовая установка","g":"Розетки накладные","n":"Установка накладной розетки/выкл на бетон","p":680,"u":"шт"},{"id":"s_p2","c":"Чистовая установка","g":"Розетки накладные","n":"Установка накладной розетки/выкл на кирпич","p":600,"u":"шт"},{"id":"s_p3","c":"Чистовая установка","g":"Розетки накладные","n":"Установка накладной розетки/выкл на ГКЛ","p":530,"u":"шт"},{"id":"s_p4","c":"Чистовая установка","g":"Розетки накладные","n":"Установка накладной розетки/выкл на дерево","p":450,"u":"шт"},{"id":"s_p5","c":"Чистовая установка","g":"Механизмы (Спец)","n":"Установка накладной силовой розетки 380В","p":1000,"u":"шт"},{"id":"s_p6","c":"Чистовая установка","g":"Механизмы (Спец)","n":"Установка встраиваемой силовой розетки 380В","p":530,"u":"шт"},{"id":"s_p7","c":"Чистовая установка","g":"Механизмы","n":"Установка встраиваемой розетки/выкл в подрозетник","p":300,"u":"шт"},{"id":"s_p8","c":"Чистовая установка","g":"Механизмы","n":"Установка блока розеток/выкл","p":1200,"u":"шт"},{"id":"s_d1","c":"Черновая электрика","g":"Электроточки","n":"Установка накладного подрозетника","p":300,"u":"шт"},{"id":"s_d2","c":"Черновая электрика","g":"Электроточки","n":"Установка подрозетника","p":180,"u":"шт"},{"id":"s_d3","c":"Черновая электрика","g":"Электроточки","n":"Установка накладной распаечной коробки","p":450,"u":"шт"},{"id":"s_d4","c":"Черновая электрика","g":"Электроточки","n":"Установка встраиваемой распаечной коробки","p":300,"u":"шт"},{"id":"s_d5","c":"Чистовая установка","g":"Механизмы (Спец)","n":"Установка термостата","p":380,"u":"шт"},{"id":"s_d6","c":"Чистовая установка","g":"Механизмы (Спец)","n":"Установка встраиваемого датчика движения","p":330,"u":"шт"},{"id":"s_d7","c":"Чистовая установка","g":"Механизмы (Спец)","n":"Установка звонка","p":680,"u":"шт"},{"id":"s_d8","c":"Чистовая установка","g":"Механизмы (Спец)","n":"Установка кнопки звонка","p":450,"u":"шт"},{"id":"s_d9","c":"Чистовая установка","g":"Механизмы (Спец)","n":"Установка ТВ краба","p":480,"u":"шт"},{"id":"s_sh1","c":"Щитовое","g":"Монтаж накладных","n":"Монтаж электрощитка накладного 2 модуля","p":180,"u":"шт"},{"id":"s_sh2","c":"Щитовое","g":"Монтаж накладных","n":"Монтаж электрощитка накладного 4-8 модулей","p":290,"u":"шт"},{"id":"s_sh3","c":"Щитовое","g":"Монтаж накладных","n":"Монтаж электрощитка накладного 12-24 модуля","p":330,"u":"шт"},{"id":"s_sh4","c":"Щитовое","g":"Монтаж накладных","n":"Монтаж электрощитка накладного 36-60 модулей","p":560,"u":"шт"},{"id":"s_sh5","c":"Щитовое","g":"Монтаж накладных","n":"Монтаж электрощитка накладного 72-96 модулей","p":780,"u":"шт"},{"id":"s_l1","c":"Освещение","g":"LED Лента","n":"Монтаж светодиодной ленты на кухне под шкафами","p":270,"u":"м.п."},{"id":"s_l2","c":"Освещение","g":"LED Лента","n":"Монтаж светодиодной ленты в натяжной потолок","p":390,"u":"м.п."},{"id":"s_l3","c":"Освещение","g":"LED Лента","n":"Монтаж светодиодной ленты на гипсокартон","p":300,"u":"м.п."},{"id":"s_l4","c":"Освещение","g":"LED Лента","n":"Монтаж светодиодной ленты в потолочный плинтус","p":350,"u":"м.п."},{"id":"s_l5","c":"Освещение","g":"LED Лента","n":"Монтаж светодиодной ленты в алюминиевый профиль","p":230,"u":"м.п."},{"id":"s_l6","c":"Освещение","g":"LED Лента","n":"Монтаж светодиодной ленты на карниз","p":350,"u":"м.п."},{"id":"s_l7","c":"Освещение","g":"LED Лента","n":"Установка светодиодной ленты в светильник","p":180,"u":"м.п."},{"id":"s_l8","c":"Освещение","g":"LED Лента","n":"Монтаж светодиодной ленты на улице","p":380,"u":"м.п."},{"id":"s_l9","c":"Освещение","g":"Алюм. профиль","n":"Установка накладного алюм. профиля на скотч","p":110,"u":"м.п."},{"id":"s_l10","c":"Освещение","g":"Алюм. профиль","n":"Установка накладного алюм. профиля со сверлением","p":290,"u":"м.п."},{"id":"s_l11","c":"Освещение","g":"Алюм. профиль","n":"Установка врезного алюм. профиля в готовый паз","p":120,"u":"м.п."},{"id":"s_l12","c":"Освещение","g":"Алюм. профиль","n":"Установка врезного алюм. профиля с подготовкой паза","p":390,"u":"м.п."},{"id":"s_c1","c":"Освещение","g":"Люстры и Светильники","n":"Сборка простой люстры","p":630,"u":"шт"},{"id":"s_c2","c":"Освещение","g":"Люстры и Светильники","n":"Сборка сложной люстры","p":870,"u":"шт"},{"id":"s_c3","c":"Освещение","g":"Люстры и Светильники","n":"Установка крюка под люстру","p":230,"u":"шт"},{"id":"s_c4","c":"Освещение","g":"Люстры и Светильники","n":"Установка люстры на готовый крюк","p":740,"u":"шт"},{"id":"s_c5","c":"Освещение","g":"Люстры и Светильники","n":"Установка люстры с креплением к потолку (простая)","p":1200,"u":"шт"},{"id":"s_c6","c":"Освещение","g":"Люстры и Светильники","n":"Установка люстры с креплением к потолку (сложная/ДУ)","p":2250,"u":"шт"},{"id":"s_c7","c":"Освещение","g":"Люстры и Светильники","n":"Установка тяжелой люстры с креплением на крюк","p":1950,"u":"шт"},{"id":"s_c8","c":"Освещение","g":"Люстры и Светильники","n":"Установка тяжелой люстры с креплением к потолку","p":3600,"u":"шт"},{"id":"s_c9","c":"Освещение","g":"Люстры и Светильники","n":"Установка настенного светильника, бра","p":450,"u":"шт"},{"id":"s_c10","c":"Освещение","g":"Люстры и Светильники","n":"Установка точечного светильника","p":750,"u":"шт"},{"id":"s_c11","c":"Освещение","g":"Люстры и Светильники","n":"Установка светодиодного светильника","p":680,"u":"шт"},{"id":"s_c12","c":"Освещение","g":"Люстры и Светильники","n":"Установка светильника Армстронг","p":380,"u":"шт"},{"id":"s_c13","c":"Освещение","g":"Люстры и Светильники","n":"Установка люминесцентного светильника","p":410,"u":"шт"},{"id":"s_c14","c":"Освещение","g":"Люстры и Светильники","n":"Установка трекового светильника","p":140,"u":"шт"},{"id":"s_c15","c":"Освещение","g":"Люстры и Светильники","n":"Монтаж шинопровода","p":450,"u":"м.п."},{"id":"s_c16","c":"Освещение","g":"Уличное освещение","n":"Установка уличного светильника на фасаде","p":830,"u":"шт"},{"id":"s_c17","c":"Освещение","g":"Уличное освещение","n":"Установка садово-паркового светильника","p":1350,"u":"шт"},{"id":"s_c18","c":"Освещение","g":"Люстры и Светильники","n":"Установка светильника Выход","p":480,"u":"шт"},{"id":"s_c19","c":"Освещение","g":"Уличное освещение","n":"Установка антивандального светильника","p":660,"u":"шт"},{"id":"s_dem1","c":"Демонтаж","g":"Освещение","n":"Демонтаж люстры","p":240,"u":"шт"},{"id":"s_dem2","c":"Демонтаж","g":"Освещение","n":"Демонтаж светильника","p":210,"u":"шт"},{"id":"s_dem3","c":"Демонтаж","g":"Электроточки","n":"Демонтаж розетки","p":200,"u":"шт"},{"id":"s_dem4","c":"Демонтаж","g":"Электроточки","n":"Демонтаж выключателя","p":200,"u":"шт"},{"id":"s_dem5","c":"Демонтаж","g":"Электроточки","n":"Демонтаж распаечной коробки","p":200,"u":"шт"},{"id":"s_dem6","c":"Демонтаж","g":"Электроточки","n":"Демонтаж дверного звонка","p":200,"u":"шт"},{"id":"s_dem7","c":"Демонтаж","g":"Щитовое","n":"Демонтаж реле времени","p":230,"u":"шт"},{"id":"s_dem8","c":"Демонтаж","g":"Щитовое","n":"Демонтаж электрощитка до 8 модулей","p":110,"u":"шт"},{"id":"s_dem9","c":"Демонтаж","g":"Щитовое","n":"Демонтаж электрощитка 12-36 модулей","p":260,"u":"шт"},{"id":"s_dem10","c":"Демонтаж","g":"Щитовое","n":"Демонтаж электрощитка 48-96 модулей","p":470,"u":"шт"},{"id":"s_dem11","c":"Демонтаж","g":"Щитовое","n":"Демонтаж автомата","p":150,"u":"шт"},{"id":"s_dem12","c":"Демонтаж","g":"Щитовое","n":"Демонтаж УЗО","p":150,"u":"шт"},{"id":"s_dem13","c":"Демонтаж","g":"Щитовое","n":"Демонтаж дифавтомата","p":150,"u":"шт"},{"id":"s_dem14","c":"Демонтаж","g":"Щитовое","n":"Демонтаж рубильника","p":150,"u":"шт"},{"id":"s_dem15","c":"Демонтаж","g":"Щитовое","n":"Демонтаж магнитного пускателя","p":140,"u":"шт"}];
 
-// Глобальные переменные
-let appUser = null; let cust = {name:"", phone:"", addr:"", ceil:270};
-let hDB = []; let currentEstimate = []; let matDB = [], workDB = []; let pool = []; let tempInvoiceItems = [];
-let coeffs = JSON.parse(localStorage.getItem('coeffs_v31')) || {mat:0, work:0};
+let appUser = null; 
+let cust = {name:"", phone:"", addr:"", ceil:270};
+try { let c = JSON.parse(safeGet('cust_v31', '{}')); if(c && c.name) cust = c; } catch(e){}
 
-let appLogic = JSON.parse(localStorage.getItem('appLogic_v31')) || { 
+let hDB = []; 
+try { hDB = JSON.parse(safeGet('h_v31', '[]')); } catch(e) { hDB = []; }
+
+let currentEstimate = []; 
+try { currentEstimate = JSON.parse(safeGet('est_v31', '[]')); } catch(e) { currentEstimate = []; }
+
+let matDB = [], workDB = []; 
+let pool = []; 
+let tempInvoiceItems = [];
+let coeffs = {mat:0, work:0};
+try { let c = JSON.parse(safeGet('coeffs_v31', '{"mat":0,"work":0}')); coeffs = c; } catch(e){}
+
+let appLogic = { 
     commutation: 'gml', cons: { sockets: 3, switches: 4, twoway: 5 }, amort: { crown: 100, discs: 150, vacuum: 30 },
     cabRes: 1.1, gofraRes: 1.05, basesPerM: 3, clipsPerM: 3, packSize: 100, mixPerBox: 0.3, crownLife: 80,
     priceSoc: 500, priceShield: 500, priceDrill: 600, priceShtroba: 550, priceCabCeil: 120 
 };
-let logicReqs = JSON.parse(localStorage.getItem('logicReqs_v31')) || [];
-let priceReqs = []; let priceOverrides = {};
+try { let logic = JSON.parse(safeGet('appLogic_v31', '{}')); appLogic = Object.assign(appLogic, logic); } catch(e){}
+
+let logicReqs = [];
+let priceOverrides = {};
 let cfg = {rms: 1, acs: 0, fls: 0, bals: 0 };
 var st_soc = 1, st_sw = 0, st_pass = 0, st_cross = 0, st_tv = 0, st_tpol = 0, st_q = 1, st_h = 30, st_p = 1, st_podr = 'std';
 let globalRecalcCab = 0, globalRecalcSht = 0; let currentCardId = null; let pendingAdd = null;
 
-// === ШАГ 1: КАСТОМНЫЕ МОДАЛКИ (БЕЗ ССЫЛОК) ===
 window.customAlert = (title, text) => {
     return new Promise(resolve => {
         const overlay = document.getElementById('custom-modal-overlay');
@@ -454,6 +463,7 @@ window.customAlert = (title, text) => {
         document.getElementById('cm-ok').onclick = () => { overlay.style.display = 'none'; resolve(); };
     });
 };
+
 window.customConfirm = (title, text) => {
     return new Promise(resolve => {
         const overlay = document.getElementById('custom-modal-overlay');
@@ -466,30 +476,19 @@ window.customConfirm = (title, text) => {
         document.getElementById('cm-cancel').onclick = () => { overlay.style.display = 'none'; resolve(false); };
     });
 };
-window.customPrompt = (title, text, defaultVal = "") => {
-    return new Promise(resolve => {
-        const overlay = document.getElementById('custom-modal-overlay');
-        document.getElementById('cm-title').innerText = title;
-        document.getElementById('cm-text').innerText = text;
-        document.getElementById('cm-input').style.display = 'block';
-        document.getElementById('cm-input').value = defaultVal;
-        document.getElementById('cm-cancel').style.display = 'block';
-        overlay.style.display = 'flex';
-        document.getElementById('cm-ok').onclick = () => { overlay.style.display = 'none'; resolve(document.getElementById('cm-input').value); };
-        document.getElementById('cm-cancel').onclick = () => { overlay.style.display = 'none'; resolve(null); };
-    });
-};
 
-// Перехват системных окон
 window.alert = (msg) => { window.customAlert("Уведомление", msg); };
 
-// Утилиты интерфейса
-function showLoader(text, icon = '☁️') { document.getElementById('loader-icon').innerText = icon; document.getElementById('loader-text').innerText = text; document.getElementById('global-loader').classList.add('show'); }
+function showLoader(text, icon = '☁️') { 
+    document.getElementById('loader-icon').innerText = icon; 
+    document.getElementById('loader-text').innerText = text; 
+    document.getElementById('global-loader').classList.add('show'); 
+}
 function hideLoader() { document.getElementById('global-loader').classList.remove('show'); }
 function showToast(msg) { let t = document.getElementById('toast'); t.innerText = msg; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 3000); }
 
-// === ГИБРИДНАЯ АВТОРИЗАЦИЯ (GOOGLE + PIN) ===
 document.getElementById('btn-google-login').onclick = async () => {
+    if(!auth) return window.customAlert("Ошибка", "Firebase не инициализирован");
     const provider = new firebase.auth.GoogleAuthProvider();
     try { await auth.signInWithPopup(provider); } catch(e) { window.customAlert("Сбой Google", "Ошибка: " + e.message); }
 };
@@ -497,355 +496,376 @@ document.getElementById('btn-google-login').onclick = async () => {
 async function loginWithPin() {
     let phone = document.getElementById('auth-phone').value.trim();
     let pin = document.getElementById('auth-pin').value.trim();
-    if(!phone || !pin) return showToast("Введите телефон и ПИН-код!");
-    
+    if(!phone || !pin) return showToast("Введите номер и PIN-код!");
     showLoader("Проверка...", "🔒");
     try {
         const snap = await db.collection('users').where('phone', '==', phone).where('pin', '==', pin).get();
-        if(snap.empty) {
-            hideLoader(); return window.customAlert("Ошибка", "Неверный телефон или ПИН-код. Либо вы еще не добавлены Админом.");
-        }
-        appUser = snap.docs[0].data(); appUser.uid = snap.docs[0].id; hideLoader();
-        
-        if (appUser.isApproved === true || appUser.role === 'admin') {
-            localStorage.setItem('authUser_v31_pin', JSON.stringify(appUser));
-            closeModal('authModal'); finishLoginSetup();
-        } else { window.customAlert("Ожидание", "Ваш аккаунт еще не одобрен руководителем!"); }
-    } catch(err) { hideLoader(); window.customAlert("Сбой базы", err.message); }
+        if(snap.empty) { hideLoader(); return window.customAlert("Ошибка", "Неверный вход."); }
+        appUser = snap.docs[0].data(); appUser.uid = snap.docs[0].id;
+        safeSet('authUser_v31_pin', JSON.stringify(appUser));
+        hideLoader(); finishLoginSetup();
+    } catch(err) { hideLoader(); window.customAlert("Ошибка базы", err.message); }
 }
 
-auth.onAuthStateChanged(async (user) => {
-    if (user) {
-        showLoader("Загрузка профиля...", "🔒");
-        try {
-            const userRef = db.collection('users').doc(user.uid);
-            const docSnap = await userRef.get();
-            if (!docSnap.exists) {
-                await userRef.set({ name: user.displayName || "Мастер", email: user.email, role: 'master', isApproved: false, geminiKey: '', phone: '', pin: '' });
-                hideLoader(); closeModal('authModal'); openModal('waitingModal'); 
-            } else {
-                appUser = docSnap.data(); appUser.uid = user.uid; hideLoader();
-                if (appUser.isApproved === true || appUser.role === 'admin') {
-                    closeModal('authModal'); closeModal('waitingModal'); finishLoginSetup();
-                } else { closeModal('authModal'); openModal('waitingModal'); }
-            }
-        } catch (err) { hideLoader(); window.customAlert("Ошибка связи с БД", err.message); }
-    } else {
-        let pinUser = localStorage.getItem('authUser_v31_pin');
-        if (pinUser) { appUser = JSON.parse(pinUser); closeModal('authModal'); finishLoginSetup(); } else { openModal('authModal'); }
-    }
-});
+if(auth) {
+    auth.onAuthStateChanged(async (user) => {
+        if (user) {
+            showLoader("Загрузка...", "🔒");
+            try {
+                const userRef = db.collection('users').doc(user.uid);
+                const docSnap = await userRef.get();
+                if (!docSnap.exists) {
+                    await userRef.set({ name: user.displayName || "Мастер", email: user.email, role: 'master', isApproved: false, geminiKey: '', phone: '', pin: '' });
+                    hideLoader(); openModal('waitingModal'); closeModal('authModal');
+                } else {
+                    appUser = docSnap.data(); appUser.uid = user.uid; hideLoader();
+                    if (appUser.isApproved || appUser.role === 'admin') {
+                        closeModal('authModal'); closeModal('waitingModal'); finishLoginSetup();
+                    } else { openModal('waitingModal'); closeModal('authModal'); }
+                }
+            } catch(e) { hideLoader(); window.customAlert("Ошибка связи", e.message); }
+        } else {
+            let pinUser = safeGet('authUser_v31_pin', null);
+            if (pinUser) { try { appUser = JSON.parse(pinUser); finishLoginSetup(); } catch(e){ openModal('authModal'); } } else { openModal('authModal'); }
+        }
+    });
+} else {
+    // If auth failed to init completely, fallback to prompt
+    let pinUser = safeGet('authUser_v31_pin', null);
+    if (pinUser) { try { appUser = JSON.parse(pinUser); finishLoginSetup(); } catch(e){ openModal('authModal'); } } else { openModal('authModal'); }
+}
 
-function confirmLogout() { auth.signOut(); localStorage.removeItem('authUser_v31_pin'); window.location.reload(); }
+function confirmLogout() { 
+    if(auth) auth.signOut(); 
+    safeSet('authUser_v31_pin', ''); 
+    window.location.reload(); 
+}
 
-// === ИНИЦИАЛИЗАЦИЯ И СИНХРОНИЗАЦИЯ ===
 async function finishLoginSetup() {
     document.getElementById('main-app').style.display = 'block';
+    closeModal('authModal');
     
-    if (appUser.geminiKey) {
-        GEMINI_API_KEY = appUser.geminiKey; localStorage.setItem('gemini_key_v31', GEMINI_API_KEY); document.getElementById('api-key-input').value = GEMINI_API_KEY;
-    } else { GEMINI_API_KEY = localStorage.getItem('gemini_key_v31') || ""; document.getElementById('api-key-input').value = GEMINI_API_KEY; }
-
-    let savedTheme = localStorage.getItem('theme_v31') || 'light'; changeTheme(savedTheme); document.getElementById('theme-select').value = savedTheme;
-    let savedScale = localStorage.getItem('scale_v31') || '1'; changeScale(savedScale); document.getElementById('ui-scale').value = savedScale;
-    document.getElementById('qr-tg').value = localStorage.getItem('qr_tg_v31') || ""; document.getElementById('qr-wa').value = localStorage.getItem('qr_wa_v31') || "";
-    document.getElementById('m-coeff').value = coeffs.mat; document.getElementById('w-coeff').value = coeffs.work;
-    
+    if (appUser.geminiKey) { GEMINI_API_KEY = appUser.geminiKey; document.getElementById('api-key-input').value = GEMINI_API_KEY; }
     if(appUser.role === 'admin') { document.getElementById('admin-panel').style.display = 'block'; listenForApprovals(); loadMasterDrafts(); renderAdminUsers(); }
+    
+    let savedTheme = safeGet('theme_v31', 'light'); changeTheme(savedTheme); document.getElementById('theme-select').value = savedTheme;
+    let savedScale = safeGet('scale_v31', '1'); changeScale(savedScale); document.getElementById('ui-scale').value = savedScale;
+    document.getElementById('m-coeff').value = coeffs.mat; document.getElementById('w-coeff').value = coeffs.work;
+    document.getElementById('qr-tg').value = safeGet('qr_tg_v31', ''); document.getElementById('qr-wa').value = safeGet('qr_wa_v31', '');
+    document.getElementById('ai-shops').value = safeGet('ai_shops_v31', 'Лемана ПРО, ВсеИнструменты, Петрович');
 
-    showLoader('Загрузка баз...', '☁️');
-    let localMat = [], localWork = []; let cached = localStorage.getItem('cachedDB_v31');
-    if (cached) { try { let p = JSON.parse(cached); localMat = p.matDB || []; localWork = p.workDB || []; } catch(e) {} }
-
+    showLoader('Синхронизация...', '☁️');
     try {
         if(db) {
             const dbDoc = await db.collection('settings').doc('global_db').get();
-            if(dbDoc.exists && (dbDoc.data().matDB?.length > 0 || dbDoc.data().workDB?.length > 0)) {
-                matDB = dbDoc.data().matDB || []; workDB = dbDoc.data().workDB || []; localStorage.setItem('cachedDB_v31', JSON.stringify({matDB, workDB}));
-            } else if (appUser.role === 'admin') {
-                matDB = FULL_MAT_INIT; workDB = FULL_WORK_INIT; await db.collection('settings').doc('global_db').set({matDB: matDB, workDB: workDB});
-            } else { matDB = FULL_MAT_INIT; workDB = FULL_WORK_INIT; }
-            
+            if(dbDoc.exists) { matDB = dbDoc.data().matDB || FULL_MAT_INIT; workDB = dbDoc.data().workDB || FULL_WORK_INIT; }
+            else { matDB = FULL_MAT_INIT; workDB = FULL_WORK_INIT; }
             const logicDoc = await db.collection('settings').doc('global_logic').get();
             if(logicDoc.exists) appLogic = Object.assign(appLogic, logicDoc.data());
-            const overrideDoc = await db.collection('settings').doc('price_overrides').get();
-            if(overrideDoc.exists) priceOverrides = overrideDoc.data().overrides || {};
-
-            const histSnap = await db.collection('history').get(); hDB = histSnap.docs.map(doc => doc.data());
-            const draftDoc = await db.collection('drafts').doc(appUser.uid).get();
-            if(draftDoc.exists && currentEstimate.length === 0) { currentEstimate = draftDoc.data().estimate || []; cust = draftDoc.data().cust || {name:"", phone:"", addr:"", ceil:270}; localStorage.setItem('cust_v31', JSON.stringify(cust)); }
+        } else {
+            matDB = FULL_MAT_INIT; workDB = FULL_WORK_INIT;
         }
-    } catch(e) { hDB = JSON.parse(localStorage.getItem('h_v31')) || []; currentEstimate = JSON.parse(localStorage.getItem('est_v31')) || []; }
+    } catch(e) { matDB = FULL_MAT_INIT; workDB = FULL_WORK_INIT; }
+    
+    hideLoader(); updateMasterBadge(); renderMainTable(); updateHistList();
+    if(!(cust && cust.name)) { setTimeout(() => { openModal('custModal'); }, 400); }
+}
 
-    matDB.forEach(item => { if(priceOverrides[item.id]) item.p = priceOverrides[item.id]; }); workDB.forEach(item => { if(priceOverrides[item.id]) item.p = priceOverrides[item.id]; });
-    hideLoader();
+function openModal(id) { 
+    if(id === 'custModal') loadCustHistoryOptions(); 
+    if(id === 'logicModal') renderLogicUI(); 
+    if(id === 'settModal') renderDbEditors(); 
+    document.getElementById(id).style.display='block'; 
+}
+function closeModal(id) { document.getElementById(id).style.display='none'; }
+function toggleMenu() { document.getElementById('burger-menu').classList.toggle('open'); document.getElementById('burger-overlay').classList.toggle('open'); }
+function changeTheme(theme) { document.documentElement.setAttribute('data-theme', theme); safeSet('theme_v31', theme); }
+function changeScale(val) { document.body.style.zoom = val; document.body.style.transform = `scale(${val})`; document.body.style.transformOrigin = 'top left'; safeSet('scale_v31', val); }
+function updateMasterBadge() { document.getElementById('master-badge').innerHTML = `${appUser?.name || "Мастер"}<br><span style="font-size:10px;">Объект: ${cust.name || 'Не выбран'}</span>`; }
 
-    let IsCust = localStorage.getItem('cust_v31');
-    if(IsCust && cust.name) { updateMasterBadge(); renderMainTable(); updateHistList(); } 
-    else { updateHistList(); setTimeout(() => { openModal('custModal'); document.querySelector('#custModal .close-x').style.display = 'none'; }, 400); }
+function updateCoeffs() {
+    coeffs.mat = Number(document.getElementById('m-coeff').value);
+    coeffs.work = Number(document.getElementById('w-coeff').value);
+    safeSet('coeffs_v31', JSON.stringify(coeffs));
+    renderMainTable();
 }
 
 async function saveApiKey(val) { 
-    GEMINI_API_KEY = val.trim(); localStorage.setItem('gemini_key_v31', GEMINI_API_KEY); 
-    if(db && appUser && appUser.uid) { try { await db.collection('users').doc(appUser.uid).set({geminiKey: GEMINI_API_KEY}, {merge: true}); } catch(e){} }
-    showToast("🔑 Ключ ИИ сохранен в вашем профиле!"); 
+    GEMINI_API_KEY = val.trim(); safeSet('gemini_key_v31', GEMINI_API_KEY);
+    if(db && appUser && appUser.uid) { try { await db.collection('users').doc(appUser.uid).update({geminiKey: GEMINI_API_KEY}); }catch(e){} }
+    showToast("🔑 Ключ сохранен!"); 
 }
-
 function saveQRs() { 
-    localStorage.setItem('qr_tg_v31', document.getElementById('qr-tg').value); localStorage.setItem('qr_wa_v31', document.getElementById('qr-wa').value); 
+    safeSet('qr_tg_v31', document.getElementById('qr-tg').value); 
+    safeSet('qr_wa_v31', document.getElementById('qr-wa').value); 
+    safeSet('ai_shops_v31', document.getElementById('ai-shops').value);
     showToast("📱 Настройки сохранены"); 
-}
-function changeScale(val) { document.body.style.zoom = val; localStorage.setItem('scale_v31', val); }
-
-async function syncGlobalDb() {
-    localStorage.setItem('cachedDB_v31', JSON.stringify({matDB, workDB}));
-    if(db && appUser && appUser.role === 'admin') { try { await db.collection('settings').doc('global_db').set({matDB: matDB, workDB: workDB}); } catch(e){} }
-}
-
-// === ПАНЕЛЬ АДМИНА ===
-function listenForApprovals() {
-    db.collection('users').where('isApproved', '==', false).onSnapshot(snap => {
-        const container = document.getElementById('admin-approval-list'); container.innerHTML = '';
-        if(snap.empty) { container.innerHTML = "<span style='font-size:12px; color:gray;'>Новых заявок нет</span>"; return; }
-        snap.forEach(doc => { const u = doc.data(); container.innerHTML += `<div class="emp-row"><span><b>${u.name}</b><br><span style="font-size:11px;">${u.email||u.phone}</span></span><button class="btn-success" onclick="approveUser('${doc.id}', '${u.name}')" style="width:auto; margin:0; padding:6px 12px;">Одобрить</button></div>`; });
-    });
-}
-async function approveUser(uid, name) { await db.collection('users').doc(uid).update({ isApproved: true }); window.customAlert("Успех", `Доступ для ${name} открыт!`); }
-
-async function loadMasterDrafts() {
-    if(!db || appUser.role !== 'admin') return;
-    try {
-        const snap = await db.collection('drafts').get(); const usersSnap = await db.collection('users').get();
-        let users = usersSnap.docs.map(d => ({id: d.id, ...d.data()})); let draftsHtml = '';
-        snap.forEach(doc => {
-            let data = doc.data(); let master = users.find(u => u.id === doc.id); let mName = master ? master.name : 'Неизвестный мастер'; let total = 0;
-            if(data.estimate) { data.estimate.forEach(it => { total += fPrice(it) * it.q; }); }
-            draftsHtml += `<div class="emp-row" style="flex-direction:column; align-items:flex-start;"><div style="width:100%; display:flex; justify-content:space-between;"><b>${mName}</b> <span style="color:var(--primary); font-weight:bold;">${total} Р</span></div><span style="font-size:11px; color:var(--gray);">Объект: ${data.cust ? data.cust.name : 'Не указан'} | Позиций: ${data.estimate ? data.estimate.length : 0}</span></div>`;
-        }); document.getElementById('admin-drafts-list').innerHTML = draftsHtml || "<span style='font-size:12px; color:gray;'>Активных смет у мастеров пока нет</span>";
-    } catch(e) {}
-}
-
-async function adminAddUser() {
-    let p = document.getElementById('add-user-phone').value.trim();
-    let pin = document.getElementById('add-user-pin').value.trim();
-    let n = document.getElementById('add-user-name').value.trim();
-    if(!p || !pin || !n) return showToast("Заполните все поля!");
-    try {
-        await db.collection('users').add({ phone: p, pin: pin, name: n, role: 'master', isApproved: true, email: '', geminiKey: '' });
-        showToast("Мастер добавлен!"); renderAdminUsers();
-        document.getElementById('add-user-phone').value = ""; document.getElementById('add-user-pin').value = ""; document.getElementById('add-user-name').value = "";
-    } catch(e) { window.customAlert("Ошибка", e.message); }
-}
-
-async function renderAdminUsers() { 
-    if(appUser.role !== 'admin') return; 
-    let users = []; 
-    try { if(db) { const snap = await db.collection('users').get(); users = snap.docs.map(doc => ({id: doc.id, ...doc.data()})); } } catch(e) {} 
-    let html = users.map(u => `<div class="emp-row"><div><b>${u.name}</b><br><span style="font-size:11px; color:var(--gray);">${u.email||u.phone} (${u.role})</span></div><button onclick="fireUser('${u.id}', '${u.name}')" class="btn-danger" style="padding:6px 12px; border-radius:6px; font-size:11px; width:auto; margin:0;">Удалить ✕</button></div>`).join(''); document.getElementById('admin-users-list').innerHTML = html || "<div style='font-size:12px; color:gray;'>Сотрудников нет</div>"; 
-}
-async function fireUser(uid, name) { let confirm = await window.customConfirm("Удаление", `Удалить сотрудника ${name}?`); if(confirm) { try { if(db) await db.collection('users').doc(uid).delete(); renderAdminUsers(); showToast("Сотрудник удален"); } catch(e) {} } }
-
-// === ИНТЕРФЕЙС ===
-function toggleMenu() { document.getElementById('burger-menu').classList.toggle('open'); document.getElementById('burger-overlay').classList.toggle('open'); }
-function changeTheme(theme) { document.documentElement.setAttribute('data-theme', theme); localStorage.setItem('theme_v31', theme); }
-function updateMasterBadge() { document.getElementById('master-badge').innerHTML = `${appUser.name}<br><span style="color:var(--gray); font-size:10px;">Объект: ${cust.name || 'Не выбран'}</span>`; }
-
-function loadCustHistoryOptions() { let sel = document.getElementById('c-history-select'); let opts = '<option value="">📥 Загрузить (История)</option>'; let uniqueCusts = []; hDB.forEach(h => { if(h.name && !uniqueCusts.find(c => c.name === h.name)) uniqueCusts.push(h); }); uniqueCusts.forEach(h => { opts += `<option value="${h.id}">${h.name} (${h.date})</option>`; }); sel.innerHTML = opts; }
-function loadCustFromHistory(id) { if(!id) return; let h = hDB.find(x => x.id == id); if(h) { document.getElementById('c-name').value = h.name || ""; document.getElementById('c-phone').value = ""; document.getElementById('c-addr').value = ""; } }
-async function saveCust() { let n = document.getElementById('c-name').value.trim(); if (!n) return showToast("❌ Введите ФИО Заказчика!"); cust = { name: n, phone: document.getElementById('c-phone').value.trim(), addr: document.getElementById('c-addr').value.trim(), ceil: document.getElementById('c-ceil').value || 270 }; localStorage.setItem('cust_v31', JSON.stringify(cust)); updateMasterBadge(); closeModal('custModal'); let cx = document.querySelector('#custModal .close-x'); if(cx) cx.style.display = 'flex'; renderMainTable(); showToast("✅ Карточка создана"); syncDraft(); }
-
-function switchDbTab(tab) { document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active')); document.getElementById(tab === 'mat' ? 'btnTabMat' : 'btnTabWork').classList.add('active'); document.getElementById('editor-mat').style.display = tab === 'mat' ? 'block' : 'none'; document.getElementById('editor-work').style.display = tab === 'work' ? 'block' : 'none'; }
-function renderDbEditors() {
-    document.getElementById('editor-mat').innerHTML = matDB.map((m,i)=>`<div class="emp-row"><div><b>${m.n}</b><br><span style="font-size:11px; color:var(--gray);">${m.c||'Без папки'}</span></div><div style="display:flex; align-items:center; gap:5px;"><input type="number" value="${m.p}" onchange="requestPriceChange('mat', '${m.id}', '${m.n}', this.value)" style="width:70px; margin:0; padding:6px; font-size:12px; text-align:center;"> <span style="font-size:11px; font-weight:bold;">Р</span></div></div>`).join("");
-    document.getElementById('editor-work').innerHTML = workDB.map((w,i)=>`<div class="emp-row"><div><b>${w.n}</b><br><span style="font-size:11px; color:var(--gray);">${w.c||'Без папки'}</span></div><div style="display:flex; align-items:center; gap:5px;"><input type="number" value="${w.p}" onchange="requestPriceChange('work', '${w.id}', '${w.n}', this.value)" style="width:70px; margin:0; padding:6px; font-size:12px; text-align:center;"> <span style="font-size:11px; font-weight:bold;">Р</span></div></div>`).join("");
-}
-function updateCategoryList() { let type = document.getElementById('new-db-type').value; let dbArr = type === 'mat' ? matDB : workDB; let cats = new Set(); dbArr.forEach(item => { if(item.c && item.c.trim() !== "") cats.add(item.c); }); let html = ''; cats.forEach(c => html += `<option value="${c}">`); document.getElementById('db-cat-list').innerHTML = html; }
-function addCustomDbItem() { let t = document.getElementById('new-db-type').value, c = document.getElementById('new-db-category').value.trim() || 'Моя Папка', n = document.getElementById('new-db-name').value.trim(), p = document.getElementById('new-db-price').value, u = document.getElementById('new-db-unit').value || (t==='mat'?'шт':'ед'); if(!n || !p) return showToast("❌ Название и цена обязательны"); let item = { id: 'c_'+Date.now(), c: c, n: n, p: Number(p), u: u, type: t }; if(t === 'mat') matDB.push(item); else workDB.push(item); syncGlobalDb(); showToast(`✅ ${n} добавлен в базу`); document.getElementById('new-db-name').value=''; document.getElementById('new-db-price').value=''; updateCategoryList(); }
-
-async function requestPriceChange(type, id, name, newPrice) {
-    newPrice = Number(newPrice);
-    if (appUser.role === 'admin') { let dbArr = type === 'mat' ? matDB : workDB; let item = dbArr.find(x => x.id === id); if (item) item.p = newPrice; priceOverrides[id] = newPrice; syncGlobalDb(); try { if(db) await db.collection('settings').doc('price_overrides').set({overrides: priceOverrides}); } catch(e){} showToast("✅ Цена изменена"); } 
-    else { showToast("Отправлено админу"); }
-}
-
-function openMatCatalog() { let cats = {}; matDB.forEach(m => { let c = m.c || "ОБЩЕЕ"; if(!cats[c]) cats[c] = []; cats[c].push(m); }); let html = ""; let idx = 0; for(let c in cats) { let sid = 'mcat_' + (idx++); html += `<div class="cat-header" onclick="toggleCat('${sid}')">${c}</div><div class="cat-body" id="${sid}" style="display:none !important;">`; cats[c].forEach(m => { html += `<div class="mat-item"><div style="flex:1; font-size:13px; font-weight:600;">${m.n}<br><span style="color:var(--gray); font-size:11px; font-weight:normal;">${m.p} P / ${m.u||'шт'}</span></div><button class="mat-add-btn" onclick="promptAdd('${m.id}', 'mat')" style="width:auto; margin:0;">+ Добавить</button></div>`; }); html += `</div>`; } document.getElementById('mat-cat-list').innerHTML = html; openModal('matCatModal'); }
-function openWorkCatalog() { let cats = {}; workDB.forEach(w => { let c = w.c || "ОБЩИЕ"; let g = w.g || "РАЗНОЕ"; if(!cats[c]) cats[c] = {}; if(!cats[c][g]) cats[c][g] = []; cats[c][g].push(w); }); let html = ""; let idx = 0; for(let c in cats) { let sid = 'wcat_' + (idx++); html += `<div class="cat-header" style="color:var(--orange);" onclick="toggleCat('${sid}')">${c}</div><div class="cat-body" id="${sid}" style="display:none !important;">`; for(let g in cats[c]) { let subSid = 'wsub_'+(idx++); html += `<div class="sub-cat-header" onclick="toggleSubCat('${subSid}', event)">${g.toUpperCase()} </div><div class="sub-cat-body" id="${subSid}" style="display:none !important;">`; cats[c][g].forEach(w => { html += `<div class="mat-item"><div style="flex:1; font-size:13px; font-weight:600;">${w.n}<br><span style="color:var(--gray); font-size:11px; font-weight:normal;">${w.p} P / ${w.u||'ед.'}</span></div><button class="mat-add-btn" style="background: var(--orange); width:auto; margin:0;" onclick="promptAdd('${w.id}', 'work')">+ Добавить</button></div>`; }); html += `</div>`; } html += `</div>`; } document.getElementById('work-cat-list').innerHTML = html; openModal('workModal'); }
-function toggleCat(id) { let el = document.getElementById(id); if(el) { if(el.classList.contains('active')) { el.classList.remove('active'); el.style.setProperty('display', 'none', 'important'); } else { el.classList.add('active'); el.style.setProperty('display', 'block', 'important'); } } }
-function toggleSubCat(id, ev) { ev.stopPropagation(); let el = document.getElementById(id); if(el) { if(el.classList.contains('active')) { el.classList.remove('active'); el.style.setProperty('display', 'none', 'important'); } else { el.classList.add('active'); el.style.setProperty('display', 'block', 'important'); } } }
-
-function promptAdd(id, type) { 
-    let dbArr = type === 'mat'? matDB: workDB; let item = dbArr.find(x => String(x.id) === String(id)); 
-    if(!item) return showToast("❌ Ошибка: Позиция не найдена!"); 
-    pendingAdd = { item: item, type: type };
-    document.getElementById('qty-prompt-name').innerText = item.n; document.getElementById('qty-input').value = 1;
-    openModal('qtyPromptModal');
-}
-function confirmQtyAdd() {
-    let qty = Number(document.getElementById('qty-input').value);
-    if(qty > 0 && pendingAdd) { addAuto([{...pendingAdd.item, q: qty, type: pendingAdd.type}], 'man_' + Date.now() + Math.random()); showToast(`✅ Добавлено: ${qty}`); } 
-    closeModal('qtyPromptModal');
 }
 
 function fPrice(it) { return Math.round((it.p || 0) * (1 + (it.type === 'mat'? coeffs.mat: coeffs.work) / 100)); }
-function addAuto(items, tag) {
-    currentEstimate = currentEstimate.filter(it => it.tag !== tag);
-    items.forEach(it => { 
-        if(it.n === 'Термоусадка (м)' || it.n === 'Термоусадка') it.n = 'Термоусадка 12/4 (м)';
-        if (!it.type) { let nLower = it.n.toLowerCase(); it.type = (nLower.includes('кабель') || nLower.includes('автомат') || (nLower.includes('розетк') && !nLower.includes('установка'))) ? 'mat' : 'work'; }
-        it.tag = tag; currentEstimate.push(it); 
-    }); renderMainTable();
-}
 
-async function syncDraft() { try { if(db && appUser && appUser.uid) await db.collection('drafts').doc(appUser.uid).set({ estimate: currentEstimate, cust: cust, timestamp: new Date().toISOString() }); } catch(e){} }
 function renderMainTable() {
     const tb = document.querySelector("#mainTable tbody"); tb.innerHTML = ""; let total = 0;
-    currentEstimate.forEach((it, idx) => { let sum = fPrice(it) * it.q; total += sum; tb.innerHTML += `<tr style="border-bottom:1px solid rgba(0,0,0,0.05);"><td class="col-name">${it.n}</td><td class="col-qty"><input type="number" value="${it.q}" onchange="currentEstimate[${idx}].q=Number(this.value); renderMainTable();" style="width:60px; padding:6px; margin:0; text-align:center;"></td><td class="col-sum" style="color:var(--text);">${sum} P</td><td style="text-align:right;"><button onclick="currentEstimate.splice(${idx}, 1);renderMainTable();" class="btn-danger" style="padding:6px 10px; border-radius:8px; width:auto; margin:0;">✕</button></td></tr>`; });
-    document.getElementById('tot-all').innerText = total.toLocaleString() + ' P'; localStorage.setItem('est_v31', JSON.stringify(currentEstimate)); syncDraft();
+    currentEstimate.forEach((it, idx) => {
+        let sum = fPrice(it) * it.q; total += sum;
+        tb.innerHTML += `<tr><td class="col-name">${it.n}</td><td class="col-qty"><input type="number" value="${it.q}" onchange="currentEstimate[${idx}].q=Number(this.value); renderMainTable();" style="width:60px; padding:6px; margin:0; text-align:center;"></td><td class="col-sum">${sum} P</td><td style="text-align:right;"><button onclick="currentEstimate.splice(${idx},1);renderMainTable();" class="btn-danger" style="padding:6px 10px; border-radius:8px; width:auto; margin:0;">✕</button></td></tr>`;
+    });
+    document.getElementById('tot-all').innerText = total.toLocaleString() + ' P'; syncDraft();
 }
-async function clearCurrentEstimate() { let conf = await window.customConfirm("Очистка", "Очистить смету полностью?"); if(conf) { currentEstimate=[]; renderMainTable(); showToast("Смета очищена"); } }
 
-// === ИИ МОДУЛИ ===
-async function handleInvoiceUpload(input) {
-    if (!GEMINI_API_KEY) return showToast("❌ Введите ключ ИИ в Админке!"); if (!input.files || !input.files[0]) return;
-    const file = input.files[0]; const mimeType = file.type; closeModal('settModal'); showLoader("ИИ читает накладную...", "🤖"); const reader = new FileReader();
-    reader.onload = async function(e) {
-        const base64Data = e.target.result.split(',')[1];
-        try {
-            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`;
-            const promptText = "Распознай чек электрика. Верни ТОЛЬКО JSON массив. Формат: [{\"n\": \"Название\", \"p\": 100, \"u\": \"шт\"}]. Округляй цену до целого.";
-            const payload = { contents: [{ parts: [{text: promptText }, { inline_data: { mime_type: mimeType, data: base64Data}}] }] };
-            const response = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) }); const data = await response.json();
-            let aiText = data.candidates[0].content.parts[0].text.replace(/```json/g, '').replace(/```/g, '').trim(); const parsedItems = JSON.parse(aiText); hideLoader();
-            if (parsedItems.length > 0) processInvoiceItems(parsedItems); else showToast("❌ ИИ не нашел товаров.");
-        } catch (err) { hideLoader(); showToast("❌ Ошибка ИИ. Проверьте ключ."); }
-    }; reader.readAsDataURL(file);
-}
-function processInvoiceItems(items) {
-    tempInvoiceItems = items; let html = ""; let cats = new Set(); matDB.forEach(m => { if(m.c) cats.add(m.c); }); let catOptions = `<option value="Разное">📁 Выбрать Папку</option>`; cats.forEach(c => catOptions += `<option value="${c}">${c}</option>`);
-    items.forEach((it, index) => { let match = matDB.find(m => m.n.toLowerCase() === it.n.toLowerCase()); let matchVal = match ? match.id : "NEW"; let actionSelect = `<select id="inv-match-${index}" onchange="toggleInvCat(${index})" style="margin:0; padding:8px; font-size:11px;"><option value="NEW">➕ Новая позиция</option>${matDB.map(m => `<option value="${m.id}" ${match && match.id===m.id?'selected':''}>🔄 Обновить: ${m.n}</option>`).join('')}</select>`; let catSelect = `<select id="inv-cat-${index}" style="display:${match?'none':'block'}; margin-top:6px; margin-bottom:0; padding:8px; font-size:11px; background:#e0e7ff; color:var(--primary);">${catOptions}</select>`; html += `<tr style="border-bottom:1px solid var(--border);"><td style="text-align:center;"><input type="checkbox" class="inv-chk" value="${index}" checked style="width:18px;height:18px;"></td><td><input type="text" id="inv-name-${index}" value="${it.n}" style="margin:0; padding:8px; font-size:11px; width:100%;"></td><td><input type="number" id="inv-price-${index}" value="${it.p}" style="margin:0; padding:8px; font-size:11px; width:100%;"></td><td>${actionSelect}${catSelect}</td></tr>`; }); document.getElementById('invoice-items-body').innerHTML = html; openModal('invoiceReviewModal');
-}
-function toggleInvCat(index) { document.getElementById(`inv-cat-${index}`).style.display = document.getElementById(`inv-match-${index}`).value === "NEW" ? "block" : "none"; }
-function toggleAllInv(el) { document.querySelectorAll('.inv-chk').forEach(cb => cb.checked = el.checked); }
-function saveInvoiceData() { let added = 0, updated = 0; document.querySelectorAll('.inv-chk:checked').forEach(cb => { let i = cb.value, finalName = document.getElementById(`inv-name-${i}`).value, finalPrice = Number(document.getElementById(`inv-price-${i}`).value), matchId = document.getElementById(`inv-match-${i}`).value; if (matchId === "NEW") { matDB.push({ id: 'ai_' + Date.now(), c: document.getElementById(`inv-cat-${i}`).value, n: finalName, p: finalPrice, u: tempInvoiceItems[i].u || 'шт', type: 'mat' }); added++; } else { let existing = matDB.find(m => m.id === matchId); if (existing && existing.p !== finalPrice) { existing.p = finalPrice; updated++; } } }); syncGlobalDb(); closeModal('invoiceReviewModal'); showToast(`✅ Добавлено: ${added}, Обновлено: ${updated}`); }
+async function syncDraft() { try { safeSet('est_v31', JSON.stringify(currentEstimate)); if(db && appUser && appUser.uid) await db.collection('drafts').doc(appUser.uid).set({ estimate: currentEstimate, cust: cust, timestamp: new Date().toISOString() }); } catch(e){} }
+async function clearCurrentEstimate() { let c = await window.customConfirm("Очистка", "Очистить смету?"); if(c){ currentEstimate=[]; renderMainTable(); } }
 
-async function runAiCheck() {
-    if (!GEMINI_API_KEY) return showToast("❌ Введите ключ ИИ в Админке!"); if (!currentEstimate || currentEstimate.length === 0) return showToast("❌ Смета пуста!"); showLoader("ИИ анализирует смету...", "🤖");
-    try {
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`; const estNames = currentEstimate.map(i => i.n).join(", ");
-        const promptText = `Я электрик. Смета: ${estNames}. Найди логические ошибки (забыл крепеж, рамки, УЗО). Верни ТОЛЬКО JSON массив: [{"reason": "Объяснение", "suggestedName": "Название из стандартных материалов"}]. Если всё идеально, верни пустой массив [].`;
-        const payload = { contents: [{ parts: [{text: promptText }] }] }; const response = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) }); const data = await response.json(); hideLoader(); let aiText = data.candidates[0].content.parts[0].text.replace(/```json/g, '').replace(/```/g, '').trim(); const suggestions = JSON.parse(aiText);
-        if (suggestions.length === 0) return showToast("✨ Всё идеально! Смета полная."); document.getElementById('ai-modal-title').innerText = "✨ ИИ-Аналитика"; document.getElementById('ai-suggestions').innerHTML = suggestions.map(s => `<div style="background:var(--bg); padding: 15px; border-radius: 12px; margin-bottom:10px; border-left:4px solid var(--ai);"><div style="font-size: 13px; font-weight:bold; margin-bottom:8px;">${s.reason}</div><div style="display:flex; justify-content:space-between; align-items:center;"><span style="font-size:14px; color:var(--primary); font-weight:bold;">${s.suggestedName}</span><button onclick="addAiItemByNameFast('${s.suggestedName}')" style="background:var(--ai); padding:8px 14px; font-size:12px; color:white; border:none; border-radius:8px; width:auto; margin:0;">+ Добавить</button></div></div>`).join(""); openModal('aiModal');
-    } catch (error) { hideLoader(); showToast("❌ Ошибка ИИ. Проверьте ключ."); }
+function openMatCatalog() { 
+    let cats = {}; matDB.forEach(m => { let c = m.c || "ОБЩЕЕ"; if(!cats[c]) cats[c] = []; cats[c].push(m); }); 
+    let html = ""; let idx = 0;
+    for(let c in cats) { 
+        let sid = 'mcat_' + (idx++);
+        html += `<div class="cat-header" onclick="toggleCat('${sid}')">${c}</div><div class="cat-body" id="${sid}">`;
+        cats[c].forEach(m => { html += `<div class="mat-item"><div style="flex:1;">${m.n}<br><small>${m.p} P / ${m.u}</small></div><button class="mat-add-btn" onclick="promptAdd('${m.id}', 'mat')">+ Добавить</button></div>`; });
+        html += `</div>`;
+    } document.getElementById('mat-cat-list').innerHTML = html; openModal('matCatModal'); 
 }
-function addAiItemByNameFast(name) { let item = matDB.find(x => x.n === name) || workDB.find(x => x.n === name); if(item) { addAuto([{...item, q: 1, type: item.c ? 'mat' : 'work'}], 'ai_sugg_' + Date.now()); showToast(`✅ Добавлено: ${name}`); closeModal('aiModal'); } else showToast(`❌ ${name} не найдено`); }
 
-// === ШАГ 2: ЛОГИКА И ЦЕНЫ (ОБНОВЛЕНО) ===
-function renderLogicUI() {
-    document.getElementById('commutation-method').value = appLogic.commutation || 'gml';
-    document.getElementById('cons-sockets').value = appLogic.cons?.sockets || 3;
-    document.getElementById('cons-switches').value = appLogic.cons?.switches || 4;
-    document.getElementById('cons-twoway').value = appLogic.cons?.twoway || 5;
-    document.getElementById('amort-crown').value = appLogic.amort?.crown || 100;
-    document.getElementById('amort-discs').value = appLogic.amort?.discs || 150;
-    document.getElementById('amort-vacuum').value = appLogic.amort?.vacuum || 30;
+function openWorkCatalog() { 
+    let cats = {}; workDB.forEach(w => { let c = w.c || "ОБЩЕЕ"; if(!cats[c]) cats[c] = []; cats[c].push(w); });
+    let html = ""; let idx = 0;
+    for(let c in cats) { 
+        let sid = 'wcat_' + (idx++);
+        html += `<div class="cat-header" style="color:var(--orange);" onclick="toggleCat('${sid}')">${c}</div><div class="cat-body" id="${sid}">`;
+        cats[c].forEach(w => { html += `<div class="mat-item"><div style="flex:1;">${w.n}<br><small>${w.p} P / ${w.u}</small></div><button class="mat-add-btn" style="background:var(--orange);" onclick="promptAdd('${w.id}', 'work')">+ Добавить</button></div>`; });
+        html += `</div>`;
+    } document.getElementById('work-cat-list').innerHTML = html; openModal('workModal'); 
+}
+
+function toggleCat(id) { let el = document.getElementById(id); el.classList.toggle('active'); }
+
+function promptAdd(id, type) { 
+    let dbArr = (type==='mat'?matDB:workDB); let item = dbArr.find(x => String(x.id) === String(id)); 
+    if(!item) return; pendingAdd = { item, type }; 
+    document.getElementById('qty-prompt-name').innerText = item.n; 
+    document.getElementById('qty-input').value = 1; 
+    openModal('qtyPromptModal'); 
+}
+function confirmQtyAdd() { 
+    let q = Number(document.getElementById('qty-input').value); 
+    if(q > 0) { addAuto([{...pendingAdd.item, q: q, type: pendingAdd.type}], 'man_'+Date.now()); } 
+    closeModal('qtyPromptModal'); showToast("Добавлено!");
+}
+
+function addAuto(items, tag) { 
+    currentEstimate = currentEstimate.filter(it => it.tag !== tag); 
+    items.forEach(it => { it.tag = tag; currentEstimate.push(it); }); 
+    renderMainTable(); 
+}
+
+function setPodr(v, el) { st_podr = v; document.querySelectorAll('#podr-tiles .tile').forEach(t=>t.classList.remove('active')); el.classList.add('active'); }
+function setH(v, el) { st_h = v; if(el){ document.querySelectorAll('#h-tiles .tile').forEach(t=>t.classList.remove('active')); el.classList.add('active'); } }
+function setP(v) { st_p = v; document.querySelectorAll('#p-tiles .tile').forEach((t,i) => { if(i===v-1) t.classList.add('active'); else t.classList.remove('active'); }); }
+function modM(t, v) { window['st_'+t] = Math.max(0, window['st_'+t] + v); upUI(); }
+function upUI() { ['soc', 'sw', 'pass', 'cross', 'tv', 'tpol'].forEach(k => document.getElementById('v-'+k).innerText = window['st_'+k]); document.getElementById('v-q').innerText = st_q; }
+
+function addGrp() { 
+    pool.push({ p:st_p, h:st_h, q:st_q, soc:st_soc, sw:st_sw, pass:st_pass, cross:st_cross, tv:st_tv, tpol:st_tpol, route: document.getElementById('g-routing').value, podr: st_podr }); 
+    rfPool(); 
+}
+function popPool() { pool.pop(); rfPool(); }
+function rfPool() { 
+    document.getElementById('pool-disp').innerHTML = pool.map((g,i) => `<div style="display:flex; justify-content:space-between; padding:8px; border-bottom:1px solid var(--border);"><b>${g.p}п на ${g.h}см (x${g.q})</b> <button onclick="pool.splice(${i},1);rfPool();" style="width:auto; margin:0; background:none; color:red;">✕</button></div>`).join(""); 
+}
+
+function applyPoolToEstimate() {
+    if(!pool.length) return showToast("❌ Пул пуст!");
+    let mode = document.getElementById('montage-mode').value;
+    let route = document.getElementById('g-routing').value;
+    let wall = document.getElementById('g-wall').value;
+    let useKk = document.getElementById('pool-cable-channel').checked;
+    let useSurf = document.getElementById('pool-surface').checked;
+    let ceilH = Number(cust.ceil) || 270;
+
+    let res = { m_sh: 0, m_sh_50: 0, boxes: 0, gml4: 0, gml6: 0, shrinkCm: 0, stdPodr: 0, deepPodr: 0, koposPodr: 0, mechs: { soc:0, sw:0, pass:0, cross:0, tv:0, tpol:0 }, frames: {1:0,2:0,3:0,4:0,5:0} };
+    let cSw = appLogic.cons?.switches || 4; let cSoc = appLogic.cons?.sockets || 3; let method = appLogic.commutation || 'gml'; let shrinkPerGml = 4;
+
+    pool.forEach(g => {
+        let isSw = (g.sw > 0 || g.pass > 0 || g.cross > 0);
+        let drop = isSw ? (ceilH - g.h)/100 : (g.route === 'ceiling' ? (ceilH - g.h)/100 : g.h/100);
+
+        if(g.tpol > 0) { res.m_sh_50 += (g.h/100) * g.q; if(g.route === 'ceiling') res.m_sh += (drop - g.h/100) * g.q; } else { res.m_sh += drop * g.q; }
+        res.boxes += 1 * g.q;
+        if(isSw) { res.gml4 += cSw * g.q; res.shrinkCm += (cSw * shrinkPerGml) * g.q; } else { res.gml6 += cSoc * g.q; res.shrinkCm += (cSoc * shrinkPerGml) * g.q; }
+        
+        let deepCount = (g.sw + g.pass + g.cross + g.tpol) * g.q; let stdCount = Math.max(0, (g.p * g.q) - deepCount);
+        if(g.podr === 'kopos') res.koposPodr += g.p * g.q; else if(g.podr === 'deep') res.deepPodr += g.p * g.q; else { res.deepPodr += deepCount; res.stdPodr += stdCount; }
+        
+        res.mechs.soc += g.soc * g.q; res.mechs.sw += g.sw * g.q; res.mechs.pass += g.pass * g.q; res.mechs.cross += g.cross * g.q; res.mechs.tv += g.tv * g.q; res.mechs.tpol += g.tpol * g.q;
+        if(g.p >= 1 && g.p <= 5) res.frames[g.p] += g.q;
+    });
+
+    let m = [], w = [];
+    let prSoc = appLogic.priceSoc || 500; let prDrill = appLogic.priceDrill || 600; let prShtr = appLogic.priceShtroba || 550;
+
+    if(!useSurf) {
+        if(res.stdPodr > 0) m.push({ n: "Подрозетник стандарт (ГКЛ/Бетон)", q: res.stdPodr, p: 20, type: 'mat' });
+        if(res.deepPodr > 0) m.push({ n: "Подрозетник глубокий 68х64", q: res.deepPodr, p: 12, type: 'mat' });
+        if(res.koposPodr > 0) m.push({ n: "Подрозетник Короѕ 75мм", q: res.koposPodr, p: 95, type: 'mat' });
+    }
     
-    document.getElementById('logic-cab-reserve').value = appLogic.cabRes || 1.1; document.getElementById('logic-gofra-reserve').value = appLogic.gofraRes || 1.05;
-    document.getElementById('logic-bases-m').value = appLogic.basesPerM || 3; document.getElementById('logic-clips-m').value = appLogic.clipsPerM || 3;
-    document.getElementById('logic-pack-size').value = appLogic.packSize || 100; document.getElementById('logic-mix-box').value = appLogic.mixPerBox || 0.3;
-    document.getElementById('logic-crown-life').value = appLogic.crownLife || 80;
-    document.getElementById('logic-price-soc').value = appLogic.priceSoc || 500; document.getElementById('logic-price-shield').value = appLogic.priceShield || 500;
-    document.getElementById('logic-price-drill').value = appLogic.priceDrill || 600; document.getElementById('logic-price-shtroba').value = appLogic.priceShtroba || 550;
-    document.getElementById('logic-price-cab-ceil').value = appLogic.priceCabCeil || 120;
-}
-
-async function saveLogic() {
-    let newLogic = {
-        commutation: document.getElementById('commutation-method').value,
-        cons: { sockets: parseInt(document.getElementById('cons-sockets').value)||3, switches: parseInt(document.getElementById('cons-switches').value)||4, twoway: parseInt(document.getElementById('cons-twoway').value)||5 },
-        amort: { crown: parseInt(document.getElementById('amort-crown').value)||100, discs: parseInt(document.getElementById('amort-discs').value)||150, vacuum: parseInt(document.getElementById('amort-vacuum').value)||30 },
-        cabRes: Number(document.getElementById('logic-cab-reserve').value) || 1.1, gofraRes: Number(document.getElementById('logic-gofra-reserve').value) || 1.05,
-        basesPerM: Number(document.getElementById('logic-bases-m').value) || 3, clipsPerM: Number(document.getElementById('logic-clips-m').value) || 3,
-        packSize: Number(document.getElementById('logic-pack-size').value) || 100, mixPerBox: Number(document.getElementById('logic-mix-box').value) || 0.3, crownLife: Number(document.getElementById('logic-crown-life').value) || 80,
-        priceSoc: Number(document.getElementById('logic-price-soc').value) || 500, priceShield: Number(document.getElementById('logic-price-shield').value) || 500,
-        priceDrill: Number(document.getElementById('logic-price-drill').value) || 600, priceShtroba: Number(document.getElementById('logic-price-shtroba').value) || 550,
-        priceCabCeil: Number(document.getElementById('logic-price-cab-ceil').value) || 120
-    };
-    if(appUser.role === 'admin') { 
-        appLogic = Object.assign(appLogic, newLogic); localStorage.setItem('appLogic_v31', JSON.stringify(appLogic)); 
-        try { if(db) await db.collection('settings').doc('global_logic').set(appLogic); } catch(e){} showToast("✅ Глобальная логика обновлена!"); closeModal('logicModal'); 
+    if(mode === 'classic') m.push({ n: "Коробка распределительная 100х100х40", q: res.boxes, p: 120, type: 'mat' });
+    
+    if(method === 'gml') {
+        if(res.gml4 > 0) m.push({ n: "Гильза ГМЛ 4", q: res.gml4, p: 12, type: 'mat' });
+        if(res.gml6 > 0) m.push({ n: "Гильза ГМЛ 6", q: res.gml6, p: 18, type: 'mat' });
+        if(res.shrinkCm > 0) m.push({ n: "Термоусадка (м)", q: Math.ceil(res.shrinkCm / 100), p: 80, type: 'mat' });
+    } else if (method === 'wago') {
+        if(res.gml4 + res.gml6 > 0) m.push({ n: "Клеммы WAGO", q: res.gml4 + res.gml6, p: 25, type: 'mat' });
     }
-}
 
-// === БУХГАЛТЕРИЯ ===
-function updateBuhUI() {
-    let sumW = 0, sumM = 0, matBase = 0, workBase = 0;
-    currentEstimate.forEach(it => { let price = fPrice(it); if(it.type==='work') { sumW += price * it.q; workBase += (it.p||0) * it.q; } else { sumM += price * it.q; matBase += (it.p||0) * it.q; } });
-    let disc = Number(document.getElementById('b-discount').value) || 0, prep = Number(document.getElementById('b-prepay').value) || 0;
-    document.getElementById('b-work').innerText = sumW + ' P'; document.getElementById('b-mat').innerText = sumM + ' P'; document.getElementById('p-total').innerText = (workBase + (sumM - matBase)) + ' P'; document.getElementById('b-final').innerText = (sumW + sumM - disc - prep) + 'P';
-}
+    if(res.mechs.soc > 0) m.push({ n: "Розетка 220В (механизм)", q: res.mechs.soc, p: 250, type: 'mat' });
+    if((res.mechs.sw+res.mechs.pass+res.mechs.cross) > 0) m.push({ n: "Выключатель (механизм)", q: res.mechs.sw+res.mechs.pass+res.mechs.cross, p: 280, type: 'mat' });
+    if(res.mechs.tv > 0) m.push({ n: "Слаботочная розетка (механизм)", q: res.mechs.tv, p: 350, type: 'mat' });
+    for(let i=1; i<=5; i++) { if(res.frames[i] > 0) m.push({ n: `Рамка ${i} пост(а)`, q: res.frames[i], p: i*50, type: 'mat' }); }
 
-async function saveHist() {
-    const finalTotal = parseInt(document.getElementById('b-final').innerText) || 0;
-    let act = { id: Date.now(), name: cust.name, total: finalTotal, date: new Date().toLocaleDateString(), estimate: JSON.parse(JSON.stringify(currentEstimate)), masterName: appUser.name, masterUid: appUser.uid };
-    hDB.push(act); localStorage.setItem('h_v31', JSON.stringify(hDB)); updateHistList(); 
-    try { if(db) { await db.collection('history').doc(String(act.id)).set(act); await db.collection('drafts').doc(appUser.uid).delete(); currentEstimate = []; renderMainTable(); } } catch(e){} 
-    showToast("✅ Объект сохранен в Облако!"); closeModal('buhModal');
-}
-function updateHistList() {
-    let viewHDB = appUser.role === 'admin' ? hDB : hDB.filter(h => h.masterUid === appUser.uid);
-    document.getElementById('h-stat').innerHTML = viewHDB.map((h, i) => `<div style="background:rgba(255,255,255,0.6); padding:14px; border-radius:12px; border:1px solid var(--border); margin-bottom:10px; cursor:pointer;" onclick="openObjCard(${h.id})"><div style="display:flex; justify-content:space-between; margin-bottom:8px;"><b style="color:var(--text); font-size:14px;">${h.name || 'Без имени'}</b><b style="color:var(--primary);">${h.total} P</b></div><div style="font-size:11px; color:var(--gray);">Дата: ${h.date} ${appUser.role === 'admin' ? `<br><span style="color:var(--orange);">Мастер: ${h.masterName}</span>` : ''}</div></div>`).join("");
-}
-function openObjCard(id) {
-    closeModal('buhModal'); currentCardId = id; const obj = hDB.find(x => x.id === id); if(!obj) return;
-    document.getElementById('card-obj-name').innerText = obj.name || 'Без имени';
-    let cables = 0, shtroba = 0, points = 0; let mechs = { soc: 0, sw: 0, tv: 0, frames: 0, extraHTML: "" };
-    if(obj.estimate) {
-        obj.estimate.forEach(it => {
-            let n = it.n.toLowerCase();
-            if(n.includes('кабель') || n.includes('провод') || n.includes('ввг')) cables += Number(it.q);
-            if(n.includes('штроб') && !n.includes('вводная')) shtroba += Number(it.q);
-            if(n.includes('подрозетник') && it.type === 'work') points += Number(it.q);
-            if(n.includes('розетки 220в') || n.includes('накладной розетки')) mechs.soc += Number(it.q);
-            if(n.includes('выключателя') || n.includes('проходн') || n.includes('перекрест')) mechs.sw += Number(it.q);
-            if(n.includes('слаботочн') || n.includes('тв/инет')) mechs.tv += Number(it.q);
-            if(n.includes('рамка')) mechs.frames += Number(it.q);
-            if(it.tag === 'extra') mechs.extraHTML += `<div style="display:flex; justify-content:space-between; border-bottom:1px solid var(--border); padding:4px 0;"><span>${it.n}</span><b>${it.p} Р</b></div>`;
-        });
+    w.push({ n: "Сборка распред. коробки / коммутация", q: res.boxes, p: 800, type: 'work' });
+    
+    if(useKk) {
+        if(res.m_sh > 0) w.push({ n: `Монтаж кабель-канала`, q: Math.ceil(res.m_sh), p: 150, type: 'work' });
+        if(res.m_sh_50 > 0) w.push({ n: `Монтаж кабель-канала (широкий)`, q: Math.ceil(res.m_sh_50), p: 200, type: 'work' });
+    } else {
+        if(res.m_sh > 0) w.push({ n: `Штроба 25х30 (${wall})`, q: Math.ceil(res.m_sh), p: prShtr, type: 'work' });
+        if(res.m_sh_50 > 0) w.push({ n: `Штроба 50х50 (${wall})`, q: Math.ceil(res.m_sh_50), p: prShtr*1.8, type: 'work' });
     }
-    let wHTML = `Проложено кабеля: <b style="color:var(--primary);">${cables} м</b><br>Нарезано штроб: <b style="color:var(--orange);">${shtroba} м</b><br>Высверлено точек: <b>${points} шт</b>`;
-    if(mechs.extraHTML) wHTML += `<br><br><b style="color:var(--success);">Доп. работы:</b>${mechs.extraHTML}`;
-    document.getElementById('card-stats-work').innerHTML = wHTML;
-    document.getElementById('card-stats-finish').innerHTML = `Выключатели: <b>${mechs.sw} шт</b><br>Розетки: <b>${mechs.soc} шт</b><br>Слаботочные: <b>${mechs.tv} шт</b><br><hr style="border:0; border-top: 1px solid rgba(79, 70, 229, 0.3); margin:8px 0;"><i>Всего чистовых рамок: <b style="color:var(--success);">${mechs.frames}</b></i>`;
-    openModal('objCardModal');
-}
-function closeObjCardAndReturn() { closeModal('objCardModal'); openModal('buhModal'); }
-async function addExtraWork() {
-    const n = document.getElementById('extra-work-name').value.trim(); const p = Number(document.getElementById('extra-work-price').value);
-    if(!n || !p) return showToast("❌ Введите название и стоимость"); const obj = hDB.find(x => x.id === currentCardId);
-    if(obj) {
-        if(!obj.estimate) obj.estimate = []; obj.estimate.push({ n: n, p: p, q: 1, type: 'work', tag: 'extra' }); obj.total += p; localStorage.setItem('h_v31', JSON.stringify(hDB)); updateHistList(); openObjCard(currentCardId); document.getElementById('extra-work-name').value = ""; document.getElementById('extra-work-price').value = ""; showToast("✅ Доп. работа добавлена!");
-        try { if(db) await db.collection('history').doc(String(obj.id)).update({ estimate: obj.estimate, total: obj.total }); } catch(e){}
+
+    if(useSurf) {
+        let sumMechs = res.mechs.soc + res.mechs.sw + res.mechs.pass + res.mechs.cross + res.mechs.tv + res.mechs.tpol;
+        if(sumMechs > 0) w.push({ n: `Установка накладного механизма`, q: sumMechs, p: prSoc, type: 'work' });
+    } else {
+        if(res.stdPodr > 0) w.push({ n: `Высверливание подрозетников (45мм)`, q: res.stdPodr, p: prDrill, type: 'work' });
+        if(res.deepPodr > 0) w.push({ n: `Высверливание подрозетников (64мм)`, q: res.deepPodr, p: prDrill+100, type: 'work' });
+        let totalPodr = res.stdPodr + res.deepPodr + res.koposPodr;
+        if(totalPodr > 0) w.push({ n: `Вклейка подрозетников`, q: totalPodr, p: 100, type: 'work' });
+        
+        if(res.mechs.soc>0) w.push({n: `Установка розетки 220B`, q:res.mechs.soc, p:prSoc, type:'work'});
+        if(res.mechs.sw>0 || res.mechs.pass>0 || res.mechs.cross>0) w.push({n: `Установка выключателя`, q:res.mechs.sw+res.mechs.pass+res.mechs.cross, p:prSoc, type:'work'});
+        if(res.mechs.tv>0) w.push({n: `Установка слаботочной розетки`, q:res.mechs.tv, p:prSoc, type:'work'});
+        if(res.mechs.tpol>0) w.push({n: `Установка терморегулятора`, q:res.mechs.tpol, p:prSoc+400, type:'work'});
     }
+
+    addAuto(m.concat(w), 'rough'); pool=[]; rfPool(); closeModal('roughModal'); showToast("✅ Пул добавлен!");
 }
 
-// === PDF ГЕНЕРАТОР ===
-function getPDFHeader(title, showQR = false) {
-    let html = `<div class="pdf-header"><h1>${title}</h1><p>Заказчик: <b>${cust.name}</b> | Объект: ${cust.addr}</p></div>`;
-    if(showQR) {
-        let tgLink = localStorage.getItem('qr_tg_v31') || ""; let waLink = localStorage.getItem('qr_wa_v31') || "";
-        let tgQR = tgLink ? `<div class="qr-box"><img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(tgLink)}"><br>Telegram</div>` : "";
-        let waQR = waLink ? `<div class="qr-box"><img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(waLink)}"><br>WhatsApp</div>` : "";
-        html += `<div class="pdf-footer" style="display:flex; justify-content:space-between; align-items:flex-end; border-bottom:2px solid #e2e8f0; padding-bottom:15px; margin-bottom:20px;"><div><p style="margin:0; font-weight:bold; color:var(--primary);">ИСПОЛНИТЕЛЬ:</p><p style="margin:5px 0;">ФИО: ${appUser.name}</p></div><div class="qr-codes" style="display:flex; gap:15px;">${waQR}${tgQR}</div></div>`;
-    } return html;
+function modV(id, val) { cfg[id] = Math.max(0, cfg[id] + val); document.getElementById('v-'+id).innerText = cfg[id]; }
+
+function generateCascadePanel() {
+    let prShield = appLogic.priceShield || 500;
+    const bBox = document.getElementById('cfg-brand-box').value; const bAuto = document.getElementById('cfg-brand-auto').value; const sWall = document.getElementById('cfg-shield-wall').value; const ph = parseInt(document.getElementById('cfg-phase').value); const isMaster = document.getElementById('cfg-master').checked;
+    let m = []; let w = []; let count1P = 0; let countDIF = 0;
+    
+    m.push({ n: `Вводной автомат ${ph}ф (${bAuto})`, q: 1, p: bAuto==='ABB'?3500:1800, type:'mat' }); let totalMod = (ph === 3 ? 3 : 2);
+    countDIF++; m.push({ n: `⚡ ДИФ 40А (Силовые) ${bAuto}`, q: 1, p: bAuto==='ABB'?4500:3800, type:'mat' }); totalMod += 2;
+    m.push({ n: `  ↳ Автомат C16 (Кухня) ${bAuto}`, q: 1, p: bAuto==='ABB'?350:155, type:'mat' }); count1P++;
+    m.push({ n: `  ↳ Автомат C16 (Коридор) ${bAuto}`, q: 1, p: bAuto==='ABB'?350:155, type:'mat' }); count1P++;
+    if(cfg.rms > 0) { m.push({ n: `  ↳ Автомат C16 (Комнаты) ${bAuto}`, q: cfg.rms, p: bAuto==='ABB'?350:155, type:'mat' }); count1P += cfg.rms; }
+    if(cfg.bals > 0) { m.push({ n: `  ↳ Автомат C16 (Балконы) ${bAuto}`, q: cfg.bals, p: bAuto==='ABB'?350:155, type:'mat' }); count1P += cfg.bals; }
+    
+    ['oven', 'fridge', 'apron', 'dish','washer', 'boiler', 'neptun'].forEach(id => {
+        if(document.getElementById('c-'+id).checked) { let nm = id==='oven'?'Плита/Духовка':id==='fridge'?'Холодильник':id==='apron'?'Фартук':id==='dish'?'Посудомойка':id==='washer'?'Стиралка':id==='boiler'?'Бойлер':"Нептун"; m.push({n: `  ↳ Автомат C16 (${nm}) ${bAuto}`, q: 1, p: bAuto==='ABB'?350:155, type:'mat' }); count1P++; }
+    });
+    
+    countDIF++; m.push({ n: `💡 ДИФ 25А (Свет) ${bAuto}`, q: 1, p: bAuto==='ABB'?4200:3200, type:'mat' }); totalMod += 2;
+    m.push({ n: `  ↳ Автомат C10 (Свет Кухня) ${bAuto}`, q: 1, p: bAuto==='ABB'?350:155, type:'mat' }); count1P++;
+    m.push({ n: `  ↳ Автомат C10 (Свет Ванная) ${bAuto}`, q: 1, p: bAuto==='ABB'?350:155, type:'mat' }); count1P++;
+    if(cfg.rms > 0) { m.push({ n: `  ↳ Автомат C10 (Свет Комнаты) ${bAuto}`, q: cfg.rms, p: bAuto==='ABB'?350:155, type:'mat' }); count1P += cfg.rms; }
+    
+    if (cfg.acs > 0) { countDIF++; m.push({ n: `❄️ ДИФ (Кондиц.) ${bAuto}`, q: 1, p: bAuto==='ABB'?4500:3500, type:'mat' }); totalMod += 2; m.push({ n: `  ↳ Автомат C16 (Конд) ${bAuto}`, q: cfg.acs, p: bAuto==='ABB'?350:155, type:'mat' }); count1P += cfg.acs; }
+    if (cfg.fls > 0) { countDIF++; m.push({ n: `🔥 ДИФ (Т.Полы) ${bAuto}`, q: 1, p: bAuto==='ABB'?4500:3600, type:'mat' }); totalMod += 2; m.push({ n: `  ↳ Автомат C16 (Т.Пол) ${bAuto}`, q: cfg.fls, p: bAuto==='ABB'?350:155, type:'mat' }); count1P += cfg.fls; }
+    if(document.getElementById('cfg-uzm').checked) { m.push({ n: `Реле напряжения УЗМ-50Ц`, q: ph===3?3:1, p: 4500, type:'mat' }); totalMod += (ph===3?6:2); }
+    if(isMaster) { m.push({ n: `Контактор 25А`, q: 1, p: 2200, type:'mat' }); m.push({ n: `  ↳ Автомат 40А (Байпас) ${bAuto}`, q: 1, p: bAuto==='ABB'?600:380, type:'mat' }); count1P++; totalMod += 2; }
+    
+    m.push({ n: `Провод ПуГВ (ПВ-3) 1х6 синий`, q: 4, p: 85, type:'mat' }); m.push({ n: `Провод ПуГВ (ПВ-3) 1х6 белый`, q: 4, p: 85, type:'mat' }); m.push({ n: `Наконечник НШВИ 6.0-12 (упак)`, q: 1, p: 225, type:'mat' });
+    
+    if (bBox === 'ABB') { m.push({ n: `Клеммник винтовой N 5x16 (ABB)`, q: countDIF, p: 345, type:'mat' }); m.push({ n: `Клеммник винтовой PE 11x16 (ABB)`, q: 1, p: 770, type:'mat' }); } 
+    else { m.push({ n: `Шина N ноль на DIN-изол (ИЭК)`, q: countDIF, p: 285, type:'mat' }); }
+    
+    let comb1P = Math.ceil(count1P / 12); let comb2P = Math.ceil(countDIF / 6);
+    if (comb1P > 0) m.push({ n: `Гребенка 1P (25см)`, q: comb1P, p: 250, type:'mat' });
+    if (comb2P > 0) m.push({ n: `Гребенка 2Р (25см)`, q: comb2P, p: 450, type:'mat' });
+    
+    totalMod += count1P; let boxSize = [12, 24, 36, 48, 54, 72, 96].find(s => s >= (totalMod + 5)) || 96;
+    m.unshift({ n: `📦 Щит ${sWall==='Накладной'?'накладной':'встраиваемый'} ${bBox} ${boxSize}М`, q: 1, p: bBox==='ABB'?6510:2660, type:'mat' });
+    
+    if(sWall !== 'Накладной') w.push({ n: `Вырубка ниши (${sWall})`, q: boxSize, p: 400, type:'work' });
+    w.push({ n: `Штроба ВВОДНАЯ 100x50 (${sWall})`, q: 2, p: 1500, type:'work' });
+    w.push({ n: `Сборка щита`, q: totalMod, p: prShield, type:'work' });
+    
+    addAuto(m.concat(w), 'shield'); closeModal('configModal'); showToast("✅ Щит сгенерирован!");
 }
 
-function showPreview(mode) {
+async function runAiCheck() { 
+    if(!GEMINI_API_KEY) return showToast("❌ Нужен ключ ИИ в настройках");
+    showLoader("ИИ анализирует...");
+    try {
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`;
+        const estNames = currentEstimate.map(i => i.n).join(", ");
+        const promptText = `Я электрик. Смета: ${estNames}. Найди логические ошибки (забыл крепеж, рамки, УЗО). Верни ТОЛЬКО JSON массив: [{"reason": "Объяснение", "suggestedName": "Название из стандартных материалов"}]. Если всё идеально, верни пустой массив [].`;
+        const payload = { contents: [{ parts: [{text: promptText }] }] };
+        const response = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
+        const data = await response.json(); hideLoader();
+        if(data.error) throw new Error(data.error.message);
+        let aiText = data.candidates[0].content.parts[0].text.replace(/```json/g, '').replace(/```/g, '').trim();
+        const suggestions = JSON.parse(aiText);
+        if (suggestions.length === 0) return showToast("✨ Всё идеально! Смета полная.");
+        document.getElementById('ai-modal-title').innerText = "✨ ИИ-Аналитика";
+        document.getElementById('ai-suggestions').innerHTML = suggestions.map(s => `<div style="background:var(--bg); padding: 15px; border-radius: 12px; margin-bottom:10px; border-left:4px solid var(--ai);"><div style="font-size: 13px; font-weight:bold; margin-bottom:8px;">${s.reason}</div><div style="display:flex; justify-content:space-between; align-items:center;"><span style="font-size:14px; color:var(--primary); font-weight:bold;">${s.suggestedName}</span><button onclick="addAuto([{n:'${s.suggestedName}', q:1, p:0}], 'ai_add'); closeModal('aiModal');" style="background:var(--ai); padding:8px 14px; font-size:12px; color:white; border:none; border-radius:8px; width:auto; margin:0;">+ Добавить</button></div></div>`).join("");
+        openModal('aiModal');
+    } catch(e) { hideLoader(); showToast("❌ Сбой ИИ"); }
+}
+
+async function aiPueHelper() { 
+    if(!GEMINI_API_KEY) return showToast("❌ Нужен ключ ИИ");
+    showLoader("ИИ думает...");
+    try {
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`;
+        const promptText = `Смета: ${currentEstimate.map(i=>i.n).join(", ")}. Какие нормы ПУЭ нужны? Напиши кратко в HTML (без markdown).`;
+        const payload = { contents: [{ parts: [{text: promptText }] }] };
+        const response = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
+        const data = await response.json(); hideLoader();
+        document.getElementById('ai-modal-title').innerText = "📚 ПУЭ Справка";
+        document.getElementById('ai-suggestions').innerHTML = data.candidates[0].content.parts[0].text.replace(/```html/g, '').replace(/```/g, '').trim();
+        openModal('aiModal');
+    } catch(e) { hideLoader(); showToast("❌ Сбой ИИ"); }
+}
+
+async function compareShopsAI() {
+    if(!GEMINI_API_KEY) return showToast("❌ Нужен ключ ИИ");
+    showLoader("Сравнение цен ГОСТ...");
+    try {
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`;
+        let shops = document.getElementById('ai-shops').value || "Лемана ПРО, Петрович";
+        const promptText = `Материалы: ${currentEstimate.filter(i=>i.type==='mat').map(i=>i.n).join(", ")}. Создай HTML таблицу сравнения цен ГОСТ в магазинах: ${shops}. Верни только HTML.`;
+        const payload = { contents: [{ parts: [{text: promptText }] }] };
+        const response = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
+        const data = await response.json(); hideLoader();
+        document.getElementById('ai-modal-title').innerText = "🛒 Цены ГОСТ";
+        document.getElementById('ai-suggestions').innerHTML = data.candidates[0].content.parts[0].text.replace(/```html/g, '').replace(/```/g, '').trim();
+        openModal('aiModal');
+    } catch(e) { hideLoader(); showToast("❌ Сбой ИИ"); }
+}
+
+async function analyzeMastersAI() { showToast("Анализ..."); }
+
+function getPDFHeader(title) { 
+    return `<div class="pdf-header"><h1>${title}</h1><p>Заказчик: <b>${cust.name}</b> | Объект: ${cust.addr}</p></div>`; 
+}
+
+function showPreview(mode) { 
     let title = mode==='vendor' ? 'СПИСОК ПОСТАВЩИКУ' : (mode==='details' ? 'ДЕТАЛИЗАЦИЯ ЩИТА' : 'СМЕТА ОБЪЕКТA');
-    let html = getPDFHeader(title, mode === 'client'); 
+    let html = getPDFHeader(title); 
+    
     if(mode === 'details') {
         let shieldItems = currentEstimate.filter(it => it.n.includes('Автомат') || it.n.includes('ДИФ') || it.n.includes('УЗО') || it.n.includes('Реле'));
         html += '<table class="pdf-table"><tr><th>Помещение/Линия</th><th>Аппарат защиты</th></tr>';
-        shieldItems.forEach(it => { let match = it.n.match(/\((.*?)\)/); let room = match ? match[1] : 'Общая / Вводная'; html += `<tr><td style="font-weight:bold; color:var(--primary);">${room}</td><td>${it.n}</td></tr>`; }); html += '</table>';
+        shieldItems.forEach(it => { let match = it.n.match(/\((.*?)\)/); let room = match ? match[1] : 'Общая / Вводная'; html += `<tr><td style="font-weight:bold; color:var(--primary);">${room}</td><td>${it.n}</td></tr>`; }); 
+        html += '</table>';
     } 
     else if(mode === 'vendor') {
         let matsFinishWords = ['розетк', 'выключател', 'рамк', 'светильник', 'терморег', 'механизм', 'люстр', 'бра', 'диммер'];
@@ -877,11 +897,35 @@ function showPreview(mode) {
         }
         html += `<h2 style="text-align:right; margin-top:20px; color:var(--text); font-size:22px;">ОБЩАЯ СУММА: ${sumMR + sumW + sumMF} Р</h2>`;
     }
-    document.getElementById('p-cont').innerHTML = html; openModal('previewModal');
+    
+    let tgLink = document.getElementById('qr-tg').value; let waLink = document.getElementById('qr-wa').value;
+    if(mode === 'client' && (tgLink || waLink)) {
+        html += `<div class="pdf-footer" style="display:flex; justify-content:space-between; align-items:flex-end; border-top:2px solid #e2e8f0; padding-top:15px; margin-top:20px;"><div><p style="margin:0; font-weight:bold; color:var(--primary);">ИСПОЛНИТЕЛЬ:</p><p style="margin:5px 0;">ФИО: ${appUser?.name}</p></div><div class="qr-codes" style="display:flex; gap:15px;">`;
+        if(waLink) html += `<div class="qr-box"><img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(waLink)}"><br>WhatsApp</div>`;
+        if(tgLink) html += `<div class="qr-box"><img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(tgLink)}"><br>Telegram</div>`;
+        html += `</div></div>`;
+    }
+    
+    document.getElementById('p-cont').innerHTML = html; 
+    openModal('previewModal'); 
 }
-function printActPDF() { showPreview('client'); }
 
-// === КАЛЬКУЛЯТОРЫ ТРАСС И ПУЛ ===
+function saveCust() { 
+    cust.name = document.getElementById('c-name').value; 
+    cust.addr = document.getElementById('c-addr').value;
+    cust.ceil = document.getElementById('c-ceil').value;
+    safeSet('cust_v31', JSON.stringify(cust)); 
+    closeModal('custModal'); updateMasterBadge(); 
+}
+
+function saveLogic() { 
+    appLogic.priceSoc = Number(document.getElementById('logic-price-soc').value);
+    appLogic.priceShield = Number(document.getElementById('logic-price-shield').value);
+    safeSet('appLogic_v31', JSON.stringify(appLogic));
+    showToast("Сохранено!"); closeModal('logicModal'); 
+}
+function renderLogicUI() { document.getElementById('logic-price-soc').value = appLogic.priceSoc; document.getElementById('logic-price-shield').value = appLogic.priceShield; }
+
 function openRecalcModal() { 
     globalRecalcCab = 0; globalRecalcSht = 0;
     currentEstimate.forEach(it => { let nameLower = it.n.toLowerCase(); if (nameLower.includes('ввг') || nameLower.includes('bbг') || nameLower.includes('провод') || nameLower.includes('кабель')) globalRecalcCab += Number(it.q); if (nameLower.includes('штроб') && !nameLower.includes('вводная')) globalRecalcSht += Number(it.q); }); 
@@ -891,7 +935,6 @@ function updateRecalcUI() {
     let ceilCab = Number(document.getElementById('r-ceil-input').value) || 0; let floorCab = Math.max(0, globalRecalcCab - ceilCab - globalRecalcSht);
     document.getElementById('r-res-sht').innerText = globalRecalcSht + ' м'; document.getElementById('r-res-ceil').innerText = ceilCab + ' м'; document.getElementById('r-res-floor').innerText = floorCab + ' м'; 
 }
-
 function doRecalculate() {
     let ceilCab = Number(document.getElementById('r-ceil-input').value) || 0; let floorCab = Math.max(0, globalRecalcCab - ceilCab - globalRecalcSht);
     const rmList = ["Гофра ПВХ", "Лента монтажная", "Площадка под стяжку", "Стяжки нейлоновые", "Стяжка нейлоновая", "Прокладка кабеля", "Клипса в штробу", "Газовый баллон", "Гвозди для прямого", "Смесь штукатурная", "Амортизация: Коронка алмазная"];
@@ -916,95 +959,7 @@ function doRecalculate() {
     addAuto(m, 'recalc_m'); addAuto(w, 'recalc_w'); closeModal('recalcModal'); showToast("✅ Трассы пересчитаны!");
 }
 
-function setPodr(t, el) { st_podr = t; document.querySelectorAll('#podr-tiles .tile').forEach(t=>t.classList.remove('active')); el.classList.add('active'); }
-function setH(v, el) { st_h = Number(v); if(el){ document.querySelectorAll('#h-tiles .tile').forEach(t=>t.classList.remove('active')); el.classList.add('active'); } }
-function setP(v) { st_p = Number(v); document.querySelectorAll('#p-tiles .tile').forEach((t,i) => { if(i === v-1) t.classList.add('active'); else t.classList.remove('active'); }); }
-function modM(t, v) { let val = window['st_'+t]; if(v > 0) { window['st_'+t]++; let total = st_soc + st_sw + st_pass + st_cross + st_tv + st_tpol; if (total > st_p && total <= 5) setP(total); } else if (v < 0 && val > 0) { window['st_'+t]--; let total = st_soc + st_sw + st_pass + st_cross + st_tv + st_tpol; if (total < st_p && st_p >= 1) setP(Math.max(1, total)); } upUI(); }
-function modV(id, val) { cfg[id] = Math.max(0, cfg[id] + val); if(id === 'rms' && cfg[id] < 1) cfg[id] = 1; document.getElementById('v-'+id).innerText = cfg[id]; }
-function upUI() { ['soc', 'sw', 'pass', 'cross', 'tv', 'tpol'].forEach(k => document.getElementById('v-'+k).innerText = window['st_'+k]); document.getElementById('v-q').innerText = st_q; }
-function addGrp() { pool.push({ id: Date.now(), h:st_h, p:st_p, soc:st_soc, sw:st_sw, pass:st_pass, cross:st_cross, tv:st_tv, tpol:st_tpol, q:st_q, u:0, type:'grp', route:document.getElementById('g-routing').value, podr: st_podr }); rfPool(); st_q = 1; st_soc = 1; st_sw = 0; st_pass = 0; st_cross = 0; st_tv = 0; st_tpol = 0; setP(1); setH(30, document.querySelector('#h-tiles .tile:first-child')); document.getElementById('c-h-custom').value = ""; upUI(); }
-function popPool() { if(pool.length>0) { pool.pop(); rfPool(); } }
-function rfPool() { document.getElementById('pool-disp').innerHTML = pool.map((g,i)=>`<div style="display: flex; justify-content:space-between;padding:10px; border-bottom:1px solid var(--border); align-items:center;"><span><b>${g.p}п на ${g.h}см (x${g.q})</b></span><button onclick="pool.splice(${i}, 1);rfPool()" style="color:white; background:var(--danger); border:none; border-radius:6px; padding:6px 10px; width:auto; margin:0;">✕</button></div>`).join(""); }
-
-function applyPoolToEstimate() {
-    if(!pool.length) return showToast("❌ Пул пуст!");
-    let mode = document.getElementById('montage-mode').value; let wall = document.getElementById('g-wall').value; let ceilH = Number(cust.ceil) || 270;
-    
-    let res = { m_sh: 0, m_sh_50: 0, boxes: 0, gml4: 0, gml6: 0, shrinkCm: 0, stdPodr: 0, deepPodr: 0, koposPodr: 0, mechs: { soc:0, sw:0, pass:0, cross:0, tv:0, tpol:0 }, frames: {1:0,2:0,3:0,4:0,5:0} };
-    let cSw = appLogic.cons?.switches || 4; let cSoc = appLogic.cons?.sockets || 3;
-    let method = appLogic.commutation || 'gml'; 
-    let shrinkPerGml = 4;
-
-    pool.forEach(g => {
-        let isSw = (g.sw > 0 || g.pass > 0 || g.cross > 0); let drop = isSw ? (ceilH - g.h)/100 : (g.route === 'ceiling' ? (ceilH - g.h)/100 : g.h/100);
-        if(g.tpol > 0) { res.m_sh_50 += (g.h/100) * g.q; if(g.route === 'ceiling') res.m_sh += (drop - g.h/100) * g.q; } else { res.m_sh += drop * g.q; }
-        res.boxes += 1 * g.q;
-        
-        if(isSw) { res.gml4 += cSw * g.q; res.shrinkCm += (cSw * shrinkPerGml) * g.q; } else { res.gml6 += cSoc * g.q; res.shrinkCm += (cSoc * shrinkPerGml) * g.q; }
-        
-        let deepCount = (g.sw + g.pass + g.cross + g.tpol) * g.q; let stdCount = Math.max(0, (g.p * g.q) - deepCount);
-        if(g.podr === 'kopos') res.koposPodr += g.p * g.q; else if(g.podr === 'deep') res.deepPodr += g.p * g.q; else { res.deepPodr += deepCount; res.stdPodr += stdCount; }
-        res.mechs.soc += g.soc * g.q; res.mechs.sw += g.sw * g.q; res.mechs.pass += g.pass * g.q; res.mechs.cross += g.cross * g.q; res.mechs.tv += g.tv * g.q; res.mechs.tpol += g.tpol * g.q;
-        if(g.p >= 1 && g.p <= 5) res.frames[g.p] += g.q;
-    });
-
-    let m = [], w = [];
-    let prSoc = appLogic.priceSoc || 500; let prDrill = appLogic.priceDrill || 600; let prShtr = appLogic.priceShtroba || 550;
-
-    if(res.stdPodr > 0) m.push({ n: "Подрозетник стандарт (ГКЛ/Бетон)", q: res.stdPodr, p: 20, type: 'mat' });
-    if(res.deepPodr > 0) m.push({ n: "Подрозетник глубокий 68х64", q: res.deepPodr, p: 12, type: 'mat' });
-    if(mode === 'classic') m.push({ n: "Коробка распределительная 100х100х40", q: res.boxes, p: 120, type: 'mat' });
-    
-    if(method === 'gml') {
-        if(res.gml4 > 0) m.push({ n: "Гильза ГМЛ 4", q: res.gml4, p: 12, type: 'mat' });
-        if(res.gml6 > 0) m.push({ n: "Гильза ГМЛ 6", q: res.gml6, p: 18, type: 'mat' });
-        if(res.shrinkCm > 0) m.push({ n: "Термоусадка (м)", q: Math.ceil(res.shrinkCm / 100), p: 80, type: 'mat' });
-    } else if (method === 'wago') {
-        if(res.gml4 + res.gml6 > 0) m.push({ n: "Клеммы WAGO", q: res.gml4 + res.gml6, p: 25, type: 'mat' });
-    }
-
-    if(res.mechs.soc > 0) m.push({ n: "Розетка 220В (механизм)", q: res.mechs.soc, p: 250, type: 'mat' });
-    if((res.mechs.sw+res.mechs.pass+res.mechs.cross) > 0) m.push({ n: "Выключатель (механизм)", q: res.mechs.sw+res.mechs.pass+res.mechs.cross, p: 280, type: 'mat' });
-    for(let i=1; i<=5; i++) { if(res.frames[i] > 0) m.push({ n: `Рамка ${i} пост(а)`, q: res.frames[i], p: i*50, type: 'mat' }); }
-
-    w.push({ n: "Сборка распред. коробки / коммутация", q: res.boxes, p: 800, type: 'work' });
-    if(res.m_sh > 0) w.push({ n: `Штроба 25х30 (${wall})`, q: Math.ceil(res.m_sh), p: prShtr, type: 'work' });
-    if(res.stdPodr > 0) w.push({ n: `Высверливание подрозетников (45мм)`, q: res.stdPodr, p: prDrill, type: 'work' });
-    if(res.deepPodr > 0) w.push({ n: `Высверливание подрозетников (64мм)`, q: res.deepPodr, p: prDrill+100, type: 'work' });
-    
-    addAuto(m.concat(w), 'rough'); pool=[]; rfPool(); closeModal('roughModal'); showToast("✅ Пул добавлен!");
-}
-
-function generateCascadePanel() {
-    let prShield = appLogic.priceShield || 500;
-    const bBox = document.getElementById('cfg-brand-box').value; const bAuto = document.getElementById('cfg-brand-auto').value; const ph = parseInt(document.getElementById('cfg-phase').value);
-    let m = []; let w = []; let count1P = 0; let countDIF = 0;
-    m.push({ n: `Вводной автомат ${ph}ф (${bAuto})`, q: 1, p: bAuto==='ABB'?3500:1800, type:'mat', stage: 1 }); let totalMod = (ph === 3 ? 3 : 2);
-    countDIF++; m.push({ n: `⚡ ДИФ 40А (Силовые) ${bAuto}`, q: 1, p: bAuto==='ABB'?4500:3800, type:'mat', stage: 1 }); totalMod += 2;
-    m.push({ n: `  ↳ Автомат C16 (Кухня) ${bAuto}`, q: 1, p: bAuto==='ABB'?350:155, type:'mat', stage: 1 }); count1P++;
-    if(cfg.rms > 0) { m.push({ n: `  ↳ Автомат C16 (Комнаты) ${bAuto}`, q: cfg.rms, p: bAuto==='ABB'?350:155, type:'mat', stage: 1 }); count1P += cfg.rms; }
-    
-    countDIF++; m.push({ n: `💡 ДИФ 25А (Свет) ${bAuto}`, q: 1, p: bAuto==='ABB'?4200:3200, type:'mat', stage: 1 }); totalMod += 2;
-    m.push({ n: `  ↳ Автомат C10 (Свет Кухня) ${bAuto}`, q: 1, p: bAuto==='ABB'?350:155, type:'mat', stage: 1 }); count1P++;
-    
-    if (cfg.acs > 0) { countDIF++; m.push({ n: `❄️ ДИФ (Кондиц.) ${bAuto}`, q: 1, p: bAuto==='ABB'?4500:3500, type:'mat', stage: 1 }); totalMod += 2; m.push({ n: `  ↳ Автомат C16 (Конд) ${bAuto}`, q: cfg.acs, p: bAuto==='ABB'?350:155, type:'mat', stage: 1 }); count1P += cfg.acs; }
-    
-    m.push({ n: `Провод ПуГВ (ПВ-3) 1х6 синий`, q: 4, p: 85, type:'mat', stage: 1 }); m.push({ n: `Наконечник НШВИ 6.0-12`, q: 1, p: 225, type:'mat', stage: 1 });
-    totalMod += count1P; let boxSize = [12, 24, 36, 48, 54, 72, 96].find(s => s >= (totalMod + 5)) || 96;
-    m.unshift({ n: `📦 Щит ${bBox} ${boxSize}М`, q: 1, p: bBox==='ABB'?6510:2660, type:'mat', stage: 1 });
-    
-    w.push({ n: `Вырубка ниши`, q: boxSize, p: 400, type:'work', stage: 1 });
-    w.push({ n: `Сборка щита`, q: totalMod, p: prShield, type:'work', stage: 1 });
-    
-    addAuto(m.concat(w), 'shield'); closeModal('configModal'); showToast("✅ Щит сгенерирован!");
-}
-function openModal(id) { document.getElementById(id).style.display='block'; if(id==='logicModal') renderLogicUI(); }
-function closeModal(id) { document.getElementById(id).style.display='none'; }
-function toggleMenu() { document.getElementById('burger-menu').classList.toggle('open'); document.getElementById('burger-overlay').classList.toggle('open'); }
-function changeTheme(theme) { document.documentElement.setAttribute('data-theme', theme); localStorage.setItem('theme_v31', theme); }
-function changeScale(val) { document.body.style.zoom = val; localStorage.setItem('scale_v31', val); }
-function updateMasterBadge() { document.getElementById('master-badge').innerHTML = `${appUser?.name || 'Мастер'}<br><span style="color:var(--gray); font-size:10px;">Объект: ${cust.name || 'Не выбран'}</span>`; }
-
+function updateBuhUI() {} function saveHist() {} function updateHistList() {} function renderDbEditors() {} function loadCustHistoryOptions() {} function listenForApprovals() {} function loadMasterDrafts() {} function renderAdminUsers() {}
 </script>
 </body>
 </html>
