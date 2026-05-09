@@ -998,6 +998,12 @@ function generateCascadePanel() {
     
     addAuto(m.concat(w), 'shield'); closeModal('configModal'); showToast("✅ Щит сгенерирован!");
 }
+function openModal(id) { document.getElementById(id).style.display='block'; if(id==='logicModal') renderLogicUI(); }
+function closeModal(id) { document.getElementById(id).style.display='none'; }
+function toggleMenu() { document.getElementById('burger-menu').classList.toggle('open'); document.getElementById('burger-overlay').classList.toggle('open'); }
+function changeTheme(theme) { document.documentElement.setAttribute('data-theme', theme); localStorage.setItem('theme_v31', theme); }
+function changeScale(val) { document.body.style.zoom = val; localStorage.setItem('scale_v31', val); }
+function updateMasterBadge() { document.getElementById('master-badge').innerHTML = `${appUser?.name || 'Мастер'}<br><span style="color:var(--gray); font-size:10px;">Объект: ${cust.name || 'Не выбран'}</span>`; }
 
 </script>
 </body>
