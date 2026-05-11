@@ -1947,7 +1947,7 @@ async function deleteUser(uid) {
     <div class="modal-content glass" style="max-width: 560px;">
         <div class="close-x" onclick="closeModal('ep-db-ai-review-modal')">×</div>
         <h2 id="ep-db-ai-review-title" style="color:var(--primary); margin-top:0; font-size:18px;">Импорт базы через ИИ</h2>
-        <p style="font-size:12px; color:var(--gray);">Отметьте галочками нужные позиции. Можно поправить имя, категорию, подкатегорию, цену и единицу.</p>
+        <p style="font-size:12px; color:var(--gray);">Каждая строка файла должна стать отдельной позицией. Отметьте галочками нужные строки. Можно поправить имя, категорию, подкатегорию, цену и единицу.</p>
         <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin:10px 0 12px 0;">
             <button class="btn-info" type="button" onclick="epReviewCheckAll(true)">✅ Выделить все</button>
             <button class="btn-vendor" type="button" onclick="epReviewCheckAll(false)">⬜ Убрать все галочки</button>
@@ -2468,6 +2468,34 @@ async function deleteUser(uid) {
         });
         return out;
     }
+    function epExtractJsonObjectsLoose(t) {
+        const s = epStripCode(String(t || '')).replace(/[“”]/g, '"').replace(/[‘’]/g, "'");
+        const out = [];
+        let depth = 0, start = -1, inStr = null, esc = false;
+
+        for (let i = 0; i < s.length; i++) {
+            const ch = s[i];
+            if (inStr) {
+                if (esc) esc = false;
+                else if (ch === '\\') esc = true;
+                else if (ch === inStr) inStr = null;
+                continue;
+            }
+            if (ch === '"' || ch === "'") { inStr = ch; continue; }
+            if (ch === '{') {
+                if (depth === 0) start = i;
+                depth++;
+            } else if (ch === '}') {
+                depth--;
+                if (depth === 0 && start >= 0) {
+                    const piece = s.slice(start, i + 1).replace(/,\s*([}\]])/g, '$1');
+                    try { out.push(JSON.parse(piece)); } catch(e) {}
+                    start = -1;
+                }
+            }
+        }
+        return out;
+    }
 
     function epParseJsonArray(t) {
         const parsed = epTryJsonParseLoose(t);
@@ -2478,6 +2506,12 @@ async function deleteUser(uid) {
                 if (Array.isArray(parsed[k])) return parsed[k];
             }
         }
+
+        // Бывает, ИИ возвращает не массив, а цепочку объектов:
+        // {"n":"..."},{"n":"..."},{"n":"..."}
+        const objects = epExtractJsonObjectsLoose(t);
+        if (objects.length) return objects;
+
         return epParseLooseTableText(t, 'mat');
     }
 
@@ -2769,6 +2803,123 @@ async function deleteUser(uid) {
         });
     }
 
+
+
+    function epIsEmptyCell(v) {
+        return v === null || v === undefined || String(v).trim() === '';
+    }
+
+    function epCleanCell(v) {
+        return epCleanText(String(v === null || v === undefined ? '' : v).replace(/\u00a0/g, ' '));
+    }
+
+    function epIsUnitCell(v) {
+        const s = epCleanCell(v).toLowerCase().replace(/\./g, '');
+        return /^(шт|штук|м|мп|м\/п|м2|м²|м3|м³|упак|уп|компл|комплект|час|точка|линия|кг|л)$/i.test(s);
+    }
+
+    function epNormalizeUnit(v) {
+        const s = epCleanCell(v).toLowerCase().replace(/\./g, '');
+        if (!s) return 'шт';
+        if (s === 'мп' || s === 'м/п') return 'м';
+        if (s === 'штук') return 'шт';
+        if (s === 'комплект') return 'компл';
+        return s;
+    }
+
+    function epIsNumberLikeCell(v) {
+        if (typeof v === 'number') return true;
+        const s = epCleanCell(v);
+        if (!s) return false;
+        return /^\d+[\d\s]*([,.]\d+)?$/.test(s);
+    }
+
+    function epLooksLikeCodeOrNumber(v) {
+        const s = epCleanCell(v);
+        if (!s) return true;
+        if (/^№$/i.test(s)) return true;
+        if (/^\d+[.)]?$/.test(s)) return true;
+        if (/^\d+(\.\d+)+$/.test(s)) return true;
+        if (/^[A-ZА-Я0-9\-_.\/]{2,18}$/i.test(s) && !/[а-яё]{4,}/i.test(s)) return true;
+        return false;
+    }
+
+    function epTitleCaseRu(s) {
+        s = epCleanCell(s).replace(/:+$/, '').trim();
+        if (!s) return '';
+        return s.charAt(0).toUpperCase() + s.slice(1).toLowerCase();
+    }
+
+    function epExtractItemsFromSheetRows(rows, type) {
+        const out = [];
+        let currentCat = type === 'work' ? 'Работы' : 'Разное';
+        let currentSubcat = 'Разное';
+
+        (rows || []).forEach(function(row) {
+            const cells = (Array.isArray(row) ? row : Object.values(row || {})).map(epCleanCell);
+            const nonEmpty = cells.filter(x => x);
+            if (!nonEmpty.length) return;
+
+            const rowText = nonEmpty.join(' ');
+            if (/^(№|номер|код|артикул)$/i.test(rowText)) return;
+            if (/наименование/i.test(rowText) && /(ед|цена|стоимость)/i.test(rowText)) return;
+
+            const unitIdx = cells.findIndex(epIsUnitCell);
+            const numIdxs = cells.map((v, i) => epIsNumberLikeCell(v) ? i : -1).filter(i => i >= 0);
+            const priceIdxs = numIdxs.filter(i => unitIdx < 0 || i > unitIdx);
+            const priceIdx = priceIdxs.length ? priceIdxs[0] : (numIdxs.length ? numIdxs[numIdxs.length - 1] : -1);
+            const hasPrice = priceIdx >= 0 && epMoney(cells[priceIdx]) > 0;
+            const hasUnit = unitIdx >= 0;
+
+            // Строка-раздел без цены и единицы
+            if (!hasPrice && !hasUnit) {
+                let title = nonEmpty.find(x => !/^\d+(\.\d+)*\.?$/.test(x)) || rowText;
+                title = epTitleCaseRu(title);
+                if (!title || title.length < 3) return;
+
+                const first = nonEmpty[0] || '';
+                if (/^\d+\.$/.test(first) || /работ/i.test(title) || title === title.toUpperCase()) {
+                    currentCat = title;
+                    currentSubcat = 'Разное';
+                } else if (/^\d+\.\d+/.test(first) || /:$/.test(rowText) || nonEmpty.length <= 2) {
+                    currentSubcat = title;
+                } else if (type === 'work') {
+                    currentSubcat = title;
+                } else {
+                    currentCat = title;
+                }
+                return;
+            }
+
+            let nameCandidates = cells.map((v, i) => ({ v, i }))
+                .filter(x => x.v)
+                .filter(x => x.i !== unitIdx && x.i !== priceIdx)
+                .filter(x => !epIsNumberLikeCell(x.v))
+                .filter(x => !epLooksLikeCodeOrNumber(x.v))
+                .filter(x => !/^(ед|ед изм|цена|сумма|стоимость|кол-во|количество)$/i.test(x.v));
+
+            if (!nameCandidates.length) return;
+            nameCandidates.sort((a, b) => b.v.length - a.v.length);
+            const name = epCleanText(nameCandidates[0].v);
+            if (!name || name.length < 4) return;
+
+            const cat = currentCat && currentCat !== 'Разное' ? currentCat : epInferCategory(name, type);
+            const subcat = currentSubcat && currentSubcat !== 'Разное' ? currentSubcat : epInferSubcategory(name, cat, type);
+            const unit = hasUnit ? epNormalizeUnit(cells[unitIdx]) : 'шт';
+            const price = hasPrice ? epMoney(cells[priceIdx]) : 0;
+
+            out.push({
+                id: (type === 'work' ? 'w' : 'm') + '_sheet_' + Date.now() + '_' + out.length,
+                n: name,
+                c: cat || (type === 'work' ? 'Работы' : 'Разное'),
+                sc: subcat || 'Разное',
+                p: price,
+                u: unit
+            });
+        });
+
+        return out;
+    }
     async function epReadDbFile(file, type) {
         showLoader('Читаю файл...', '📥');
         try {
@@ -2789,22 +2940,30 @@ async function deleteUser(uid) {
                 epShowDbReview(epNormalizeItems(raw, type), type, name);
                 return;
             }
-
             if (lower.endsWith('.xlsx') || lower.endsWith('.xls') || lower.endsWith('.csv')) {
                 let rows = [];
                 if (window.XLSX) {
                     const ab = await epReadFileAsArrayBuffer(file);
                     const wb = XLSX.read(ab, { type: 'array' });
                     const ws = wb.Sheets[wb.SheetNames[0]];
-                    rows = XLSX.utils.sheet_to_json(ws, { defval: '' });
+                    rows = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '' });
                 } else {
                     const txt = await epReadFileAsText(file);
                     rows = txt.split(/\r?\n/).map(function(line) {
-                        const cols = line.split(';').length > line.split(',').length ? line.split(';') : line.split(',');
-                        return { Категория: cols[0], Наименование: cols[1], Цена: cols[2], Ед: cols[3] };
+                        return line.split(';').length > line.split(',').length ? line.split(';') : line.split(',');
                     });
                 }
-                await epAiNormalizeDbText(JSON.stringify(rows).slice(0, 80000), type, name);
+
+                // Сначала разбираем Excel/CSV локально, построчно: каждая строка = отдельная позиция.
+                // ИИ нужен только как запасной вариант, если таблица слишком кривая.
+                const localItems = epExtractItemsFromSheetRows(rows, type);
+                if (localItems.length) {
+                    hideLoader();
+                    epShowDbReview(localItems, type, name);
+                    return;
+                }
+
+                await epAiNormalizeDbText(JSON.stringify(rows).slice(0, 90000), type, name);
                 return;
             }
 
@@ -2917,6 +3076,7 @@ async function deleteUser(uid) {
             return {
                 id: it.id || (window.EP_DB_REVIEW.type === 'work' ? 'w' : 'm') + '_ai_' + Date.now() + '_' + idx,
                 c: epCleanText(document.getElementById('ep-db-cat-' + idx)?.value) || 'Разное',
+                sc: epCleanText(document.getElementById('ep-db-subcat-' + idx)?.value) || 'Разное',
                 n: epCleanText(document.getElementById('ep-db-name-' + idx)?.value),
                 p: epMoney(document.getElementById('ep-db-price-' + idx)?.value),
                 u: epCleanText(document.getElementById('ep-db-unit-' + idx)?.value) || 'шт'
@@ -3265,4 +3425,6 @@ async function deleteUser(uid) {
 
 <!-- EP_OPENAI_IMAGE_TABLE_FIX_VERSION: 1778515438 -->
 
-<!-- EP_DB_AI_FIELDS_VERSION: name-category-subcategory-price-unit-select-buttons-v1 -->
+
+
+<!-- EP_DB_AI_SPLIT_ROWS_VERSION: split-each-excel-row-v1 -->
