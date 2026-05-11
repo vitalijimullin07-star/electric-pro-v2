@@ -1928,7 +1928,7 @@ async function deleteUser(uid) {
         provider: safeGet('ep_ai_provider_v1', 'gemini') || 'gemini',
         geminiKey: '',
         openaiKey: '',
-        openaiModel: safeGet('ep_openai_model_v1', 'gpt-4.1-mini') || 'gpt-4.1-mini'
+        openaiModel: safeGet('ep_openai_model_v1', 'gpt-4o-mini') || 'gpt-4o-mini'
     };
 
     window.EP_DB_REVIEW = { type: 'mat', items: [], source: '' };
@@ -2096,7 +2096,7 @@ async function deleteUser(uid) {
                 <input type="password" id="ep-openai-key-input" placeholder="sk-..." style="margin-bottom:8px;">
 
                 <label style="font-size:11px; font-weight:800; color:var(--gray);">OpenAI модель</label>
-                <input type="text" id="ep-openai-model-input" value="gpt-4.1-mini" style="margin-bottom:8px;">
+                <input type="text" id="ep-openai-model-input" value="gpt-4o-mini" style="margin-bottom:8px;">
 
                 <button class="btn-primary" style="width:100%; margin-bottom:8px;" onclick="epSaveAiConfig(true)">✅ Проверить и отправить мастерам</button>
                 <button class="btn-danger" style="width:100%; background:var(--gray);" onclick="epClearLocalAiKeys()">🧹 Очистить старые локальные ключи</button>
@@ -2130,7 +2130,7 @@ async function deleteUser(uid) {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + key },
                 body: JSON.stringify({
-                    model: model || 'gpt-4.1-mini',
+                    model: model || 'gpt-4o-mini',
                     input: [{ role: 'user', content: [{ type: 'input_text', text: 'Ответь одним словом: ok' }] }],
                     max_output_tokens: 20
                 })
@@ -2160,7 +2160,7 @@ async function deleteUser(uid) {
         const provider = epCurrentProvider();
         const geminiKey = epCleanText(document.getElementById('ep-gemini-key-input')?.value || window.EP_AI_CONFIG.geminiKey || '');
         const openaiKey = epCleanText(document.getElementById('ep-openai-key-input')?.value || window.EP_AI_CONFIG.openaiKey || '');
-        const model = epCleanText(document.getElementById('ep-openai-model-input')?.value || 'gpt-4.1-mini');
+        const model = epCleanText(document.getElementById('ep-openai-model-input')?.value || 'gpt-4o-mini');
 
         const keyToTest = provider === 'openai' ? openaiKey : geminiKey;
 
@@ -2266,11 +2266,11 @@ async function deleteUser(uid) {
                 window.EP_AI_CONFIG.provider = epNormProvider(data.provider || window.EP_AI_CONFIG.provider);
                 window.EP_AI_CONFIG.geminiKey = data.geminiKey || data.key || window.EP_AI_CONFIG.geminiKey || '';
                 window.EP_AI_CONFIG.openaiKey = data.openaiKey || window.EP_AI_CONFIG.openaiKey || '';
-                window.EP_AI_CONFIG.openaiModel = data.openaiModel || window.EP_AI_CONFIG.openaiModel || 'gpt-4.1-mini';
+                window.EP_AI_CONFIG.openaiModel = data.openaiModel || window.EP_AI_CONFIG.openaiModel || 'gpt-4o-mini';
             } else {
                 window.EP_AI_CONFIG.geminiKey = safeGet('ep_gemini_key_v1', '') || safeGet('gemini_key_v31', '');
                 window.EP_AI_CONFIG.openaiKey = safeGet('ep_openai_key_v1', '');
-                window.EP_AI_CONFIG.openaiModel = safeGet('ep_openai_model_v1', 'gpt-4.1-mini');
+                window.EP_AI_CONFIG.openaiModel = safeGet('ep_openai_model_v1', 'gpt-4o-mini');
             }
 
             safeSet('ep_ai_provider_v1', window.EP_AI_CONFIG.provider);
@@ -2281,7 +2281,7 @@ async function deleteUser(uid) {
             const m = document.getElementById('ep-openai-model-input');
             if (g) g.value = window.EP_AI_CONFIG.geminiKey || '';
             if (o) o.value = window.EP_AI_CONFIG.openaiKey || '';
-            if (m) m.value = window.EP_AI_CONFIG.openaiModel || 'gpt-4.1-mini';
+            if (m) m.value = window.EP_AI_CONFIG.openaiModel || 'gpt-4o-mini';
 
             const keysBox = document.getElementById('ep-ai-admin-keys');
             const masterInfo = document.getElementById('ep-ai-master-info');
@@ -2341,17 +2341,23 @@ async function deleteUser(uid) {
 
         const content = [{ type: 'input_text', text: promptText }];
         if (opts && opts.imageDataUrl) {
-            content.push({ type: 'input_image', image_url: opts.imageDataUrl });
+            content.push({
+                type: 'input_image',
+                image_url: opts.imageDataUrl,
+                detail: (opts && opts.imageDetail) ? opts.imageDetail : 'high'
+            });
         }
+
+        const body = {
+            model: window.EP_AI_CONFIG.openaiModel || 'gpt-4o-mini',
+            input: [{ role: 'user', content: content }],
+            max_output_tokens: opts && opts.maxTokens ? opts.maxTokens : 5000
+        };
 
         const r = await fetch('https://api.openai.com/v1/responses', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + key },
-            body: JSON.stringify({
-                model: window.EP_AI_CONFIG.openaiModel || 'gpt-4.1-mini',
-                input: [{ role: 'user', content: content }],
-                max_output_tokens: opts && opts.maxTokens ? opts.maxTokens : 3000
-            })
+            body: JSON.stringify(body)
         });
         const data = await r.json();
         if (!r.ok || data.error) throw new Error(data.error ? data.error.message : 'OpenAI API error');
@@ -2368,17 +2374,62 @@ async function deleteUser(uid) {
     window.epAskAI = epAskAI;
 
     function epStripCode(t) {
-        return (t || '').replace(/```json/gi, '').replace(/```html/gi, '').replace(/```[a-z]*/gi, '').replace(/```/g, '').trim();
+        return (t || '').replace(/```json/gi, '').replace(/```html/gi, '').replace(/```javascript/gi, '').replace(/```js/gi, '').replace(/```[a-z]*/gi, '').replace(/```/g, '').trim();
+    }
+
+    function epTryJsonParseLoose(t) {
+        if (!t) return null;
+        let s = epStripCode(String(t));
+        s = s.replace(/[“”]/g, '"').replace(/[‘’]/g, "'");
+        s = s.replace(/,\s*([}\]])/g, '$1');
+        try { return JSON.parse(s); } catch(e) {}
+        const arr = s.match(/\[[\s\S]*\]/);
+        if (arr) {
+            try { return JSON.parse(arr[0].replace(/,\s*([}\]])/g, '$1')); } catch(e) {}
+        }
+        const obj = s.match(/\{[\s\S]*\}/);
+        if (obj) {
+            try { return JSON.parse(obj[0].replace(/,\s*([}\]])/g, '$1')); } catch(e) {}
+        }
+        return null;
+    }
+
+    function epParseLooseTableText(t, type) {
+        const lines = epStripCode(t).split(/\r?\n/).map(x => x.trim()).filter(Boolean);
+        const out = [];
+        lines.forEach(function(line) {
+            if (/^(№|номер|код|артикул|итого|сумма|json|категория)/i.test(line)) return;
+            let s = line.replace(/[|;]/g, '\t').replace(/\s{2,}/g, '\t');
+            const parts = s.split(/\t+/).map(x => x.trim()).filter(Boolean);
+            const unitIdx = parts.findIndex(x => /^(шт|м|м2|м²|м3|м³|упак|уп|компл|кг|л)$/i.test(x));
+            if (unitIdx > 0) {
+                let nameParts = parts.slice(0, unitIdx).filter(x => !/^\d+$/.test(x) && !/^[A-ZА-Я0-9\-.]{3,15}$/i.test(x));
+                let name = nameParts.join(' ').trim();
+                let nums = parts.slice(unitIdx + 1).map(epMoney).filter(n => n > 0);
+                let p = nums.length ? nums[0] : 0;
+                if (name.length > 3) out.push({ c: epInferCategory(name, type), n: name, p: p, u: parts[unitIdx] });
+            } else {
+                const nums = line.match(/\d+[\d\s]*[,.]?\d*/g) || [];
+                if (nums.length && line.length > 8) {
+                    let p = epMoney(nums[nums.length - 1]);
+                    let name = line.replace(/^[\d\s.№-]+/, '').replace(/\d+[\d\s]*[,.]?\d*\s*$/, '').trim();
+                    if (name.length > 4) out.push({ c: epInferCategory(name, type), n: name, p: p, u: 'шт' });
+                }
+            }
+        });
+        return out;
     }
 
     function epParseJsonArray(t) {
-        t = epStripCode(t);
-        try { return JSON.parse(t); } catch(e) {}
-        const m = t.match(/\[[\s\S]*\]/);
-        if (m) {
-            try { return JSON.parse(m[0]); } catch(e) {}
+        const parsed = epTryJsonParseLoose(t);
+        if (Array.isArray(parsed)) return parsed;
+        if (parsed && typeof parsed === 'object') {
+            const keys = ['items', 'positions', 'rows', 'data', 'result', 'materials', 'works', 'материалы', 'работы', 'позиции'];
+            for (const k of keys) {
+                if (Array.isArray(parsed[k])) return parsed[k];
+            }
         }
-        return [];
+        return epParseLooseTableText(t, 'mat');
     }
 
     // Override AI functions
@@ -2447,20 +2498,52 @@ async function deleteUser(uid) {
     function epCurrentDb(type) { return type === 'work' ? workDB : matDB; }
     function epSetCurrentDb(type, arr) { if (type === 'work') workDB = arr; else matDB = arr; }
 
+    function epInferCategory(name, type) {
+        const n = String(name || '').toLowerCase();
+        if (type === 'work') {
+            if (/штроб|борозд|резк|алмаз/.test(n)) return 'Штробление';
+            if (/подрозет|розет|выключ|механизм|рамк|светильник/.test(n)) return 'Чистовая';
+            if (/кабел|провод|гофр|труб|лоток|короб/.test(n)) return 'Черновая';
+            if (/щит|автомат|узо|диф|реле/.test(n)) return 'Щит';
+            return 'Работы';
+        }
+        if (/ввг|пуг|пвс|провод|кабел|cat|utp|ftp|sat|коаксиал/.test(n)) return 'Кабель';
+        if (/гофр|труб|кабель.?канал|лоток|клипс|стяжк/.test(n)) return 'Трубы';
+        if (/подрозет|короб|распред|клемм|wago|гмл|изол|саморез|дюбел|гвозд|площадк|баллон|наконечник/.test(n)) return 'Расходники';
+        if (/автомат|узо|диф|реле|выключател[ья] автомат|щит|бокс|din|дин|шина|кросс/.test(n)) return 'Автоматика';
+        if (/tv|тв|интернет|rj|utp|ftp|cat|слаботоч/.test(n)) return 'Слаботочка';
+        if (/розет|выключ|рамк|механизм|диммер|терморег/.test(n)) return 'Чистовое';
+        return 'Разное';
+    }
+
     function epNormalizeItems(raw, type) {
-        const arr = Array.isArray(raw) ? raw : [];
+        let arr = [];
+        if (Array.isArray(raw)) arr = raw;
+        else if (raw && typeof raw === 'object') {
+            arr = raw.items || raw.positions || raw.rows || raw.data || raw.result || [];
+        }
         return arr.map(function (x, i) {
             if (Array.isArray(x)) {
                 x = { c: x[0], n: x[1], p: x[2], u: x[3] };
             }
+            const name = epCleanText(
+                x.n || x.name || x.title || x.item || x.position || x.material || x.work ||
+                x['Название'] || x['Наименование'] || x['Наименование позиции'] || x['Товар'] || x['Материал'] || x['Работа'] ||
+                x['номенклатура'] || x['наименование'] || x['позиция'] || ''
+            );
+            const unit = epCleanText(
+                x.u || x.unit || x.measure || x['Ед'] || x['Ед.'] || x['Ед. изм'] || x['Ед.изм.'] || x['Единица'] || x['единица'] || x['ед'] || 'шт'
+            ) || 'шт';
+            const priceRaw = x.p || x.price || x.cost || x.unitPrice || x['Цена'] || x['Цена ₽'] || x['Цена руб'] || x['Цена за ед.'] || x['Стоимость'] || x['цена'] || 0;
+            const cat = epCleanText(x.c || x.cat || x.category || x.group || x['Категория'] || x['Группа'] || x['категория'] || '') || epInferCategory(name, type);
             return {
                 id: (type === 'work' ? 'w' : 'm') + '_ai_' + Date.now() + '_' + i,
-                c: epCleanText(x.c || x.cat || x.category || x['Категория'] || x['категория'] || 'Разное') || 'Разное',
-                n: epCleanText(x.n || x.name || x.title || x['Название'] || x['Наименование'] || x['наименование'] || ''),
-                p: epMoney(x.p || x.price || x.cost || x['Цена'] || x['Сумма'] || x['цена'] || 0),
-                u: epCleanText(x.u || x.unit || x['Ед'] || x['Ед.'] || x['Ед. изм'] || x['единица'] || 'шт') || 'шт'
+                c: cat || 'Разное',
+                n: name,
+                p: epMoney(priceRaw),
+                u: unit
             };
-        }).filter(function (x) { return x.n; });
+        }).filter(function (x) { return x.n && x.n.length > 2; });
     }
 
     async function epSaveUserDb() {
@@ -2635,12 +2718,41 @@ async function deleteUser(uid) {
     }
 
     async function epAiNormalizeImage(imageDataUrl, type, source) {
+        showLoader('ИИ читает таблицу с изображения...', '👁️');
+        let rawAnswer = '';
         try {
-            const prompt = 'Ты помощник электрика. На изображении/скрине может быть прайс, смета или таблица. Извлеки позиции для базы ' + epDbTypeLabel(type) + '. Верни ТОЛЬКО JSON массив объектов: [{"c":"Категория","n":"Название","p":123,"u":"шт"}]. Если цены нет, p=0. Без пояснений.';
-            const txt = await epAskAI(prompt, { imageDataUrl: imageDataUrl, maxTokens: 4000 });
-            const items = epNormalizeItems(epParseJsonArray(txt), type);
+            const prompt = `Ты профессионально распознаёшь русские сметы, счета и прайсы электромонтажных материалов.
+На изображении таблица. Нужно извлечь ВСЕ видимые строки с позициями для базы ${epDbTypeLabel(type)}.
+
+Правила:
+1. Читай каждую строку таблицы, даже если качество среднее.
+2. Не возвращай пустой массив, если видны строки с товарами/работами.
+3. Для названия бери колонку с наименованием/описанием, НЕ артикул и НЕ номер строки.
+4. p — это цена за единицу. Если есть две суммы, бери меньшую как цену за единицу, большую не бери как цену.
+5. u — единица измерения: шт, м, упак, компл и т.д.
+6. c — категория. Если категории нет, определи сам: Кабель, Трубы, Расходники, Автоматика, Слаботочка, Чистовое, Разное.
+7. Если цену не видно — p=0. Если единицу не видно — u="шт".
+8. Верни СТРОГО JSON-массив без текста вокруг.
+
+Формат строго такой:
+[
+  {"c":"Кабель","n":"ВВГ-Пнг(A)-LS ГОСТ Конкорд 3x1,5","p":58.43,"u":"м"},
+  {"c":"Расходники","n":"Подрозетник бетон 68x60","p":12,"u":"шт"}
+]`;
+
+            rawAnswer = await epAskAI(prompt, { imageDataUrl: imageDataUrl, imageDetail: 'high', maxTokens: 9000 });
+            let parsed = epParseJsonArray(rawAnswer);
+            let items = epNormalizeItems(parsed, type);
+
+            if (!items.length) {
+                const retryPrompt = `Ты ответил без позиций. Посмотри изображение ещё раз. Там таблица со строками, например кабели, подрозетники, клеммники, автоматы, расходники. Извлеки хотя бы 10-30 видимых строк. Верни только JSON массив [{"c":"...","n":"...","p":0,"u":"шт"}]. Не объясняй.`;
+                rawAnswer = await epAskAI(retryPrompt, { imageDataUrl: imageDataUrl, imageDetail: 'high', maxTokens: 9000 });
+                parsed = epParseJsonArray(rawAnswer);
+                items = epNormalizeItems(parsed, type);
+            }
+
             hideLoader();
-            epShowDbReview(items, type, source);
+            epShowDbReview(items, type, source, rawAnswer);
         } catch (e) {
             hideLoader();
             showToast('❌ ' + (e.message || 'ИИ не прочитал изображение'));
@@ -2649,25 +2761,26 @@ async function deleteUser(uid) {
 
     async function epAiNormalizeDbText(rawText, type, source) {
         showLoader('ИИ структурирует базу...', '🤖');
+        let rawAnswer = '';
         try {
-            const prompt = 'Ты помощник электрика. Приведи данные к базе ' + epDbTypeLabel(type) + '. Верни ТОЛЬКО JSON массив объектов: [{"c":"Категория","n":"Название","p":123,"u":"шт"}]. Цена числом. Если цены нет, p=0. Данные: ' + String(rawText).slice(0, 90000);
-            const txt = await epAskAI(prompt, { maxTokens: 5000 });
-            const items = epNormalizeItems(epParseJsonArray(txt), type);
+            const prompt = 'Ты помощник электрика. Приведи данные к базе ' + epDbTypeLabel(type) + '. Верни ТОЛЬКО JSON массив объектов: [{"c":"Категория","n":"Название","p":123,"u":"шт"}]. Цена p — цена за единицу, не итоговая сумма. Если цены нет, p=0. Если категории нет, определи сам: Кабель, Трубы, Расходники, Автоматика, Слаботочка, Чистовое, Разное. Не возвращай пустой массив, если в данных есть строки с позициями. Данные: ' + String(rawText).slice(0, 90000);
+            rawAnswer = await epAskAI(prompt, { maxTokens: 8000 });
+            const items = epNormalizeItems(epParseJsonArray(rawAnswer), type);
             hideLoader();
-            epShowDbReview(items, type, source);
+            epShowDbReview(items, type, source, rawAnswer);
         } catch (e) {
             hideLoader();
             showToast('❌ ' + (e.message || 'ИИ не обработал данные'));
         }
     }
 
-    function epShowDbReview(items, type, source) {
+    function epShowDbReview(items, type, source, rawAnswer) {
         window.EP_DB_REVIEW = { type: type, items: items, source: source || '' };
         document.getElementById('ep-db-ai-review-title').innerText = 'Импорт ' + epDbTypeLabel(type) + ': ' + (source || '');
         const list = document.getElementById('ep-db-ai-review-list');
 
         if (!items.length) {
-            list.innerHTML = `<div style="padding:12px; color:var(--danger); font-weight:800;">ИИ не нашёл позиции. Попробуйте другой файл или текст.</div>`;
+            list.innerHTML = `<div style="padding:12px; color:var(--danger); font-weight:800;">ИИ не нашёл позиции. Попробуйте другой файл, текст или сделайте скрин крупнее.</div><details style="margin-top:10px; font-size:11px; color:var(--gray);"><summary>Показать ответ ИИ</summary><pre style="white-space:pre-wrap; max-height:220px; overflow:auto;">${epEscape(rawAnswer || '')}</pre></details>`;
         } else {
             list.innerHTML = items.map(function (it, idx) {
                 return `<div class="ep-db-review-row">
@@ -3038,3 +3151,5 @@ async function deleteUser(uid) {
 </html>
 
 <!-- EP_SURGICAL_OPENAI_PROVIDER_VERSION: 1778513531 -->
+
+<!-- EP_OPENAI_IMAGE_TABLE_FIX_VERSION: 1778515438 -->
