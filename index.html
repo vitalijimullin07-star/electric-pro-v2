@@ -131,99 +131,33 @@
         .editable-name { cursor: pointer; color: var(--primary); border-bottom: 1px dashed var(--primary); }
 
         #chart-container { background: rgba(255,255,255,0.7); border-radius: 12px; padding: 10px; margin-bottom: 15px; border: 1px solid var(--border); }
-    
+    </style>
 
-        /* === EP VISUAL SINGLE HTML PATCH START === */
-        html { scroll-behavior: smooth; }
-        button, input, select, textarea, .card, .modal-content, .burger-menu, .toast {
-            transition: background-color .22s ease, color .22s ease, border-color .22s ease, box-shadow .22s ease, transform .18s ease, opacity .18s ease;
-        }
-
-        .header {
-            position: relative;
-            min-height: 38px;
-            justify-content: flex-end;
-        }
-
-        .burger-btn {
-            position: fixed !important;
-            left: 6px !important;
-            top: 12px !important;
-            width: 42px !important;
-            height: 42px !important;
-            padding: 0 !important;
-            margin: 0 !important;
-            z-index: 1900 !important;
-            border-radius: 12px !important;
-            background: var(--card) !important;
-            border: 1px solid var(--border) !important;
-            box-shadow: 0 8px 22px rgba(0,0,0,0.16) !important;
-            display: flex !important;
-            align-items: center !important;
-            justify-content: center !important;
-            line-height: 1 !important;
-        }
-
-        #master-badge {
-            padding-left: 46px;
-        }
-
-        .beta-badge {
-            display: inline-block;
-            margin-left: 5px;
-            font-size: 11px;
-            font-weight: 900;
-            color: #fff7b0;
-            vertical-align: middle;
-        }
-
-        .btn-shield .beta-badge,
-        .btn-rough .beta-badge {
-            color: rgba(255,255,255,0.92);
-        }
-
-        .ai-functions-menu {
-            width: 100%;
-            margin: 0 0 8px 0;
-        }
-
-        .ai-functions-main {
-            background: linear-gradient(135deg, #7C3AED, #2563EB) !important;
-            color: #fff !important;
-            box-shadow: 0 8px 20px rgba(37, 99, 235, 0.22);
-        }
-
-        .ai-functions-panel {
-            display: none;
-            padding: 6px 0 2px 0;
-        }
-
-        .ai-functions-menu.open .ai-functions-panel {
-            display: block;
-            animation: epAiOpen .2s ease both;
-        }
-
-        .ai-sub-btn {
-            margin-left: 10px !important;
-            width: calc(100% - 10px) !important;
-            font-size: 13px !important;
-            padding: 12px 14px !important;
-        }
-
-        @keyframes epAiOpen {
-            from { opacity: 0; transform: translateY(-5px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        @media (max-width: 600px) {
-            body { padding-top: 10px; }
-            .burger-btn {
-                left: 4px !important;
-                top: 10px !important;
-            }
-        }
-        /* === EP VISUAL SINGLE HTML PATCH END === */
+<style id="EP_DB_AI_SYNC_STYLE">
+/* === DB AI IMPORT / EXPORT / MASTER-GLOBAL SYNC === */
+.ep-db-tools { background: rgba(79,70,229,.06); border: 1px solid rgba(79,70,229,.18); border-radius: 14px; padding: 10px; margin: 12px 0; }
+.ep-db-tools-title { font-size: 12px; font-weight: 900; color: var(--primary); margin-bottom: 8px; }
+.ep-db-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; }
+.ep-db-grid button { padding: 10px 7px !important; font-size: 11px !important; margin: 0 !important; white-space: normal !important; line-height: 1.15; }
+.ep-db-hint { color: var(--gray); font-size: 10px; line-height: 1.35; margin-top: 8px; }
+.ep-db-badge { display:inline-block; font-size:10px; padding:2px 6px; border-radius:999px; background:rgba(79,70,229,.12); color:var(--primary); font-weight:900; margin-left:4px; }
+.ep-db-badge.user { background:rgba(16,185,129,.14); color:var(--success); }
+.ep-db-badge.pending { background:rgba(245,158,11,.16); color:var(--orange); }
+.ep-import-list { max-height: 42vh; overflow-y: auto; border:1px solid var(--border); border-radius:12px; padding:8px; background:rgba(0,0,0,.025); margin: 10px 0; }
+.ep-import-row { display:grid; grid-template-columns: 26px 1.5fr .7fr .55fr; gap:6px; align-items:center; padding:7px 0; border-bottom:1px dashed var(--border); }
+.ep-import-row:last-child { border-bottom:none; }
+.ep-import-row input { margin:0 !important; padding:7px !important; font-size:11px !important; }
+.ep-import-row input[type="checkbox"] { width:18px !important; height:18px !important; padding:0 !important; }
+.ep-admin-proposal { border:1px solid var(--border); border-radius:12px; padding:8px; margin:7px 0; background:rgba(0,0,0,.025); }
+.ep-admin-proposal b { font-size:12px; }
+.ep-admin-actions { display:grid; grid-template-columns:1fr 1fr 1fr; gap:5px; margin-top:7px; }
+.ep-admin-actions button { padding:7px 5px !important; font-size:10px !important; margin:0 !important; white-space:normal !important; }
+.ep-db-row-actions { display:flex; gap:5px; align-items:center; }
+.ep-db-row-actions input { width:68px !important; }
+.ep-db-row-actions button { width:auto !important; padding:6px 8px !important; font-size:10px !important; margin:0 !important; }
+@media (max-width: 520px) { .ep-import-row { grid-template-columns: 24px 1fr .58fr .45fr; gap:4px; } .ep-db-grid { grid-template-columns:1fr 1fr; } }
 </style>
+
 </head>
 <body>
 
@@ -234,21 +168,14 @@
 <div class="burger-menu glass" id="burger-menu">
     <h2 style="margin-top:0; color: var(--primary); margin-bottom: 25px; font-weight:900;">Электрик PRO</h2>
     <button class="btn-info" onclick="openModal('custModal'); toggleMenu();">👤 О заказчике</button>
-
-    <div class="ai-functions-menu">
-        <button class="btn-vendor ai-functions-main" type="button" onclick="toggleAiFunctionsMenu(event)">✨ ИИ Функции <span class="beta-badge">(бета)</span></button>
-        <div class="ai-functions-panel" id="ai-functions-panel">
-            <button class="btn-vendor ai-sub-btn" style="background: rgba(139,92,246,0.15); color: #8B5CF6;" onclick="runAiCheck(); toggleMenu();">✨ ИИ-Анализ сметы</button>
-            <button class="btn-vendor ai-sub-btn" style="background: rgba(59,130,246,0.15); color: #3B82F6;" onclick="aiSupply(); toggleMenu();">📦 ИИ-Снабженец</button>
-            <button class="btn-vendor ai-sub-btn" style="background: rgba(16,185,129,0.15); color: #10B981;" onclick="aiPueHelper(); toggleMenu();">📚 ИИ-Помощник (ПУЭ)</button>
-            <button class="btn-vendor ai-sub-btn" style="background: rgba(244,63,94,0.1); color: var(--danger);" onclick="compareShopsAI(); toggleMenu();">🛒 ИИ-Сравнение цен</button>
-        </div>
-    </div>
-
+    <button class="btn-vendor" style="background: rgba(139,92,246,0.15); color: #8B5CF6;" onclick="runAiCheck(); toggleMenu();">✨ ИИ-Анализ сметы</button>
+    <button class="btn-vendor" style="background: rgba(59,130,246,0.15); color: #3B82F6;" onclick="aiSupply(); toggleMenu();">📦 ИИ-Снабженец</button>
     <button class="btn-vendor" style="background: rgba(16,185,129,0.15); color: #10B981;" onclick="openModal('settModal'); toggleMenu();">🗄 База данных</button>
     <button class="btn-vendor" style="background: rgba(245,158,11,0.15); color: #F59E0B;" onclick="openModal('buhModal'); toggleMenu();">💰 Бухгалтерия (Акты)</button>
-
+    
     <div style="border-top: 1px solid var(--border); margin-top:10px; padding-top:10px;">
+        <button class="btn-vendor" style="background: rgba(16,185,129,0.15); color: #10B981;" onclick="aiPueHelper(); toggleMenu();">📚 ИИ-Помощник (ПУЭ)</button>
+        <button class="btn-vendor" style="background: rgba(244,63,94,0.1); color: var(--danger);" onclick="compareShopsAI(); toggleMenu();">🛒 ИИ-Сравнение цен</button>
         <button class="btn-vendor" style="background: rgba(100,116,139,0.15); color: var(--text);" onclick="openModal('logicModal'); toggleMenu();">⚙️ Логика расчетов</button>
         <button class="btn-vendor" style="background: rgba(100,116,139,0.15); color: var(--text);" onclick="openModal('settingsModal'); toggleMenu();">🛠 Настройки системы</button>
         <button class="btn-danger" style="margin-top:15px;" onclick="confirmLogout(); toggleMenu();">🚪 Выйти</button>
@@ -263,8 +190,8 @@
         </div>
         
         <div class="controls">
-            <button onclick="openModal('configModal')" class="btn-shield btn-full">1. Конфигуратор щита <span class="beta-badge">(бета)</span></button>
-            <button onclick="openModal('roughModal')" class="btn-rough btn-full">2. Пул розеток и BIM <span class="beta-badge">(бета)</span></button>
+            <button onclick="openModal('configModal')" class="btn-shield btn-full">1. Конфигуратор щита</button>
+            <button onclick="openModal('roughModal')" class="btn-rough btn-full">2. Пул розеток и ВІM</button>
             <button onclick="openMatCatalog()" class="btn-mat">+ Материалы</button>
             <button onclick="openWorkCatalog()" class="btn-work">+ Работы</button>
         </div>
@@ -383,15 +310,8 @@
         <div class="close-x" onclick="closeModal('settingsModal')">×</div>
         <h2 style="color: var(--primary); margin-top:0; font-size:18px;">Настройки</h2>
         
-        <div id="admin-api-settings" style="display:none; padding:12px; background:rgba(79,70,229,0.06); border:1px solid var(--primary); border-radius:12px; margin-bottom:15px;">
-            <h4 style="color:var(--primary); margin: 0 0 8px;">🔑 Глобальный ИИ-Ключ Gemini</h4>
-            <input type="password" id="api-key-input" placeholder="Ключ Gemini API" onchange="saveApiKey(this.value)" style="border-color:var(--primary);">
-            <p style="font-size:10px; color:var(--gray); margin:0;">Вводит только админ. После сохранения ключ автоматически отправляется всем мастерам.</p>
-            <div id="api-sync-status" style="font-size:11px; color:var(--success); margin-top:6px; font-weight:700;"></div>
-        </div>
-        <div id="master-api-info" style="display:none; padding:10px; background:rgba(16,185,129,0.08); border:1px solid rgba(16,185,129,0.35); border-radius:12px; margin-bottom:15px; font-size:12px; font-weight:700; color:var(--success);">
-            🔑 ИИ подключён администратором. Мастеру API-ключ вводить не нужно.
-        </div>
+        <h4 style="color:var(--gray); margin: 10px 0 5px;">🔑 ИИ-Ключ (Gemini)</h4>
+        <input type="password" id="api-key-input" placeholder="Ключ Gemini API" onchange="saveApiKey(this.value)">
         
         <h4 style="color:var(--gray); margin: 10px 0 5px;">🎨 Внешний вид</h4>
         <select id="theme-select" onchange="changeTheme(this.value)"><option value="light">Светлая</option><option value="dark">Темная</option><option value="emerald">Изумруд</option><option value="sunset">Закат</option></select>
@@ -876,7 +796,7 @@ async function finishLoginSetup() {
     document.getElementById('waitingModal').style.display = 'none';
     document.getElementById('main-app').style.display = 'block';
     
-    await loadGlobalApiKey();
+    if (appUser.geminiKey) { GEMINI_API_KEY = appUser.geminiKey; document.getElementById('api-key-input').value = GEMINI_API_KEY; }
     
     if(appUser.role === 'admin') { 
         document.getElementById('admin-panel').style.display = 'block'; 
@@ -936,149 +856,10 @@ function updateCoeffs() {
     renderMainTable();
 }
 
-function isAdminUser() {
-    return !!(appUser && appUser.role === 'admin');
-}
-
-function applyApiKeyUI() {
-    const adminBox = document.getElementById('admin-api-settings');
-    const masterInfo = document.getElementById('master-api-info');
-    const input = document.getElementById('api-key-input');
-
-    if (isAdminUser()) {
-        if (adminBox) adminBox.style.display = 'block';
-        if (masterInfo) masterInfo.style.display = 'none';
-        if (input) {
-            input.disabled = false;
-            input.placeholder = 'Ключ Gemini API';
-            if (GEMINI_API_KEY) input.value = GEMINI_API_KEY;
-        }
-    } else {
-        if (adminBox) adminBox.style.display = 'none';
-        if (masterInfo) masterInfo.style.display = 'block';
-        if (input) {
-            input.disabled = true;
-            input.value = '';
-            input.placeholder = GEMINI_API_KEY ? 'Ключ получен от администратора' : 'Ключ ожидается от администратора';
-        }
-    }
-}
-
-async function loadGlobalApiKey() {
-    try {
-        let loadedKey = '';
-
-        if (db) {
-            const globalDoc = await db.collection('settings').doc('global_api').get();
-            if (globalDoc.exists && globalDoc.data().geminiKey) {
-                loadedKey = String(globalDoc.data().geminiKey || '').trim();
-            }
-
-            // Запасной вариант: если глобальный документ ещё не создан,
-            // берём ключ из профиля пользователя.
-            if (!loadedKey && appUser && appUser.geminiKey) {
-                loadedKey = String(appUser.geminiKey || '').trim();
-            }
-        } else if (appUser && appUser.geminiKey) {
-            loadedKey = String(appUser.geminiKey || '').trim();
-        }
-
-        if (loadedKey) {
-            GEMINI_API_KEY = loadedKey;
-            safeSet('gemini_key_v31', GEMINI_API_KEY);
-        }
-    } catch (e) {
-        console.warn('Не удалось получить глобальный API ключ:', e);
-        if (appUser && appUser.geminiKey) {
-            GEMINI_API_KEY = String(appUser.geminiKey || '').trim();
-            safeSet('gemini_key_v31', GEMINI_API_KEY);
-        }
-    }
-
-    applyApiKeyUI();
-}
-
-async function sendApiKeyToAllMasters(apiKey) {
-    if (!db) return { count: 0, skipped: true };
-
-    const snap = await db.collection('users').get();
-    let batch = db.batch();
-    let ops = 0;
-    let count = 0;
-
-    for (const doc of snap.docs) {
-        const data = doc.data() || {};
-
-        // Админа тоже обновляем, но считаем отдельно только мастеров.
-        batch.set(doc.ref, {
-            geminiKey: apiKey,
-            apiKeyUpdatedAt: firebase.firestore.FieldValue.serverTimestamp()
-        }, { merge: true });
-
-        ops++;
-        if (data.role !== 'admin') count++;
-
-        if (ops >= 450) {
-            await batch.commit();
-            batch = db.batch();
-            ops = 0;
-        }
-    }
-
-    if (ops > 0) await batch.commit();
-
-    return { count, skipped: false };
-}
-
-async function saveApiKey(val) {
-    const newKey = String(val || '').trim();
-
-    if (!isAdminUser()) {
-        applyApiKeyUI();
-        showToast('⛔ API-ключ может менять только админ');
-        return;
-    }
-
-    if (!newKey) {
-        showToast('⚠️ Введите API-ключ');
-        return;
-    }
-
-    GEMINI_API_KEY = newKey;
-    safeSet('gemini_key_v31', GEMINI_API_KEY);
-
-    const status = document.getElementById('api-sync-status');
-    if (status) status.innerText = 'Синхронизация ключа...';
-
-    try {
-        if (db) {
-            await db.collection('settings').doc('global_api').set({
-                geminiKey: GEMINI_API_KEY,
-                updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
-                updatedBy: appUser && appUser.uid ? appUser.uid : '',
-                updatedByName: appUser && appUser.name ? appUser.name : 'Админ'
-            }, { merge: true });
-
-            const result = await sendApiKeyToAllMasters(GEMINI_API_KEY);
-
-            if (status) {
-                status.innerText = result.skipped
-                    ? 'Ключ сохранён локально'
-                    : 'Ключ отправлен мастерам: ' + result.count;
-            }
-
-            showToast(result.skipped ? '🔑 Ключ сохранён' : '🔑 Ключ отправлен всем мастерам');
-        } else {
-            if (status) status.innerText = 'Ключ сохранён локально';
-            showToast('🔑 Ключ сохранён локально');
-        }
-    } catch (e) {
-        console.error(e);
-        if (status) status.innerText = 'Ошибка синхронизации: ' + e.message;
-        showToast('⚠️ Ошибка синхронизации API');
-    }
-
-    applyApiKeyUI();
+async function saveApiKey(val) { 
+    GEMINI_API_KEY = val.trim(); safeSet('gemini_key_v31', GEMINI_API_KEY);
+    if(db && appUser && appUser.uid) { try { await db.collection('users').doc(appUser.uid).update({geminiKey: GEMINI_API_KEY}); }catch(e){} }
+    showToast("🔑 Ключ сохранен!"); 
 }
 function saveQRs() { 
     safeSet('qr_tg_v31', document.getElementById('qr-tg').value); 
@@ -2010,20 +1791,666 @@ async function deleteUser(uid) {
 }
 </script>
 
-<script id="EP_VISUAL_SINGLE_HTML_JS">
-function toggleAiFunctionsMenu(event) {
-    if (event) {
-        event.preventDefault();
-        event.stopPropagation();
+<script id="EP_DB_AI_SYNC_PATCH">
+(function(){
+    'use strict';
+
+    const EP_DB_VERSION = "1778509362";
+    let epImportType = 'mat';
+    let epParsedItems = [];
+    let epImportSource = 'text';
+    let epGlobalMatDB = null;
+    let epGlobalWorkDB = null;
+    let epDbProposalUnsub = null;
+
+    function epReady(fn){
+        if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', fn);
+        else fn();
     }
-    const box = document.querySelector('.ai-functions-menu');
-    if (box) box.classList.toggle('open');
-}
+
+    function epToast(msg){ if(typeof showToast === 'function') showToast(msg); else alert(msg); }
+    function epLoader(msg, icon){ if(typeof showLoader === 'function') showLoader(msg, icon || '☁️'); }
+    function epHideLoader(){ if(typeof hideLoader === 'function') hideLoader(); }
+    function epUid(){ return (window.appUser && (appUser.uid || appUser.phone || appUser.email)) || 'local-master'; }
+    function epIsAdmin(){ return !!(window.appUser && appUser.role === 'admin'); }
+    function epTypeLabel(type){ return type === 'mat' ? 'Материалы' : 'Работы'; }
+    function epTypePrefix(type){ return type === 'mat' ? 'm' : 'w'; }
+    function epClean(v){ return String(v || '').replace(/\s+/g,' ').trim(); }
+    function epNorm(v){ return epClean(v).toLowerCase().replace(/[ё]/g,'е').replace(/[^a-zа-я0-9]+/gi,''); }
+    function epSafeJsonParse(s, def){ try { return JSON.parse(s); } catch(e){ return def; } }
+    function epArray(v){ return Array.isArray(v) ? v : []; }
+    function epLocalGet(k, def){ try { return JSON.parse(localStorage.getItem(k) || JSON.stringify(def)); } catch(e){ return def; } }
+    function epLocalSet(k, v){ try { localStorage.setItem(k, JSON.stringify(v)); } catch(e){} }
+    function epEscape(s){ return String(s ?? '').replace(/[&<>"]/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[ch])); }
+
+    function epUserKey(type){ return type === 'mat' ? 'user_db_mat_v31' : 'user_db_work_v31'; }
+    function epDeletedKey(type){ return type === 'mat' ? 'user_db_deleted_mat_v31' : 'user_db_deleted_work_v31'; }
+    function epGlobalArr(type){ return type === 'mat' ? (epGlobalMatDB || window.matDB || []) : (epGlobalWorkDB || window.workDB || []); }
+    function epSetGlobalArr(type, arr){ if(type === 'mat') epGlobalMatDB = arr; else epGlobalWorkDB = arr; }
+    function epUserArr(type){ return type === 'mat' ? (window.userMatDB || []) : (window.userWorkDB || []); }
+    function epSetUserArr(type, arr){ if(type === 'mat') window.userMatDB = arr; else window.userWorkDB = arr; }
+
+    function epNormalizeItem(raw, type, fallbackCat){
+        const item = {
+            id: raw.id || (epTypePrefix(type) + '_u_' + Date.now() + '_' + Math.floor(Math.random()*999999)),
+            c: epClean(raw.c || raw.cat || raw.category || fallbackCat || 'Разное') || 'Разное',
+            n: epClean(raw.n || raw.name || raw.title || raw.naimenovanie || raw['наименование']),
+            p: Number(raw.p ?? raw.price ?? raw.cost ?? raw.sum ?? raw['цена'] ?? 0) || 0,
+            u: epClean(raw.u || raw.unit || raw.ed || raw['ед'] || raw['ед.'] || 'шт') || 'шт'
+        };
+        if(!item.n) return null;
+        return item;
+    }
+
+    function epMergeActiveDB(){
+        ['mat','work'].forEach(type => {
+            const globalArr = epArray(epGlobalArr(type)).map(x => ({...x, _scope:'global'}));
+            const userArr = epArray(epUserArr(type)).map(x => ({...x, _scope:'user'}));
+            const deleted = epLocalGet(epDeletedKey(type), []);
+            const deletedSet = new Set(deleted.map(x => x.id || epNorm(x.n || x.name || x)));
+            const byKey = new Map();
+            globalArr.forEach(item => {
+                const key = item.id || epNorm(item.n);
+                if(!deletedSet.has(item.id) && !deletedSet.has(epNorm(item.n))) byKey.set(key, item);
+            });
+            userArr.forEach(item => {
+                const key = item.id || epNorm(item.n);
+                byKey.set(key, item);
+            });
+            const merged = Array.from(byKey.values());
+            if(type === 'mat') window.matDB = merged; else window.workDB = merged;
+        });
+    }
+
+    async function epPersistGlobalDB(){
+        if(!epIsAdmin()) return;
+        const cleanMat = epArray(epGlobalMatDB || window.matDB).map(({_scope, ...x}) => x);
+        const cleanWork = epArray(epGlobalWorkDB || window.workDB).map(({_scope, ...x}) => x);
+        epGlobalMatDB = cleanMat;
+        epGlobalWorkDB = cleanWork;
+        window.matDB = cleanMat.map(x => ({...x, _scope:'global'}));
+        window.workDB = cleanWork.map(x => ({...x, _scope:'global'}));
+        try { if(window.db) await db.collection('settings').doc('global_db').set({matDB: cleanMat, workDB: cleanWork, updatedAt: Date.now()}, {merge:true}); } catch(e){ console.warn('global db save', e); }
+        try { if(typeof renderMainTable === 'function') renderMainTable(); } catch(e){}
+    }
+
+    async function epPersistUserDB(options={}){
+        const uid = epUid();
+        const mat = epArray(window.userMatDB).map(({_scope, ...x}) => x);
+        const work = epArray(window.userWorkDB).map(({_scope, ...x}) => x);
+        epLocalSet('user_db_mat_v31', mat);
+        epLocalSet('user_db_work_v31', work);
+        try { safeSet && safeSet('user_db_mat_v31', JSON.stringify(mat)); safeSet && safeSet('user_db_work_v31', JSON.stringify(work)); } catch(e){}
+        if(window.db && uid && uid !== 'local-master') {
+            try {
+                await db.collection('user_db').doc(uid).set({
+                    uid,
+                    masterName: (window.appUser && appUser.name) || 'Мастер',
+                    matDB: mat,
+                    workDB: work,
+                    deletedMat: epLocalGet('user_db_deleted_mat_v31', []),
+                    deletedWork: epLocalGet('user_db_deleted_work_v31', []),
+                    updatedAt: Date.now()
+                }, {merge:true});
+            } catch(e){ console.warn('user db save', e); }
+        }
+        epMergeActiveDB();
+        try { if(typeof renderDbEditors === 'function' && options.render !== false) renderDbEditors(); } catch(e){}
+        try { if(typeof renderMainTable === 'function') renderMainTable(); } catch(e){}
+    }
+
+    async function epLoadMasterDB(){
+        if(!epGlobalMatDB) epGlobalMatDB = epArray(window.matDB).map(({_scope, ...x}) => x);
+        if(!epGlobalWorkDB) epGlobalWorkDB = epArray(window.workDB).map(({_scope, ...x}) => x);
+
+        window.userMatDB = epLocalGet('user_db_mat_v31', epArray(window.userMatDB));
+        window.userWorkDB = epLocalGet('user_db_work_v31', epArray(window.userWorkDB));
+
+        const uid = epUid();
+        if(window.db && uid && uid !== 'local-master') {
+            try {
+                const doc = await db.collection('user_db').doc(uid).get();
+                if(doc.exists) {
+                    const data = doc.data() || {};
+                    window.userMatDB = epArray(data.matDB).length ? data.matDB : window.userMatDB;
+                    window.userWorkDB = epArray(data.workDB).length ? data.workDB : window.userWorkDB;
+                    if(Array.isArray(data.deletedMat)) epLocalSet('user_db_deleted_mat_v31', data.deletedMat);
+                    if(Array.isArray(data.deletedWork)) epLocalSet('user_db_deleted_work_v31', data.deletedWork);
+                    epLocalSet('user_db_mat_v31', window.userMatDB);
+                    epLocalSet('user_db_work_v31', window.userWorkDB);
+                }
+            } catch(e){ console.warn('user db load', e); }
+        }
+        epMergeActiveDB();
+    }
+
+    async function epSubmitProposal(type, item, action){
+        if(epIsAdmin() || !window.db) return;
+        try {
+            await db.collection('db_proposals').add({
+                uid: epUid(),
+                masterName: (window.appUser && appUser.name) || 'Мастер',
+                type,
+                action: action || 'add',
+                item: {...item, _scope: undefined},
+                status: 'pending',
+                createdAt: Date.now()
+            });
+        } catch(e){ console.warn('proposal', e); }
+    }
+
+    function epEnsureDbUi(){
+        const sett = document.getElementById('settModal');
+        if(!sett) return;
+
+        // Панель предложений админу
+        const adminPanel = document.getElementById('admin-panel');
+        if(adminPanel && !document.getElementById('admin-db-proposals')) {
+            const box = document.createElement('div');
+            box.innerHTML = `
+                <h4 style="color:var(--primary); margin: 10px 0 5px;">🔔 Предложения в глобальную БД:</h4>
+                <div id="admin-db-proposals" style="margin-bottom:10px; border:1px solid var(--primary); background:rgba(79,70,229,.05); border-radius:8px; padding:8px; max-height:220px; overflow-y:auto; font-size:12px; color:var(--text);"></div>
+            `;
+            const firstH4 = adminPanel.querySelector('h4');
+            adminPanel.insertBefore(box, firstH4 || adminPanel.firstChild.nextSibling);
+        }
+
+        // Панель импорта/экспорта в модалке базы
+        const tabs = sett.querySelector('.tabs-container');
+        if(tabs && !document.getElementById('ep-db-tools')) {
+            const tools = document.createElement('div');
+            tools.id = 'ep-db-tools';
+            tools.className = 'ep-db-tools';
+            tools.innerHTML = `
+                <div class="ep-db-tools-title">📥 Импорт / экспорт базы с ИИ</div>
+                <div class="ep-db-grid">
+                    <button class="btn-info" onclick="triggerAIImport('mat','file')">Материалы: Excel/JSON/Фото</button>
+                    <button class="btn-info" style="background:#F59E0B;" onclick="triggerAIImport('work','file')">Работы: Excel/JSON/Фото</button>
+                    <button class="btn-vendor" onclick="triggerAIImport('mat','text')">Материалы из текста/скрина</button>
+                    <button class="btn-vendor" style="background:#475569;" onclick="triggerAIImport('work','text')">Работы из текста/скрина</button>
+                    <button class="btn-success" onclick="exportDbJson('active')">Экспорт моей базы</button>
+                    <button class="btn-success" style="background:#0EA5E9;" onclick="exportDbJson('global')">Экспорт глобальной</button>
+                </div>
+                <div class="ep-db-hint">Мастер сохраняет изменения локально и на сервере своего аккаунта. В глобальную БД позиции попадают только после решения админа.</div>
+            `;
+            tabs.parentNode.insertBefore(tools, tabs);
+        }
+
+        // Прячем старые кнопки Excel, чтобы не было дублей
+        Array.from(sett.querySelectorAll('button')).forEach(btn => {
+            const t = (btn.textContent || '').trim();
+            if(t.includes('Импорт Excel/CSV')) {
+                const wrap = btn.parentElement;
+                if(wrap && wrap.style && !wrap.id) wrap.style.display = 'none';
+            }
+        });
+
+        if(!document.getElementById('ep-db-file-input')) {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.id = 'ep-db-file-input';
+            input.accept = '.xlsx,.xls,.csv,.json,.txt,image/*';
+            input.style.display = 'none';
+            input.onchange = handleAIImportFile;
+            document.body.appendChild(input);
+        }
+
+        if(!document.getElementById('epDbImportModal')) {
+            const modal = document.createElement('div');
+            modal.className = 'modal';
+            modal.id = 'epDbImportModal';
+            modal.style.zIndex = '4500';
+            modal.innerHTML = `
+                <div class="modal-content glass" style="max-width:680px;">
+                    <div class="close-x" onclick="closeModal('epDbImportModal')">×</div>
+                    <h2 style="margin-top:0; color:var(--primary); font-size:18px;">🤖 Импорт базы с ИИ</h2>
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:10px;">
+                        <select id="ep-import-type" onchange="epImportType=this.value"><option value="mat">Материалы</option><option value="work">Работы</option></select>
+                        <input id="ep-import-cat" placeholder="Категория по умолчанию" value="Разное" style="margin:0;">
+                    </div>
+                    <textarea id="ep-import-text" placeholder="Вставь текст, прайс, строки из скриншота или описание картинки..." style="width:100%; min-height:110px; padding:10px; border:1px solid var(--border); border-radius:10px; background:rgba(255,255,255,.5); color:var(--text);"></textarea>
+                    <button class="btn-primary" style="width:100%; margin-top:8px;" onclick="parseAIImportText()">🤖 Прочитать текст через ИИ</button>
+                    <div id="ep-import-list" class="ep-import-list"><span style="font-size:12px; color:var(--gray);">После чтения ИИ здесь появятся позиции с галочками.</span></div>
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+                        <button class="btn-success" onclick="applyAIImport('add')">➕ Добавить выбранные</button>
+                        <button class="btn-info" onclick="applyAIImport('replace')">🔁 Заменить выбранные</button>
+                    </div>
+                    <div class="ep-db-hint">Добавить — создаёт новые позиции. Заменить — ищет совпадение по названию и обновляет цену/единицу/категорию; если совпадения нет, добавляет как новую.</div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+        }
+    }
+
+    async function epAfterLoginSetup(){
+        epEnsureDbUi();
+        await epLoadMasterDB();
+        if(epIsAdmin()) listenForDbProposals();
+        try { if(typeof renderDbEditors === 'function') renderDbEditors(); } catch(e){}
+    }
+
+    function epGroupByCat(arr){
+        const groups = {};
+        epArray(arr).forEach(x => {
+            const c = x.c || 'Разное';
+            if(!groups[c]) groups[c] = [];
+            groups[c].push(x);
+        });
+        return groups;
+    }
+
+    function epRenderRows(type, arr, color){
+        let html = '';
+        const groups = epGroupByCat(arr);
+        Object.keys(groups).sort().forEach((c, idx) => {
+            const sid = 'ep_db_' + type + '_' + idx;
+            html += `<div class="cat-header" ${color ? `style="color:${color};"` : ''} onclick="toggleCat('${sid}')">${epEscape(c)}</div><div class="cat-body" id="${sid}">`;
+            groups[c].forEach(item => {
+                const scope = item._scope === 'user' ? 'user' : 'global';
+                const badge = scope === 'user' ? '<span class="ep-db-badge user">моя</span>' : '<span class="ep-db-badge">глобальная</span>';
+                const id = epEscape(item.id || '');
+                const name = epEscape(item.n || '');
+                html += `<div class="emp-row" style="gap:8px;">
+                    <div style="flex:1;"><b>${name}</b>${badge}<br><span style="color:var(--gray);font-size:10px;">${Number(item.p)||0} ₽ / ${epEscape(item.u||'шт')}</span></div>
+                    <div class="ep-db-row-actions">
+                        <input type="number" value="${Number(item.p)||0}" onchange="requestPriceChange('${type}', '${id}', this.value)">
+                        ${epIsAdmin() ? `<button class="btn-danger" onclick="deleteDbItem('${type}','${id}','local')">у меня</button><button class="btn-danger" onclick="deleteDbItem('${type}','${id}','global')">у всех</button>` : `<button class="btn-danger" onclick="deleteDbItem('${type}','${id}','user')">удалить</button>`}
+                    </div>
+                </div>`;
+            });
+            html += `</div>`;
+        });
+        return html || `<div style="font-size:12px;color:var(--gray);padding:10px;">Пока пусто</div>`;
+    }
+
+    window.renderDbEditors = function(){
+        epEnsureDbUi();
+        epMergeActiveDB();
+        const catsM = [...new Set(epArray(window.matDB).map(m => m.c || 'Разное'))];
+        const catsW = [...new Set(epArray(window.workDB).map(w => w.c || 'Разное'))];
+        const dl = document.getElementById('db-cats');
+        if(dl) dl.innerHTML = [...new Set([...catsM, ...catsW])].sort().map(c => `<option value="${epEscape(c)}">`).join('');
+        const matEl = document.getElementById('editor-mat-list');
+        const workEl = document.getElementById('editor-work-list');
+        if(matEl) matEl.innerHTML = epRenderRows('mat', window.matDB, 'var(--primary)');
+        if(workEl) workEl.innerHTML = epRenderRows('work', window.workDB, 'var(--orange)');
+    };
+
+    window.addDbItem = async function(){
+        const cat = epClean(document.getElementById('db-new-cat')?.value) || 'Разное';
+        const name = epClean(document.getElementById('db-new-name')?.value);
+        const price = Number(document.getElementById('db-new-price')?.value) || 0;
+        const unit = epClean(document.getElementById('db-new-unit')?.value) || 'шт';
+        const type = (document.getElementById('editor-mat-list')?.style.display !== 'none') ? 'mat' : 'work';
+        if(!name) return epToast('Введите название!');
+        const item = { id: epTypePrefix(type) + '_' + Date.now(), c: cat, n: name, p: price, u: unit };
+        if(epIsAdmin()) {
+            const arr = epArray(epGlobalArr(type));
+            arr.push(item);
+            epSetGlobalArr(type, arr);
+            await epPersistGlobalDB();
+            epToast('✅ Добавлено в глобальную базу');
+        } else {
+            const arr = epArray(epUserArr(type));
+            arr.push(item);
+            epSetUserArr(type, arr);
+            await epPersistUserDB();
+            await epSubmitProposal(type, item, 'manual_add');
+            epToast('✅ Сохранено у мастера и отправлено админу');
+        }
+        const n = document.getElementById('db-new-name'); if(n) n.value = '';
+        const p = document.getElementById('db-new-price'); if(p) p.value = '';
+        renderDbEditors();
+    };
+
+    window.requestPriceChange = async function(type, id, newPrice){
+        newPrice = Number(newPrice) || 0;
+        const active = epArray(type === 'mat' ? window.matDB : window.workDB);
+        const item = active.find(x => String(x.id) === String(id));
+        if(!item) return;
+        const updated = {...item, p: newPrice};
+        delete updated._scope;
+        if(epIsAdmin()) {
+            const arr = epArray(epGlobalArr(type));
+            const i = arr.findIndex(x => String(x.id) === String(id) || epNorm(x.n) === epNorm(updated.n));
+            if(i >= 0) arr[i] = {...arr[i], ...updated}; else arr.push(updated);
+            epSetGlobalArr(type, arr);
+            await epPersistGlobalDB();
+            epToast('✅ Цена изменена глобально');
+        } else {
+            const arr = epArray(epUserArr(type));
+            const i = arr.findIndex(x => String(x.id) === String(id) || epNorm(x.n) === epNorm(updated.n));
+            if(i >= 0) arr[i] = {...arr[i], ...updated}; else arr.push(updated);
+            epSetUserArr(type, arr);
+            await epPersistUserDB();
+            await epSubmitProposal(type, updated, 'price_change');
+            epToast('✅ Цена сохранена у мастера и отправлена админу');
+        }
+    };
+
+    window.deleteDbItem = async function(type, id, scope){
+        const active = epArray(type === 'mat' ? window.matDB : window.workDB);
+        const item = active.find(x => String(x.id) === String(id));
+        if(!item) return;
+        if(epIsAdmin() && scope === 'global') {
+            const ok = await (window.customConfirm ? customConfirm('Удалить у всех?', 'Позиция будет удалена из глобальной базы для всех мастеров.') : Promise.resolve(confirm('Удалить у всех?')));
+            if(!ok) return;
+            const arr = epArray(epGlobalArr(type)).filter(x => String(x.id) !== String(id) && epNorm(x.n) !== epNorm(item.n));
+            epSetGlobalArr(type, arr);
+            await epPersistGlobalDB();
+            epToast('🗑 Удалено у всех');
+        } else {
+            if(item._scope === 'user') {
+                const arr = epArray(epUserArr(type)).filter(x => String(x.id) !== String(id));
+                epSetUserArr(type, arr);
+            } else {
+                const deleted = epLocalGet(epDeletedKey(type), []);
+                deleted.push({id: item.id, n: item.n, at: Date.now()});
+                epLocalSet(epDeletedKey(type), deleted);
+            }
+            await epPersistUserDB();
+            epToast('🗑 Удалено только у вас');
+        }
+        renderDbEditors();
+    };
+
+    window.triggerAIImport = function(type, source){
+        epImportType = type || 'mat';
+        epImportSource = source || 'file';
+        epParsedItems = [];
+        epEnsureDbUi();
+        const typeSel = document.getElementById('ep-import-type'); if(typeSel) typeSel.value = epImportType;
+        if(source === 'text') {
+            const area = document.getElementById('ep-import-text'); if(area) area.value = '';
+            const list = document.getElementById('ep-import-list'); if(list) list.innerHTML = '<span style="font-size:12px; color:var(--gray);">Вставь текст и нажми «Прочитать текст через ИИ».</span>';
+            openModal('epDbImportModal');
+        } else {
+            const input = document.getElementById('ep-db-file-input');
+            if(input) { input.value = ''; input.click(); }
+        }
+    };
+
+    window.handleAIImportFile = async function(ev){
+        const file = ev.target.files && ev.target.files[0];
+        if(!file) return;
+        epEnsureDbUi();
+        const typeSel = document.getElementById('ep-import-type'); if(typeSel) typeSel.value = epImportType;
+        try {
+            epLoader('Читаю файл...', '📁');
+            const name = file.name.toLowerCase();
+            let items = [];
+            if(name.endsWith('.json')) {
+                const text = await file.text();
+                items = epParseJsonImport(text, epImportType);
+            } else if(name.endsWith('.xlsx') || name.endsWith('.xls') || name.endsWith('.csv')) {
+                items = await epParseExcelWithAI(file, epImportType);
+            } else if(file.type && file.type.startsWith('image/')) {
+                items = await epParseImageWithAI(file, epImportType);
+            } else {
+                const text = await file.text();
+                items = await epParseTextWithAI(text, epImportType);
+            }
+            epHideLoader();
+            epShowImportReview(items, epImportType);
+            openModal('epDbImportModal');
+        } catch(e){ epHideLoader(); console.error(e); epToast('Ошибка импорта: ' + (e.message || e)); }
+    };
+
+    window.parseAIImportText = async function(){
+        const area = document.getElementById('ep-import-text');
+        const text = area ? area.value : '';
+        epImportType = document.getElementById('ep-import-type')?.value || epImportType;
+        if(!epClean(text)) return epToast('Вставь текст для чтения');
+        try {
+            epLoader('ИИ читает текст...', '🤖');
+            const items = await epParseTextWithAI(text, epImportType);
+            epHideLoader();
+            epShowImportReview(items, epImportType);
+        } catch(e){ epHideLoader(); console.error(e); epToast('Ошибка ИИ: ' + (e.message || e)); }
+    };
+
+    function epParseJsonImport(text, type){
+        const data = epSafeJsonParse(text, null);
+        let arr = [];
+        if(Array.isArray(data)) arr = data;
+        else if(data && Array.isArray(data.items)) arr = data.items;
+        else if(data && (data.matDB || data.workDB)) arr = type === 'mat' ? epArray(data.matDB) : epArray(data.workDB);
+        return arr.map(x => epNormalizeItem(x, type)).filter(Boolean);
+    }
+
+    async function epParseExcelWithAI(file, type){
+        if(!window.XLSX) throw new Error('XLSX библиотека не загружена');
+        const buf = await file.arrayBuffer();
+        const wb = XLSX.read(new Uint8Array(buf), {type:'array'});
+        let text = '';
+        wb.SheetNames.slice(0, 3).forEach(name => {
+            const ws = wb.Sheets[name];
+            text += '\n### Лист: ' + name + '\n' + XLSX.utils.sheet_to_csv(ws).slice(0, 12000);
+        });
+        return epParseTextWithAI(text, type);
+    }
+
+    async function epParseImageWithAI(file, type){
+        if(!GEMINI_API_KEY) throw new Error('Нужен API ключ Gemini');
+        const data = await epFileToBase64(file);
+        const prompt = epImportPrompt(type) + '\nЭто фото/скриншот прайса или базы. Прочитай таблицу/текст на изображении.';
+        return epCallGeminiForItems(prompt, type, {mime: file.type || 'image/png', data});
+    }
+
+    async function epParseTextWithAI(text, type){
+        if(!GEMINI_API_KEY) throw new Error('Нужен API ключ Gemini');
+        const prompt = epImportPrompt(type) + '\nДанные для разбора:\n' + String(text).slice(0, 30000);
+        return epCallGeminiForItems(prompt, type);
+    }
+
+    function epImportPrompt(type){
+        return `Ты помощник электрика. Нужно извлечь ${type === 'mat' ? 'МАТЕРИАЛЫ' : 'РАБОТЫ'} из прайса/текста/таблицы. Верни СТРОГО JSON массив без markdown. Формат: [{"c":"категория","n":"название","p":123,"u":"шт"}]. Цена только числом. Единицы: шт, м, м.п., компл, мод. Пустые и мусорные строки исключи.`;
+    }
+
+    async function epCallGeminiForItems(prompt, type, image){
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`;
+        const parts = [{text: prompt}];
+        if(image) parts.push({inline_data: {mime_type: image.mime, data: image.data}});
+        const res = await fetch(url, {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({contents:[{parts}]})});
+        const json = await res.json();
+        if(!res.ok) throw new Error(json.error?.message || 'Gemini не ответил');
+        const txt = json.candidates?.[0]?.content?.parts?.map(p => p.text || '').join('\n') || '';
+        const arr = epExtractJsonArray(txt);
+        return arr.map(x => epNormalizeItem(x, type)).filter(Boolean);
+    }
+
+    function epExtractJsonArray(txt){
+        let clean = String(txt || '').replace(/```json|```/gi,'').trim();
+        const start = clean.indexOf('['), end = clean.lastIndexOf(']');
+        if(start >= 0 && end > start) clean = clean.slice(start, end+1);
+        const arr = epSafeJsonParse(clean, []);
+        if(!Array.isArray(arr)) throw new Error('ИИ не вернул список JSON');
+        return arr;
+    }
+
+    function epFileToBase64(file){
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(String(reader.result).split(',')[1] || '');
+            reader.onerror = reject;
+            reader.readAsDataURL(file);
+        });
+    }
+
+    function epShowImportReview(items, type){
+        epParsedItems = epArray(items);
+        epImportType = type;
+        const list = document.getElementById('ep-import-list');
+        const catInput = document.getElementById('ep-import-cat');
+        const cats = [...new Set(epParsedItems.map(x => x.c).filter(Boolean))];
+        if(catInput && cats.length) catInput.value = cats[0];
+        if(!list) return;
+        if(!epParsedItems.length) {
+            list.innerHTML = '<span style="font-size:12px; color:var(--danger);">Позиции не найдены. Попробуй другой файл/текст.</span>';
+            return;
+        }
+        list.innerHTML = epParsedItems.map((it, i) => `
+            <div class="ep-import-row">
+                <input type="checkbox" id="ep-imp-check-${i}" checked>
+                <input id="ep-imp-name-${i}" value="${epEscape(it.n)}" title="Название">
+                <input type="number" id="ep-imp-price-${i}" value="${Number(it.p)||0}" title="Цена">
+                <input id="ep-imp-unit-${i}" value="${epEscape(it.u||'шт')}" title="Ед.">
+            </div>
+        `).join('');
+        epToast('✅ ИИ нашёл позиций: ' + epParsedItems.length);
+    }
+
+    window.applyAIImport = async function(mode){
+        epImportType = document.getElementById('ep-import-type')?.value || epImportType;
+        const fallbackCat = epClean(document.getElementById('ep-import-cat')?.value) || 'Разное';
+        if(!epParsedItems.length) return epToast('Нет позиций для добавления');
+        let selected = [];
+        epParsedItems.forEach((it, i) => {
+            const checked = document.getElementById(`ep-imp-check-${i}`)?.checked;
+            if(!checked) return;
+            selected.push(epNormalizeItem({
+                ...it,
+                n: document.getElementById(`ep-imp-name-${i}`)?.value,
+                p: document.getElementById(`ep-imp-price-${i}`)?.value,
+                u: document.getElementById(`ep-imp-unit-${i}`)?.value,
+                c: it.c || fallbackCat
+            }, epImportType, fallbackCat));
+        });
+        selected = selected.filter(Boolean);
+        if(!selected.length) return epToast('Ничего не выбрано');
+        epLoader('Сохраняю базу...', '💾');
+        let target = epIsAdmin() ? epArray(epGlobalArr(epImportType)) : epArray(epUserArr(epImportType));
+        let added = 0, replaced = 0;
+        for(const item of selected) {
+            const idx = target.findIndex(x => epNorm(x.n) === epNorm(item.n) || String(x.id) === String(item.id));
+            if(mode === 'replace' && idx >= 0) {
+                target[idx] = {...target[idx], ...item, id: target[idx].id || item.id};
+                replaced++;
+            } else {
+                item.id = epTypePrefix(epImportType) + '_' + Date.now() + '_' + Math.floor(Math.random()*999999);
+                target.push(item);
+                added++;
+            }
+            if(!epIsAdmin()) await epSubmitProposal(epImportType, item, mode === 'replace' ? 'import_replace' : 'import_add');
+        }
+        if(epIsAdmin()) {
+            epSetGlobalArr(epImportType, target);
+            await epPersistGlobalDB();
+        } else {
+            epSetUserArr(epImportType, target);
+            await epPersistUserDB();
+        }
+        epHideLoader();
+        closeModal('epDbImportModal');
+        renderDbEditors();
+        epToast(`✅ Готово: добавлено ${added}, заменено ${replaced}`);
+    };
+
+    window.exportDbJson = function(scope){
+        epMergeActiveDB();
+        let data;
+        if(scope === 'global') {
+            data = {kind:'electric-pro-global-db', exportedAt:new Date().toISOString(), matDB: epArray(epGlobalArr('mat')), workDB: epArray(epGlobalArr('work'))};
+        } else {
+            data = {kind:'electric-pro-master-db', exportedAt:new Date().toISOString(), master:(window.appUser && appUser.name)||'master', matDB: epArray(window.matDB), workDB: epArray(window.workDB), personal:{matDB:epArray(window.userMatDB), workDB:epArray(window.userWorkDB)}};
+        }
+        const blob = new Blob([JSON.stringify(data, null, 2)], {type:'application/json'});
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = scope === 'global' ? 'electric-pro-global-db.json' : 'electric-pro-master-db.json';
+        document.body.appendChild(a); a.click(); a.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+        epToast('📤 Экспорт готов');
+    };
+
+    window.listenForDbProposals = function(){
+        if(!epIsAdmin() || !window.db) return;
+        const box = document.getElementById('admin-db-proposals');
+        if(!box) return;
+        if(epDbProposalUnsub) { try { epDbProposalUnsub(); } catch(e){} }
+        try {
+            epDbProposalUnsub = db.collection('db_proposals').where('status','==','pending').onSnapshot(snap => {
+                if(snap.empty) { box.innerHTML = `<span style="font-size:11px; color:var(--gray);">Новых предложений нет</span>`; return; }
+                let html = '';
+                snap.forEach(doc => {
+                    const d = doc.data() || {};
+                    const item = d.item || d;
+                    html += `<div class="ep-admin-proposal">
+                        <b>${epEscape(item.n || 'Без названия')}</b> <span class="ep-db-badge pending">${epTypeLabel(d.type)}</span><br>
+                        <span style="font-size:10px;color:var(--gray);">${epEscape(d.masterName || 'Мастер')} · ${epEscape(item.c || 'Разное')} · ${Number(item.p)||0} ₽ / ${epEscape(item.u || 'шт')}</span>
+                        <div class="ep-admin-actions">
+                            <button class="btn-success" onclick="approveDbProposal('${doc.id}','full')">Добавить</button>
+                            <button class="btn-info" onclick="approveDbProposal('${doc.id}','name')">Только название</button>
+                            <button class="btn-danger" onclick="rejectDbProposal('${doc.id}')">Отклонить</button>
+                        </div>
+                    </div>`;
+                });
+                box.innerHTML = html;
+            });
+        } catch(e){ console.warn('listen proposals', e); }
+    };
+
+    window.approveDbProposal = async function(id, mode){
+        if(!epIsAdmin() || !window.db) return;
+        try {
+            const ref = db.collection('db_proposals').doc(id);
+            const snap = await ref.get();
+            if(!snap.exists) return;
+            const data = snap.data() || {};
+            const type = data.type || 'mat';
+            let item = epNormalizeItem(data.item || data, type);
+            if(!item) return;
+            if(mode === 'name') item.p = 0;
+            const arr = epArray(epGlobalArr(type));
+            const idx = arr.findIndex(x => epNorm(x.n) === epNorm(item.n));
+            if(idx >= 0) arr[idx] = {...arr[idx], ...item, id: arr[idx].id || item.id};
+            else arr.push({...item, id: epTypePrefix(type) + '_g_' + Date.now()});
+            epSetGlobalArr(type, arr);
+            await epPersistGlobalDB();
+            await ref.update({status: mode === 'name' ? 'approved_name_only' : 'approved_full', reviewedAt: Date.now()});
+            renderDbEditors();
+            epToast(mode === 'name' ? '✅ Добавлено название без суммы' : '✅ Добавлено в глобальную БД');
+        } catch(e){ console.error(e); epToast('Ошибка решения: ' + (e.message || e)); }
+    };
+
+    window.rejectDbProposal = async function(id){
+        if(!epIsAdmin() || !window.db) return;
+        try { await db.collection('db_proposals').doc(id).update({status:'rejected', reviewedAt: Date.now()}); epToast('Отклонено'); }
+        catch(e){ epToast('Ошибка отклонения'); }
+    };
+
+    // Оборачиваем завершение входа, чтобы после штатной загрузки добавить личную базу мастера и заявки админу
+    const oldFinishLoginSetup = window.finishLoginSetup;
+    if(typeof oldFinishLoginSetup === 'function' && !oldFinishLoginSetup.__epDbWrapped) {
+        window.finishLoginSetup = async function(){
+            await oldFinishLoginSetup.apply(this, arguments);
+            setTimeout(epAfterLoginSetup, 250);
+        };
+        window.finishLoginSetup.__epDbWrapped = true;
+    }
+
+    // Оборачиваем openModal, чтобы база всегда дорисовывалась перед открытием
+    const oldOpenModal = window.openModal;
+    if(typeof oldOpenModal === 'function' && !oldOpenModal.__epDbWrapped) {
+        window.openModal = function(id){
+            epEnsureDbUi();
+            const res = oldOpenModal.apply(this, arguments);
+            if(id === 'settModal') setTimeout(() => { epLoadMasterDB().then(() => renderDbEditors()); }, 50);
+            return res;
+        };
+        window.openModal.__epDbWrapped = true;
+    }
+
+    epReady(function(){
+        epEnsureDbUi();
+        setTimeout(epEnsureDbUi, 500);
+        setTimeout(epEnsureDbUi, 1500);
+    });
+})();
 </script>
 
 </body>
 </html>
 
-<!-- EP_SINGLE_HTML_READY_VERSION: 1778505836 -->
-
-<!-- EP_API_SYNC_VERSION: 1778506402 -->
+<!-- EP_DB_AI_SYNC_VERSION: 1778509362 -->
