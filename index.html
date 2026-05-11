@@ -262,6 +262,51 @@ button:active { transform: scale(.985); }
 }
 </style>
 
+
+<style id="EP_DB_REVIEW_FIELDS_STYLE">
+/* === EP DB REVIEW FIELDS PATCH === */
+.ep-db-review-row {
+    display: grid !important;
+    grid-template-columns: 28px 1fr !important;
+    gap: 10px !important;
+    align-items: flex-start !important;
+    padding: 10px !important;
+    margin-bottom: 10px !important;
+    border: 1px solid var(--border) !important;
+    border-radius: 14px !important;
+    background: rgba(255,255,255,.06) !important;
+}
+.ep-db-review-row input[type="checkbox"] {
+    width: 22px !important;
+    height: 22px !important;
+    margin-top: 11px !important;
+    accent-color: var(--success) !important;
+}
+.ep-db-review-fields {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 7px !important;
+}
+.ep-db-review-fields label {
+    font-size: 10px !important;
+    font-weight: 900 !important;
+    color: var(--gray) !important;
+    display: block !important;
+    margin: 0 0 3px 2px !important;
+}
+.ep-db-review-fields input {
+    margin: 0 !important;
+}
+.ep-db-review-2col {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 7px !important;
+}
+.ep-db-subcat-label {
+    color: var(--primary) !important;
+}
+</style>
+
 </head>
 <body>
 
@@ -1902,7 +1947,11 @@ async function deleteUser(uid) {
     <div class="modal-content glass" style="max-width: 560px;">
         <div class="close-x" onclick="closeModal('ep-db-ai-review-modal')">×</div>
         <h2 id="ep-db-ai-review-title" style="color:var(--primary); margin-top:0; font-size:18px;">Импорт базы через ИИ</h2>
-        <p style="font-size:12px; color:var(--gray);">Отметьте галочками нужные позиции. Можно поправить название, категорию, цену и единицу.</p>
+        <p style="font-size:12px; color:var(--gray);">Отметьте галочками нужные позиции. Можно поправить имя, категорию, подкатегорию, цену и единицу.</p>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin:10px 0 12px 0;">
+            <button class="btn-info" type="button" onclick="epReviewCheckAll(true)">✅ Выделить все</button>
+            <button class="btn-vendor" type="button" onclick="epReviewCheckAll(false)">⬜ Убрать все галочки</button>
+        </div>
         <div id="ep-db-ai-review-list" style="max-height:48vh; overflow-y:auto; margin-bottom:12px;"></div>
         <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
             <button class="btn-success" onclick="epApplyReviewedDbItems('add')">➕ Добавить выбранные</button>
@@ -2516,30 +2565,80 @@ async function deleteUser(uid) {
         return 'Разное';
     }
 
+
+    function epInferSubcategory(name, category, type) {
+        const n = String(name || '').toLowerCase();
+        const c = String(category || '').toLowerCase();
+        if (type === 'work') {
+            if (/штроб|борозд/.test(n)) return 'Штробление';
+            if (/сверл|подрозет/.test(n)) return 'Подрозетники';
+            if (/кабел|провод|проклад/.test(n)) return 'Прокладка кабеля';
+            if (/щит|автомат|узо|диф/.test(n)) return 'Щит';
+            if (/розет|выключ|механизм|рамк/.test(n)) return 'Чистовая установка';
+            return 'Работы';
+        }
+        if (/ввг/.test(n)) return 'ВВГ';
+        if (/пугв|пу ?гв|пв-?3/.test(n)) return 'ПУГВ';
+        if (/cat|utp|ftp|rj|интернет/.test(n)) return 'UTP/FTP';
+        if (/sat|tv|коаксиал|cavel|антенн/.test(n)) return 'TV/SAT';
+        if (/подрозет/.test(n)) return 'Подрозетники';
+        if (/короб|распред/.test(n)) return 'Коробки';
+        if (/клемм|wago|гмл|наконечник|шина/.test(n)) return 'Клеммы/соединители';
+        if (/стяжк|клипс|дюбел|саморез|гвозд|площадк|баллон/.test(n)) return 'Крепёж';
+        if (/гофр|труб/.test(n)) return 'Трубы/гофра';
+        if (/щит|бокс|шкаф|корпус/.test(n)) return 'Щиты/корпуса';
+        if (/диф/.test(n)) return 'Дифавтоматы';
+        if (/узо/.test(n)) return 'УЗО';
+        if (/автомат|выключател[ья] автомат/.test(n)) return 'Автоматы';
+        if (/розет/.test(n)) return 'Розетки';
+        if (/выключ/.test(n)) return 'Выключатели';
+        if (/рамк/.test(n)) return 'Рамки';
+        if (/механизм|диммер|терморег/.test(n)) return 'Механизмы';
+        if (c.includes('кабель')) return 'Кабель силовой';
+        if (c.includes('расход')) return 'Прочие расходники';
+        return 'Разное';
+    }
+
     function epNormalizeItems(raw, type) {
         let arr = [];
         if (Array.isArray(raw)) arr = raw;
         else if (raw && typeof raw === 'object') {
-            arr = raw.items || raw.positions || raw.rows || raw.data || raw.result || [];
+            arr = raw.items || raw.positions || raw.rows || raw.data || raw.result || raw.materials || raw.works || raw['позиции'] || raw['материалы'] || raw['работы'] || [];
         }
         return arr.map(function (x, i) {
             if (Array.isArray(x)) {
-                x = { c: x[0], n: x[1], p: x[2], u: x[3] };
+                x = { n: x[1] || x[0], c: x[0], sc: x[2], p: x[3], u: x[4] };
             }
+
             const name = epCleanText(
-                x.n || x.name || x.title || x.item || x.position || x.material || x.work ||
-                x['Название'] || x['Наименование'] || x['Наименование позиции'] || x['Товар'] || x['Материал'] || x['Работа'] ||
+                x.n || x.name || x.title || x.item || x.position || x.material || x.work || x.itemName ||
+                x['Имя'] || x['Название'] || x['Наименование'] || x['Наименование позиции'] || x['Товар'] || x['Материал'] || x['Работа'] ||
                 x['номенклатура'] || x['наименование'] || x['позиция'] || ''
             );
+
+            const cat = epCleanText(
+                x.c || x.cat || x.category || x.group ||
+                x['Категория'] || x['Группа'] || x['категория'] || ''
+            ) || epInferCategory(name, type);
+
+            const subcat = epCleanText(
+                x.sc || x.subcat || x.subcategory || x.subCategory || x.sub_group || x.section ||
+                x['Подкатегория'] || x['Подраздел'] || x['Раздел'] || x['подкатегория'] || x['подраздел'] || ''
+            ) || epInferSubcategory(name, cat, type);
+
             const unit = epCleanText(
-                x.u || x.unit || x.measure || x['Ед'] || x['Ед.'] || x['Ед. изм'] || x['Ед.изм.'] || x['Единица'] || x['единица'] || x['ед'] || 'шт'
+                x.u || x.unit || x.measure || x.measurement ||
+                x['Ед'] || x['Ед.'] || x['Ед. изм'] || x['Ед.изм.'] || x['Единица'] || x['Единица измерения'] || x['единица'] || x['ед'] || 'шт'
             ) || 'шт';
-            const priceRaw = x.p || x.price || x.cost || x.unitPrice || x['Цена'] || x['Цена ₽'] || x['Цена руб'] || x['Цена за ед.'] || x['Стоимость'] || x['цена'] || 0;
-            const cat = epCleanText(x.c || x.cat || x.category || x.group || x['Категория'] || x['Группа'] || x['категория'] || '') || epInferCategory(name, type);
+
+            const priceRaw = x.p || x.price || x.cost || x.unitPrice || x.unit_price ||
+                x['Цена'] || x['Цена ₽'] || x['Цена руб'] || x['Цена за ед.'] || x['Цена за единицу'] || x['Стоимость'] || x['цена'] || 0;
+
             return {
-                id: (type === 'work' ? 'w' : 'm') + '_ai_' + Date.now() + '_' + i,
-                c: cat || 'Разное',
+                id: x.id || (type === 'work' ? 'w' : 'm') + '_ai_' + Date.now() + '_' + i,
                 n: name,
+                c: cat || 'Разное',
+                sc: subcat || 'Разное',
                 p: epMoney(priceRaw),
                 u: unit
             };
@@ -2727,17 +2826,18 @@ async function deleteUser(uid) {
 Правила:
 1. Читай каждую строку таблицы, даже если качество среднее.
 2. Не возвращай пустой массив, если видны строки с товарами/работами.
-3. Для названия бери колонку с наименованием/описанием, НЕ артикул и НЕ номер строки.
-4. p — это цена за единицу. Если есть две суммы, бери меньшую как цену за единицу, большую не бери как цену.
-5. u — единица измерения: шт, м, упак, компл и т.д.
-6. c — категория. Если категории нет, определи сам: Кабель, Трубы, Расходники, Автоматика, Слаботочка, Чистовое, Разное.
-7. Если цену не видно — p=0. Если единицу не видно — u="шт".
-8. Верни СТРОГО JSON-массив без текста вокруг.
+3. Для имени n бери колонку с наименованием/описанием, НЕ артикул и НЕ номер строки.
+4. c — главная категория: Кабель, Трубы, Расходники, Автоматика, Слаботочка, Чистовое, Работы, Щит, Разное.
+5. sc — подкатегория. Определи точнее: ВВГ, ПУГВ, SAT/TV, UTP/FTP, Подрозетники, Крепёж, Клеммники, Коробки, Щиты, Автоматы, УЗО, Дифавтоматы, Розетки, Выключатели и т.д.
+6. p — цена за единицу. Если есть две суммы, бери меньшую как цену за единицу, большую не бери как цену.
+7. u — единица измерения: шт, м, упак, компл, кг, л и т.д.
+8. Если цену не видно — p=0. Если единицу не видно — u="шт". Если подкатегорию не понял — sc="Разное".
+9. Верни СТРОГО JSON-массив без текста вокруг.
 
 Формат строго такой:
 [
-  {"c":"Кабель","n":"ВВГ-Пнг(A)-LS ГОСТ Конкорд 3x1,5","p":58.43,"u":"м"},
-  {"c":"Расходники","n":"Подрозетник бетон 68x60","p":12,"u":"шт"}
+  {"n":"ВВГ-Пнг(A)-LS ГОСТ Конкорд 3x1,5","c":"Кабель","sc":"ВВГ","p":58.43,"u":"м"},
+  {"n":"Подрозетник бетон 68x60","c":"Расходники","sc":"Подрозетники","p":12,"u":"шт"}
 ]`;
 
             rawAnswer = await epAskAI(prompt, { imageDataUrl: imageDataUrl, imageDetail: 'high', maxTokens: 9000 });
@@ -2745,7 +2845,7 @@ async function deleteUser(uid) {
             let items = epNormalizeItems(parsed, type);
 
             if (!items.length) {
-                const retryPrompt = `Ты ответил без позиций. Посмотри изображение ещё раз. Там таблица со строками, например кабели, подрозетники, клеммники, автоматы, расходники. Извлеки хотя бы 10-30 видимых строк. Верни только JSON массив [{"c":"...","n":"...","p":0,"u":"шт"}]. Не объясняй.`;
+                const retryPrompt = `Ты ответил без позиций. Посмотри изображение ещё раз. Там таблица со строками, например кабели, подрозетники, клеммники, автоматы, расходники. Извлеки хотя бы 10-30 видимых строк. Верни только JSON массив [{"n":"Имя позиции","c":"Категория","sc":"Подкатегория","p":0,"u":"шт"}]. Не объясняй.`;
                 rawAnswer = await epAskAI(retryPrompt, { imageDataUrl: imageDataUrl, imageDetail: 'high', maxTokens: 9000 });
                 parsed = epParseJsonArray(rawAnswer);
                 items = epNormalizeItems(parsed, type);
@@ -2763,7 +2863,7 @@ async function deleteUser(uid) {
         showLoader('ИИ структурирует базу...', '🤖');
         let rawAnswer = '';
         try {
-            const prompt = 'Ты помощник электрика. Приведи данные к базе ' + epDbTypeLabel(type) + '. Верни ТОЛЬКО JSON массив объектов: [{"c":"Категория","n":"Название","p":123,"u":"шт"}]. Цена p — цена за единицу, не итоговая сумма. Если цены нет, p=0. Если категории нет, определи сам: Кабель, Трубы, Расходники, Автоматика, Слаботочка, Чистовое, Разное. Не возвращай пустой массив, если в данных есть строки с позициями. Данные: ' + String(rawText).slice(0, 90000);
+            const prompt = 'Ты помощник электрика. Приведи данные к базе ' + epDbTypeLabel(type) + '. Верни ТОЛЬКО JSON массив объектов: [{"n":"Имя позиции","c":"Категория","sc":"Подкатегория","p":123,"u":"шт"}]. n — имя/наименование позиции. c — главная категория. sc — подкатегория. p — цена за единицу, не итоговая сумма. u — единица измерения. Если цены нет, p=0. Если категории нет, определи сам: Кабель, Трубы, Расходники, Автоматика, Слаботочка, Чистовое, Работы, Щит, Разное. Если подкатегории нет, определи сам или поставь "Разное". Не возвращай пустой массив, если в данных есть строки с позициями. Данные: ' + String(rawText).slice(0, 90000);
             rawAnswer = await epAskAI(prompt, { maxTokens: 8000 });
             const items = epNormalizeItems(epParseJsonArray(rawAnswer), type);
             hideLoader();
@@ -2773,6 +2873,12 @@ async function deleteUser(uid) {
             showToast('❌ ' + (e.message || 'ИИ не обработал данные'));
         }
     }
+
+    window.epReviewCheckAll = function (checked) {
+        document.querySelectorAll('#ep-db-ai-review-list input[type="checkbox"]').forEach(function (cb) {
+            cb.checked = !!checked;
+        });
+    };
 
     function epShowDbReview(items, type, source, rawAnswer) {
         window.EP_DB_REVIEW = { type: type, items: items, source: source || '' };
@@ -2785,12 +2891,15 @@ async function deleteUser(uid) {
             list.innerHTML = items.map(function (it, idx) {
                 return `<div class="ep-db-review-row">
                     <input type="checkbox" id="ep-db-check-${idx}" checked>
-                    <div>
-                        <input id="ep-db-cat-${idx}" value="${epEscape(it.c)}" placeholder="Категория">
-                        <input id="ep-db-name-${idx}" value="${epEscape(it.n)}" placeholder="Название">
-                        <div style="display:grid; grid-template-columns:1fr 1fr; gap:6px;">
-                            <input id="ep-db-price-${idx}" type="number" value="${Number(it.p)||0}" placeholder="Цена">
-                            <input id="ep-db-unit-${idx}" value="${epEscape(it.u || 'шт')}" placeholder="ед.">
+                    <div class="ep-db-review-fields">
+                        <div><label>Имя</label><input id="ep-db-name-${idx}" value="${epEscape(it.n)}" placeholder="Имя / наименование"></div>
+                        <div class="ep-db-review-2col">
+                            <div><label>Категория</label><input id="ep-db-cat-${idx}" value="${epEscape(it.c)}" placeholder="Категория"></div>
+                            <div><label class="ep-db-subcat-label">Подкатегория</label><input id="ep-db-subcat-${idx}" value="${epEscape(it.sc || 'Разное')}" placeholder="Подкатегория"></div>
+                        </div>
+                        <div class="ep-db-review-2col">
+                            <div><label>Цена за единицу</label><input id="ep-db-price-${idx}" type="number" step="0.01" value="${Number(it.p)||0}" placeholder="Цена"></div>
+                            <div><label>Единица</label><input id="ep-db-unit-${idx}" value="${epEscape(it.u || 'шт')}" placeholder="шт / м / упак"></div>
                         </div>
                     </div>
                 </div>`;
@@ -2816,7 +2925,9 @@ async function deleteUser(uid) {
     }
 
     function epSameItem(a, b) {
-        return epCleanText(a.n).toLowerCase() === epCleanText(b.n).toLowerCase() && epCleanText(a.c).toLowerCase() === epCleanText(b.c).toLowerCase();
+        return epCleanText(a.n).toLowerCase() === epCleanText(b.n).toLowerCase()
+            && epCleanText(a.c).toLowerCase() === epCleanText(b.c).toLowerCase()
+            && (!a.sc || !b.sc || epCleanText(a.sc).toLowerCase() === epCleanText(b.sc).toLowerCase());
     }
 
     async function epSendDbProposal(type, items, action) {
@@ -2913,7 +3024,7 @@ async function deleteUser(uid) {
             htmlMat += `<div class="cat-header" onclick="toggleCat('${sid}')">${epEscape(c)}</div><div class="cat-body" id="${sid}">`;
             mGroups[c].forEach(m => {
                 htmlMat += `<div class="emp-row">
-                    <div style="flex:1;"><b>${epEscape(m.n)}</b><br><span style="color:var(--gray);font-size:10px;">${Number(m.p)||0} ₽ / ${epEscape(m.u || 'шт')}</span></div>
+                    <div style="flex:1;"><b>${epEscape(m.n)}</b><br><span style="color:var(--gray);font-size:10px;">${epEscape(m.sc || 'Разное')} • ${Number(m.p)||0} ₽ / ${epEscape(m.u || 'шт')}</span></div>
                     <div class="ep-row-actions">
                         <input type="number" value="${Number(m.p)||0}" onchange="requestPriceChange('mat', '${epEscape(m.id)}', this.value)" style="width:70px;margin:0;padding:4px;text-align:center;">
                         <button class="btn-danger" onclick="epDeleteDbItem('mat','${epEscape(m.id)}')" title="Удалить">🗑</button>
@@ -2932,7 +3043,7 @@ async function deleteUser(uid) {
             htmlWork += `<div class="cat-header" style="color:var(--orange); border-color:rgba(245,158,11,0.2); background:rgba(245,158,11,0.08);" onclick="toggleCat('${sid}')">${epEscape(c)}</div><div class="cat-body" id="${sid}">`;
             wGroups[c].forEach(w => {
                 htmlWork += `<div class="emp-row">
-                    <div style="flex:1;"><b>${epEscape(w.n)}</b><br><span style="color:var(--gray);font-size:10px;">${Number(w.p)||0} ₽ / ${epEscape(w.u || 'шт')}</span></div>
+                    <div style="flex:1;"><b>${epEscape(w.n)}</b><br><span style="color:var(--gray);font-size:10px;">${epEscape(w.sc || 'Разное')} • ${Number(w.p)||0} ₽ / ${epEscape(w.u || 'шт')}</span></div>
                     <div class="ep-row-actions">
                         <input type="number" value="${Number(w.p)||0}" onchange="requestPriceChange('work', '${epEscape(w.id)}', this.value)" style="width:70px;margin:0;padding:4px;text-align:center;">
                         <button class="btn-danger" onclick="epDeleteDbItem('work','${epEscape(w.id)}')" title="Удалить">🗑</button>
@@ -3049,7 +3160,7 @@ async function deleteUser(uid) {
                 cont.innerHTML += `<div class="ep-db-admin-proposal">
                     <b>${epEscape(d.masterName || d.uid || 'Мастер')}</b>
                     <div style="color:var(--gray); font-size:11px;">${d.type === 'work' ? 'Работы' : 'Материалы'} • ${epEscape(d.action || '')} • ${items.length} поз.</div>
-                    <div style="font-size:11px; margin-top:5px;">${items.slice(0,3).map(x => epEscape(x.n)).join('<br>')}${items.length > 3 ? '<br>...' : ''}</div>
+                    <div style="font-size:11px; margin-top:5px;">${items.slice(0,3).map(x => epEscape(x.n) + (x.sc ? ' <span style="color:var(--gray);">[' + epEscape(x.sc) + ']</span>' : '')).join('<br>')}${items.length > 3 ? '<br>...' : ''}</div>
                     <div class="ep-mini-actions">
                         <button class="btn-success" onclick="epAdminResolveDbProposal('${doc.id}','full')">✅ Добавить полностью</button>
                         <button class="btn-primary" onclick="epAdminResolveDbProposal('${doc.id}','names')">🏷 Только название без суммы</button>
@@ -3153,3 +3264,5 @@ async function deleteUser(uid) {
 <!-- EP_SURGICAL_OPENAI_PROVIDER_VERSION: 1778513531 -->
 
 <!-- EP_OPENAI_IMAGE_TABLE_FIX_VERSION: 1778515438 -->
+
+<!-- EP_DB_AI_FIELDS_VERSION: name-category-subcategory-price-unit-select-buttons-v1 -->
