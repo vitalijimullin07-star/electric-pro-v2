@@ -339,7 +339,8 @@ button:active { transform: scale(.985); }
         <div id="admin-api-settings" style="display:none; padding:10px; background:rgba(79,70,229,0.06); border:1px solid var(--primary); border-radius:12px; margin-bottom:14px;">
             <h4 style="color:var(--primary); margin: 0 0 6px;">🔑 ИИ-Ключ (Gemini)</h4>
             <input type="password" id="api-key-input" placeholder="Ключ Gemini API" onchange="saveApiKey(this.value)" style="border-color:var(--primary);">
-            <p style="font-size:10px; color:var(--gray); margin:0; line-height:1.3;">Ключ сохраняется в settings/global_api и автоматически передаётся мастерам.</p>
+            <p style="font-size:10px; color:var(--gray); margin:0 0 8px; line-height:1.3;">Ключ сохраняется в settings/global_api и автоматически передаётся мастерам. Перед сохранением ключ проверяется.</p>
+            <button id="epClearApiLocalButton" class="btn-ghost" style="width:100%;padding:8px;font-size:11px;margin:0;" onclick="try{localStorage.removeItem('gemini_key_v31'); GEMINI_API_KEY=''; document.getElementById('api-key-input').value=''; showToast('Локальный старый ключ очищен');}catch(e){}">🧹 Очистить старый локальный ключ</button>
         </div>
         <div id="master-api-status" style="display:none; padding:10px; background:rgba(16,185,129,0.10); color:var(--success); border:1px solid rgba(16,185,129,.25); border-radius:12px; font-size:12px; font-weight:800; margin-bottom:14px;">
             🤖 ИИ подключён администратором
@@ -1873,6 +1874,56 @@ async function deleteUser(uid) {
     let userWorkDB = [];
 
     function epText(v) { return (v == null ? '' : String(v)).trim(); }
+
+    function epCleanApiKey(raw) {
+        let v = epText(raw);
+        if (!v) return '';
+        try {
+            const m = v.match(/[?&]key=([^&\s]+)/);
+            if (m) v = decodeURIComponent(m[1]);
+        } catch(e) {}
+        v = v.replace(/["'`]/g, '').replace(/\s+/g, '');
+        const k = v.match(/AIza[0-9A-Za-z_\-]{20,}/);
+        return k ? k[0] : v;
+    }
+    function epIsValidLookingApiKey(key) {
+        return /^AIza[0-9A-Za-z_\-]{20,}$/.test(epCleanApiKey(key));
+    }
+    function epClearBadLocalApi() {
+        GEMINI_API_KEY = '';
+        try { localStorage.removeItem('gemini_key_v31'); } catch(e) {}
+        const input = document.getElementById('api-key-input');
+        if (input && (!appUser || appUser.role !== 'admin')) input.value = '';
+    }
+    function epApiInvalidMessage() {
+        return appUser && appUser.role === 'admin'
+            ? '❌ API-ключ неверный. Вставь новый ключ Gemini в настройках админа.'
+            : '❌ API-ключ неверный или не получен от админа. Админ должен заново сохранить ключ.';
+    }
+    async function epValidateGeminiKey(key) {
+        key = epCleanApiKey(key);
+        if (!epIsValidLookingApiKey(key)) throw new Error('Ключ не похож на Gemini API key. Он должен начинаться с AIza.');
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${encodeURIComponent(key)}`;
+        const payload = { contents: [{ parts: [{ text: 'Ответь одним словом: OK' }] }] };
+        const res = await fetch(url, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload) });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok || data.error) throw new Error((data.error && data.error.message) || 'API key validation failed');
+        return key;
+    }
+    async function epGetGeminiKey() {
+        await epLoadGlobalApi();
+        const key = epCleanApiKey(GEMINI_API_KEY);
+        if (!key || !epIsValidLookingApiKey(key)) return '';
+        return key;
+    }
+    function epHandleGeminiError(e) {
+        const msg = String((e && (e.message || e)) || '');
+        if (/API key not valid|API_KEY_INVALID|invalid api key|Ключ не похож/i.test(msg)) {
+            epClearBadLocalApi();
+            showToast(epApiInvalidMessage());
+        }
+    }
+
     function epNormName(s) { return epText(s).toLowerCase().replace(/ё/g, 'е').replace(/\s+/g, ' '); }
     function epNewId(type) { return (type === 'mat' ? 'um' : 'uw') + Date.now() + '_' + Math.floor(Math.random() * 100000); }
     function epSafeNumber(v) { const n = Number(String(v).replace(',', '.').replace(/[^0-9.\-]/g, '')); return Number.isFinite(n) ? n : 0; }
@@ -1964,24 +2015,52 @@ async function deleteUser(uid) {
         const masterStatus = document.getElementById('master-api-status');
         const input = document.getElementById('api-key-input');
         const isAdmin = appUser && appUser.role === 'admin';
+
         if (adminBox) adminBox.style.display = isAdmin ? 'block' : 'none';
-        if (masterStatus) masterStatus.style.display = 'none';
+        if (masterStatus) {
+            masterStatus.style.display = 'none';
+            masterStatus.innerHTML = '✅ ИИ подключён администратором';
+        }
 
         let key = '';
+
+        // 1) Главный источник для всех мастеров: settings/global_api
         if (db) {
             try {
                 const doc = await db.collection('settings').doc('global_api').get();
-                if (doc.exists) key = doc.data().geminiKey || doc.data().apiKey || '';
+                if (doc.exists) key = epCleanApiKey(doc.data().geminiKey || doc.data().apiKey || '');
             } catch (e) { console.warn('global_api load error', e); }
         }
-        if (!key && appUser && appUser.geminiKey) key = appUser.geminiKey;
-        if (!key) key = safeGet('gemini_key_v31', '');
 
-        if (key) {
+        // 2) Запасной источник: users/{uid}.geminiKey
+        if (!key && db && appUser && appUser.uid) {
+            try {
+                const udoc = await db.collection('users').doc(appUser.uid).get();
+                if (udoc.exists) key = epCleanApiKey(udoc.data().geminiKey || '');
+            } catch(e) { console.warn('user geminiKey load error', e); }
+        }
+        if (!key && appUser && appUser.geminiKey) key = epCleanApiKey(appUser.geminiKey);
+
+        // 3) Локальный ключ разрешён только админу, чтобы мастер не брал старый/битый ключ из localStorage.
+        if (!key && isAdmin) key = epCleanApiKey(safeGet('gemini_key_v31', ''));
+
+        if (key && epIsValidLookingApiKey(key)) {
             GEMINI_API_KEY = key;
             safeSet('gemini_key_v31', key);
             if (input) input.value = isAdmin ? key : '';
-            if (!isAdmin && masterStatus) masterStatus.style.display = 'block';
+            if (!isAdmin && masterStatus) {
+                masterStatus.style.display = 'block';
+                masterStatus.innerHTML = '✅ ИИ подключён администратором';
+            }
+        } else {
+            if (!isAdmin) epClearBadLocalApi();
+            if (input) input.value = isAdmin ? epCleanApiKey(safeGet('gemini_key_v31', '')) : '';
+            if (!isAdmin && masterStatus) {
+                masterStatus.style.display = 'block';
+                masterStatus.style.background = 'rgba(239,68,68,0.10)';
+                masterStatus.style.color = 'var(--danger)';
+                masterStatus.innerHTML = '⚠️ ИИ-ключ не получен от администратора';
+            }
         }
     }
 
@@ -2003,26 +2082,45 @@ async function deleteUser(uid) {
 
     window.saveApiKey = async function (val) {
         if (!appUser || appUser.role !== 'admin') return showToast('⛔ API-ключ может менять только админ');
-        GEMINI_API_KEY = epText(val);
-        if (!GEMINI_API_KEY) return showToast('Введите API-ключ');
-        safeSet('gemini_key_v31', GEMINI_API_KEY);
+        let key = epCleanApiKey(val);
+        if (!key) return showToast('Введите API-ключ');
+
+        showLoader('Проверяю API-ключ...', '🔑');
+        try {
+            key = await epValidateGeminiKey(key);
+        } catch(e) {
+            hideLoader();
+            console.error('Gemini key validation error', e);
+            return showToast('❌ API-ключ неверный. Проверь ключ Gemini и вставь заново.');
+        }
+
+        GEMINI_API_KEY = key;
+        safeSet('gemini_key_v31', key);
+        const input = document.getElementById('api-key-input');
+        if (input) input.value = key;
+
         showLoader('Рассылка API мастерам...', '🔑');
         try {
             if (db) {
-                await db.collection('settings').doc('global_api').set({ geminiKey: GEMINI_API_KEY, updatedAt: new Date().toISOString(), updatedBy: appUser.uid || appUser.email || appUser.phone || 'admin' }, { merge: true });
+                await db.collection('settings').doc('global_api').set({
+                    geminiKey: key,
+                    updatedAt: new Date().toISOString(),
+                    updatedBy: appUser.uid || appUser.email || appUser.phone || 'admin'
+                }, { merge: true });
+
                 try {
                     const snap = await db.collection('users').get();
                     const batch = db.batch();
-                    snap.docs.forEach(doc => batch.update(doc.ref, { geminiKey: GEMINI_API_KEY }));
+                    snap.docs.forEach(doc => batch.set(doc.ref, { geminiKey: key }, { merge: true }));
                     await batch.commit();
                 } catch (e) {
                     console.warn('users geminiKey batch error', e);
                 }
             }
-            showToast('✅ API-ключ отправлен всем мастерам');
+            showToast('✅ API-ключ проверен и отправлен мастерам');
         } catch(e) {
-            showToast('⚠️ Ключ сохранён локально, Firestore не дал записать');
             console.error(e);
+            showToast('⚠️ Ключ рабочий, но Firestore не дал разослать');
         } finally { hideLoader(); }
     };
 
@@ -2296,10 +2394,11 @@ async function deleteUser(uid) {
     }
     async function epAnalyzeRawText(type, raw, filename) {
         const fallback = epLocalParseRows(type, raw);
-        if (!GEMINI_API_KEY) return fallback;
+        const key = await epGetGeminiKey();
+        if (!key) return fallback;
         showLoader('ИИ читает базу...', '🤖');
         try {
-            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`;
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${encodeURIComponent(key)}`;
             const prompt = `Ты помощник электрика. Извлеки из текста позиции для базы ${type === 'mat' ? 'материалов' : 'работ'}. Верни только JSON массив без markdown. Формат строго: [{"c":"Категория","n":"Название","p":123,"u":"шт"}]. Цена p числом, если цены нет — 0. Текст/файл: ${filename || ''}\n\n${String(raw).slice(0, 14000)}`;
             const payload = { contents: [{ parts: [{ text: prompt }] }] };
             const res = await fetch(url, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload) });
@@ -2310,10 +2409,16 @@ async function deleteUser(uid) {
             hideLoader();
             const ai = epCleanItems(parsed, type, 'user');
             return ai.length ? ai : fallback;
-        } catch(e) { hideLoader(); console.warn('AI parse fallback', e); return fallback; }
+        } catch(e) {
+            hideLoader();
+            epHandleGeminiError(e);
+            console.warn('AI parse fallback', e);
+            return fallback;
+        }
     }
     async function epAnalyzeImage(type, file) {
-        if (!GEMINI_API_KEY) throw new Error('Для фото/скрина нужен API-ключ от админа');
+        const key = await epGetGeminiKey();
+        if (!key) throw new Error('ИИ-ключ не получен от админа или ключ неверный. Зайди админом и сохрани рабочий Gemini API-ключ.');
         showLoader('ИИ читает фото/скрин...', '🖼');
         const base64 = await new Promise((resolve, reject) => {
             const r = new FileReader();
@@ -2322,7 +2427,7 @@ async function deleteUser(uid) {
             r.readAsDataURL(file);
         });
         try {
-            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`;
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${encodeURIComponent(key)}`;
             const prompt = `На изображении прайс/таблица/скрин. Извлеки позиции для базы ${type === 'mat' ? 'материалов' : 'работ'} электрика. Верни только JSON массив: [{"c":"Категория","n":"Название","p":123,"u":"шт"}]. Если цены нет — p=0.`;
             const payload = { contents: [{ parts: [{ text: prompt }, { inline_data: { mime_type: file.type || 'image/jpeg', data: base64 } }] }] };
             const res = await fetch(url, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload) });
@@ -2331,7 +2436,11 @@ async function deleteUser(uid) {
             const txt = data.candidates[0].content.parts[0].text.replace(/```[a-z]*\n?/g,'').replace(/```/g,'').trim();
             hideLoader();
             return epCleanItems(JSON.parse(txt), type, 'user');
-        } catch(e) { hideLoader(); throw e; }
+        } catch(e) {
+            hideLoader();
+            epHandleGeminiError(e);
+            throw e;
+        }
     }
     function epRenderImportReview() {
         const box = document.getElementById('epDbImportList');
@@ -2373,3 +2482,5 @@ async function deleteUser(uid) {
 <!-- EP_SURGICAL_VERSION: 1778511340 -->
 </body>
 </html>
+
+<!-- EP_API_KEY_FIX_VERSION: api-key-fix-2 -->
