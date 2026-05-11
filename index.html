@@ -15,6 +15,7 @@
     </script>
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
     <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore-compat.js"></script>
@@ -133,49 +134,132 @@
         #chart-container { background: rgba(255,255,255,0.7); border-radius: 12px; padding: 10px; margin-bottom: 15px; border: 1px solid var(--border); }
     </style>
 
-<style id="EP_SURGICAL_STYLE">
-/* === EP SURGICAL PATCH: visual, AI menu, DB import/export === */
+<style id="EP_SURGICAL_TZ_STYLE">
+/* === ELECTRIC PRO SURGICAL TZ PATCH === */
 * { -webkit-tap-highlight-color: transparent; }
-button, input, select, textarea, .card, .modal, .modal-content, .burger-menu, .cat-header, .emp-row {
+button, input, select, textarea, .card, .glass, .modal, .modal-content, .burger-menu, .cat-header, .emp-row {
     transition: background-color .22s ease, color .22s ease, border-color .22s ease, box-shadow .22s ease, transform .18s ease, opacity .18s ease !important;
 }
 button:active { transform: scale(.985); }
-.header { position: relative !important; min-height: 46px !important; justify-content: flex-end !important; }
+
+/* Бургер в левый верхний угол карточки */
+.header { position: relative !important; min-height: 48px !important; justify-content: flex-end !important; }
 .burger-btn {
     position: absolute !important;
-    left: 0 !important;
-    top: 0 !important;
-    width: 46px !important;
-    height: 46px !important;
+    left: -2px !important;
+    top: 2px !important;
+    width: 54px !important;
+    height: 54px !important;
+    border-radius: 14px !important;
+    background: rgba(255,255,255,.78) !important;
+    box-shadow: 0 6px 18px rgba(15,23,42,.12) !important;
+    z-index: 20 !important;
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
-    z-index: 50 !important;
-    border-radius: 12px !important;
+    padding: 0 !important;
 }
-#master-badge { margin-left: auto !important; max-width: 155px !important; }
-.ep-beta-label { display:inline-block !important; margin-left:6px !important; font-size:12px !important; font-weight:900 !important; color:#fff7b0 !important; opacity:.98 !important; }
-.ep-ai-menu-group { width:100%; margin:0 0 8px 0; }
-.ep-ai-menu-btn {
-    width:100% !important; text-align:left !important; justify-content:flex-start !important;
+
+/* Главный переключатель Gemini / OpenAI */
+#ep-main-ai-switch {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px;
+    margin: -2px 0 12px 0;
+    border-radius: 14px;
+    border: 1px solid var(--border);
+    background: rgba(79,70,229,.06);
+}
+.ep-ai-choice {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 9px 8px;
+    border-radius: 11px;
+    font-size: 12px;
+    font-weight: 900;
+    color: var(--gray);
+    background: rgba(255,255,255,.45);
+    border: 1px solid transparent;
+}
+.ep-ai-choice input { width: 16px; height: 16px; accent-color: var(--primary); }
+.ep-ai-choice.active {
+    color: #fff;
+    background: linear-gradient(135deg, #7c3aed, #2563eb);
+    border-color: rgba(255,255,255,.25);
+    box-shadow: 0 8px 18px rgba(37,99,235,.18);
+}
+#ep-main-ai-state {
+    grid-column: 1 / -1;
+    font-size: 10px;
+    font-weight: 800;
+    color: var(--gray);
+    text-align: center;
+    padding-top: 2px;
+}
+
+/* ИИ-группа */
+#ep-ai-functions-group { width: 100% !important; margin: 8px 0 !important; }
+#ep-ai-functions-btn {
+    width: 100% !important;
+    border: none !important;
+    border-radius: 14px !important;
+    padding: 15px 14px !important;
+    font-size: 14px !important;
+    font-weight: 900 !important;
+    text-align: left !important;
     background: linear-gradient(135deg, #7c3aed, #2563eb) !important;
-    color:#fff !important; border:none !important; box-shadow:0 8px 22px rgba(37,99,235,.18) !important;
+    color: #fff !important;
+    box-shadow: 0 8px 22px rgba(37,99,235,.22) !important;
 }
-.ep-ai-menu-btn span { color:#ffe58a !important; font-size:12px !important; font-weight:900 !important; }
-.ep-ai-menu-panel { display:none; padding-top:8px; }
-.ep-ai-menu-group.open .ep-ai-menu-panel { display:block; animation: epFadeSlide .22s ease both; }
-.ep-ai-menu-panel button { width:100% !important; margin-bottom:8px !important; }
-.ep-db-ai-tools { background:rgba(79,70,229,.06); border:1px solid rgba(79,70,229,.18); border-radius:14px; padding:10px; margin:12px 0; }
-.ep-db-tools-title { color:var(--primary); font-weight:900; font-size:13px; margin-bottom:8px; }
-.ep-db-tools-grid { display:grid; grid-template-columns:1fr 1fr; gap:7px; }
-.ep-db-tools-grid button { padding:10px 8px !important; font-size:11px !important; white-space:normal !important; line-height:1.2 !important; }
-.ep-import-row { display:grid; grid-template-columns:24px 1fr 74px; gap:8px; align-items:center; background:var(--card); border:1px solid var(--border); border-radius:10px; padding:8px; margin-bottom:7px; }
-.ep-import-row input[type="checkbox"] { width:18px; height:18px; accent-color:var(--primary); }
-.ep-import-row b { font-size:12px; }
-.ep-import-row span { font-size:10px; color:var(--gray); }
-.ep-small-btn { width:auto !important; padding:5px 8px !important; margin:2px !important; font-size:10px !important; border-radius:7px !important; }
-@keyframes epFadeSlide { from { opacity:0; transform:translateY(-7px); } to { opacity:1; transform:translateY(0); } }
-@media (max-width:600px) { .ep-db-tools-grid { grid-template-columns:1fr; } }
+#ep-ai-functions-panel { display: none !important; padding-top: 8px !important; }
+#ep-ai-functions-group.open #ep-ai-functions-panel { display: block !important; animation: epFadeSlide .2s ease both !important; }
+#ep-ai-functions-panel button { width: 100% !important; margin: 7px 0 !important; display: block !important; opacity: 1 !important; }
+.ep-beta-label { display: inline-block !important; margin-left: 5px !important; color: #fff7b0 !important; font-size: 12px !important; font-weight: 900 !important; }
+
+/* База: импорт/экспорт */
+#ep-db-ai-tools {
+    margin: 12px 0 14px;
+    padding: 12px;
+    border-radius: 15px;
+    border: 1px solid rgba(139,92,246,.25);
+    background: rgba(139,92,246,.07);
+}
+#ep-db-ai-tools h3 { margin: 0 0 10px; font-size: 14px; color: var(--primary); }
+.ep-db-ai-grid { display: grid; grid-template-columns: 1fr; gap: 8px; }
+.ep-db-ai-grid button { padding: 12px 10px !important; font-size: 12px !important; }
+.ep-db-review-row {
+    display: grid;
+    grid-template-columns: 28px 1fr;
+    gap: 8px;
+    padding: 10px;
+    border: 1px solid var(--border);
+    background: rgba(255,255,255,.5);
+    border-radius: 12px;
+    margin-bottom: 8px;
+}
+.ep-db-review-row input[type="checkbox"] { width: 20px; height: 20px; accent-color: var(--success); }
+.ep-db-review-row input { margin: 4px 0 !important; padding: 8px !important; font-size: 12px !important; }
+.ep-db-admin-proposal {
+    border: 1px solid rgba(79,70,229,.25);
+    border-radius: 12px;
+    padding: 10px;
+    margin-bottom: 8px;
+    background: rgba(79,70,229,.06);
+}
+.ep-db-admin-proposal .ep-mini-actions { display: grid; grid-template-columns: 1fr; gap: 6px; margin-top: 8px; }
+.ep-row-actions { display: flex; gap: 6px; align-items: center; }
+.ep-row-actions input { flex: 1; }
+.ep-row-actions button { width: auto !important; min-width: 42px !important; padding: 7px 9px !important; margin: 0 !important; }
+
+@keyframes epFadeSlide {
+    from { opacity: 0; transform: translateY(-7px); }
+    to { opacity: 1; transform: translateY(0); }
+}
 </style>
 
 </head>
@@ -188,20 +272,14 @@ button:active { transform: scale(.985); }
 <div class="burger-menu glass" id="burger-menu">
     <h2 style="margin-top:0; color: var(--primary); margin-bottom: 25px; font-weight:900;">Электрик PRO</h2>
     <button class="btn-info" onclick="openModal('custModal'); toggleMenu();">👤 О заказчике</button>
-
-    <div id="ep-ai-menu-group" class="ep-ai-menu-group">
-        <button id="ep-ai-menu-btn" class="ep-ai-menu-btn" type="button" onclick="epToggleAiMenu(event)">✨ ИИ Функции <span>(бета)</span></button>
-        <div id="ep-ai-menu-panel" class="ep-ai-menu-panel">
-            <button class="btn-vendor" style="background: rgba(139,92,246,0.15); color: #8B5CF6;" onclick="runAiCheck(); toggleMenu();">✨ ИИ-Анализ сметы</button>
-            <button class="btn-vendor" style="background: rgba(59,130,246,0.15); color: #3B82F6;" onclick="aiSupply(); toggleMenu();">📦 ИИ-Снабженец</button>
-            <button class="btn-vendor" style="background: rgba(16,185,129,0.15); color: #10B981;" onclick="aiPueHelper(); toggleMenu();">📚 ИИ-Помощник (ПУЭ)</button>
-            <button class="btn-vendor" style="background: rgba(244,63,94,0.1); color: var(--danger);" onclick="compareShopsAI(); toggleMenu();">🛒 ИИ-Сравнение цен</button>
-        </div>
-    </div>
-
+    <button class="btn-vendor" style="background: rgba(139,92,246,0.15); color: #8B5CF6;" onclick="runAiCheck(); toggleMenu();">✨ ИИ-Анализ сметы</button>
+    <button class="btn-vendor" style="background: rgba(59,130,246,0.15); color: #3B82F6;" onclick="aiSupply(); toggleMenu();">📦 ИИ-Снабженец</button>
     <button class="btn-vendor" style="background: rgba(16,185,129,0.15); color: #10B981;" onclick="openModal('settModal'); toggleMenu();">🗄 База данных</button>
     <button class="btn-vendor" style="background: rgba(245,158,11,0.15); color: #F59E0B;" onclick="openModal('buhModal'); toggleMenu();">💰 Бухгалтерия (Акты)</button>
+    
     <div style="border-top: 1px solid var(--border); margin-top:10px; padding-top:10px;">
+        <button class="btn-vendor" style="background: rgba(16,185,129,0.15); color: #10B981;" onclick="aiPueHelper(); toggleMenu();">📚 ИИ-Помощник (ПУЭ)</button>
+        <button class="btn-vendor" style="background: rgba(244,63,94,0.1); color: var(--danger);" onclick="compareShopsAI(); toggleMenu();">🛒 ИИ-Сравнение цен</button>
         <button class="btn-vendor" style="background: rgba(100,116,139,0.15); color: var(--text);" onclick="openModal('logicModal'); toggleMenu();">⚙️ Логика расчетов</button>
         <button class="btn-vendor" style="background: rgba(100,116,139,0.15); color: var(--text);" onclick="openModal('settingsModal'); toggleMenu();">🛠 Настройки системы</button>
         <button class="btn-danger" style="margin-top:15px;" onclick="confirmLogout(); toggleMenu();">🚪 Выйти</button>
@@ -216,8 +294,8 @@ button:active { transform: scale(.985); }
         </div>
         
         <div class="controls">
-            <button onclick="openModal('configModal')" class="btn-shield btn-full">1. Конфигуратор щита <span class="ep-beta-label">(бета)</span></button>
-            <button onclick="openModal('roughModal')" class="btn-rough btn-full">2. Пул розеток и BIM <span class="ep-beta-label">(бета)</span></button>
+            <button onclick="openModal('configModal')" class="btn-shield btn-full">1. Конфигуратор щита</button>
+            <button onclick="openModal('roughModal')" class="btn-rough btn-full">2. Пул розеток и ВІM</button>
             <button onclick="openMatCatalog()" class="btn-mat">+ Материалы</button>
             <button onclick="openWorkCatalog()" class="btn-work">+ Работы</button>
         </div>
@@ -336,15 +414,8 @@ button:active { transform: scale(.985); }
         <div class="close-x" onclick="closeModal('settingsModal')">×</div>
         <h2 style="color: var(--primary); margin-top:0; font-size:18px;">Настройки</h2>
         
-        <div id="admin-api-settings" style="display:none; padding:10px; background:rgba(79,70,229,0.06); border:1px solid var(--primary); border-radius:12px; margin-bottom:14px;">
-            <h4 style="color:var(--primary); margin: 0 0 6px;">🔑 ИИ-Ключ (Gemini)</h4>
-            <input type="password" id="api-key-input" placeholder="Ключ Gemini API" onchange="saveApiKey(this.value)" style="border-color:var(--primary);">
-            <p style="font-size:10px; color:var(--gray); margin:0 0 8px; line-height:1.3;">Ключ сохраняется в settings/global_api и автоматически передаётся мастерам. Перед сохранением ключ проверяется.</p>
-            <button id="epClearApiLocalButton" class="btn-ghost" style="width:100%;padding:8px;font-size:11px;margin:0;" onclick="try{localStorage.removeItem('gemini_key_v31'); GEMINI_API_KEY=''; document.getElementById('api-key-input').value=''; showToast('Локальный старый ключ очищен');}catch(e){}">🧹 Очистить старый локальный ключ</button>
-        </div>
-        <div id="master-api-status" style="display:none; padding:10px; background:rgba(16,185,129,0.10); color:var(--success); border:1px solid rgba(16,185,129,.25); border-radius:12px; font-size:12px; font-weight:800; margin-bottom:14px;">
-            🤖 ИИ подключён администратором
-        </div>
+        <h4 style="color:var(--gray); margin: 10px 0 5px;">🔑 ИИ-Ключ (Gemini)</h4>
+        <input type="password" id="api-key-input" placeholder="Ключ Gemini API" onchange="saveApiKey(this.value)">
         
         <h4 style="color:var(--gray); margin: 10px 0 5px;">🎨 Внешний вид</h4>
         <select id="theme-select" onchange="changeTheme(this.value)"><option value="light">Светлая</option><option value="dark">Темная</option><option value="emerald">Изумруд</option><option value="sunset">Закат</option></select>
@@ -357,11 +428,6 @@ button:active { transform: scale(.985); }
         
         <div id="admin-panel" style="display:none; padding-top:15px; border-top: 1px dashed var(--gray); margin-top:15px;">
             <h3 style="color:var(--danger); margin: 0 0 10px;">👑 Админ Панель</h3>
-            <div id="ep-admin-db-proposals-wrap" style="padding:10px; background:rgba(79,70,229,0.05); border:1px solid var(--primary); border-radius:10px; margin-bottom:12px;">
-                <h4 style="color:var(--primary); margin:0 0 8px;">🧾 Заявки в глобальную базу</h4>
-                <div id="admin-db-proposals" style="max-height:220px; overflow-y:auto; font-size:12px;"><span style="font-size:11px; color:gray;">Загрузка...</span></div>
-            </div>
-
             
             <h4 style="color:var(--orange); margin: 10px 0 5px;">Заявки на регистрацию:</h4>
             <div id="admin-approval-list" style="margin-bottom:10px; border:1px solid var(--orange); border-radius:8px; padding:8px; max-height: 120px; overflow-y:auto; font-size: 12px; color: var(--text);"></div>
@@ -476,20 +542,6 @@ button:active { transform: scale(.985); }
             <button class="tab-btn active" id="btnTabMat" onclick="switchDbTab('mat')">Материалы</button>
             <button class="tab-btn" id="btnTabWork" onclick="switchDbTab('work')">Работы</button>
         </div>
-        
-        <div id="ep-db-ai-tools" class="ep-db-ai-tools">
-            <div class="ep-db-tools-title">🤖 Импорт / экспорт базы через ИИ</div>
-            <div class="ep-db-tools-grid">
-                <button class="btn-info" onclick="epSelectDbFile('mat')">📥 Материалы: Excel / JSON / фото / скрин</button>
-                <button class="btn-info" style="background:#F59E0B;" onclick="epSelectDbFile('work')">📥 Работы: Excel / JSON / фото / скрин</button>
-                <button class="btn-vendor" onclick="epOpenTextImport('mat')">📝 Материалы из текста</button>
-                <button class="btn-vendor" onclick="epOpenTextImport('work')">📝 Работы из текста</button>
-                <button class="btn-success" onclick="epExportMyDb()">📤 Экспорт моей базы</button>
-                <button class="btn-shield" onclick="epExportGlobalDb()">🌍 Экспорт глобальной базы</button>
-            </div>
-            <input type="file" id="ep-db-file-input" accept=".xlsx,.xls,.csv,.json,image/*" style="display:none" onchange="epHandleDbFile(event)">
-        </div>
-
         <div id="editor-mat-list" style="max-height:40vh; overflow-y:auto;"></div>
         <div id="editor-work-list" style="max-height:40vh; overflow-y:auto; display:none;"></div>
     </div>
@@ -667,26 +719,6 @@ button:active { transform: scale(.985); }
         <button class="btn-ghost no-print" style="width:100%; margin-top:15px; padding:12px;" onclick="closeModal('previewModal')">Закрыть</button>
     </div>
 </div>
-
-
-<!-- EP_SURGICAL_PATCH_START -->
-<div class="modal" id="epDbImportModal" style="z-index:5000;">
-    <div class="modal-content glass" style="max-width:650px;">
-        <div class="close-x" onclick="closeModal('epDbImportModal')">×</div>
-        <h2 id="epDbImportTitle" style="color:var(--primary); margin-top:0; font-size:18px;">Импорт базы</h2>
-        <div id="epDbTextBox" style="display:none; margin-bottom:12px;">
-            <textarea id="epDbImportText" placeholder="Вставьте текст прайса, таблицу или список позиций..." style="width:100%; min-height:130px; padding:12px; border-radius:10px; border:1px solid var(--border); background:rgba(255,255,255,.55); color:var(--text); box-sizing:border-box;"></textarea>
-            <button class="btn-primary" onclick="epAnalyzeTextImport()" style="margin-top:8px;">🤖 Прочитать ИИ</button>
-        </div>
-        <div id="epDbImportHint" style="font-size:11px; color:var(--gray); margin-bottom:10px; line-height:1.35;">После чтения появятся позиции. Отметьте галочками нужные строки.</div>
-        <div id="epDbImportList" style="max-height:45vh; overflow-y:auto; border:1px solid var(--border); background:rgba(0,0,0,0.03); border-radius:12px; padding:10px; margin-bottom:12px;"></div>
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
-            <button class="btn-success" onclick="epApplyImportedDb('add')">➕ Добавить выбранные</button>
-            <button class="btn-shield" onclick="epApplyImportedDb('replace')">🔁 Заменить выбранные</button>
-        </div>
-    </div>
-</div>
-<!-- EP_SURGICAL_PATCH_END -->
 
 <script>
 // === БЕЗОПАСНАЯ ОБОЛОЧКА И СИНХРОНИЗАЦИЯ ===
@@ -1863,624 +1895,1146 @@ async function deleteUser(uid) {
 }
 </script>
 
-<script id="EP_SURGICAL_SCRIPT">
-// === EP SURGICAL PATCH: API sync + DB import/export + personal/global DB ===
+<!-- === EP SURGICAL DB AI MODALS === -->
+<input type="file" id="ep-db-file-input" style="display:none" accept=".xlsx,.xls,.csv,.json,.txt,image/*" />
+
+<div class="modal" id="ep-db-ai-review-modal" style="z-index:4500;">
+    <div class="modal-content glass" style="max-width: 560px;">
+        <div class="close-x" onclick="closeModal('ep-db-ai-review-modal')">×</div>
+        <h2 id="ep-db-ai-review-title" style="color:var(--primary); margin-top:0; font-size:18px;">Импорт базы через ИИ</h2>
+        <p style="font-size:12px; color:var(--gray);">Отметьте галочками нужные позиции. Можно поправить название, категорию, цену и единицу.</p>
+        <div id="ep-db-ai-review-list" style="max-height:48vh; overflow-y:auto; margin-bottom:12px;"></div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+            <button class="btn-success" onclick="epApplyReviewedDbItems('add')">➕ Добавить выбранные</button>
+            <button class="btn-shield" onclick="epApplyReviewedDbItems('replace')">🔁 Заменить выбранные</button>
+        </div>
+    </div>
+</div>
+
+<div class="modal" id="ep-text-import-modal" style="z-index:4400;">
+    <div class="modal-content glass" style="max-width: 560px;">
+        <div class="close-x" onclick="closeModal('ep-text-import-modal')">×</div>
+        <h2 id="ep-text-import-title" style="color:var(--primary); margin-top:0; font-size:18px;">Импорт из текста</h2>
+        <textarea id="ep-text-import-value" placeholder="Вставьте сюда список позиций, прайс или текст со скриншота..." style="width:100%; min-height:170px; padding:12px; border:1px solid var(--border); border-radius:12px; background:rgba(255,255,255,.6); color:var(--text);"></textarea>
+        <button class="btn-primary" style="width:100%; margin-top:10px;" onclick="epRunTextImport()">🤖 Прочитать через ИИ</button>
+    </div>
+</div>
+
+
+<script id="EP_SURGICAL_TZ_SCRIPT">
 (function () {
-    let epImportType = 'mat';
-    let epPendingItems = [];
-    let epGlobalMatDB = [];
-    let epGlobalWorkDB = [];
-    let userMatDB = [];
-    let userWorkDB = [];
-
-    function epText(v) { return (v == null ? '' : String(v)).trim(); }
-
-    function epCleanApiKey(raw) {
-        let v = epText(raw);
-        if (!v) return '';
-        try {
-            const m = v.match(/[?&]key=([^&\s]+)/);
-            if (m) v = decodeURIComponent(m[1]);
-        } catch(e) {}
-        v = v.replace(/["'`]/g, '').replace(/\s+/g, '');
-        const k = v.match(/AIza[0-9A-Za-z_\-]{20,}/);
-        return k ? k[0] : v;
-    }
-    function epIsValidLookingApiKey(key) {
-        return /^AIza[0-9A-Za-z_\-]{20,}$/.test(epCleanApiKey(key));
-    }
-    function epClearBadLocalApi() {
-        GEMINI_API_KEY = '';
-        try { localStorage.removeItem('gemini_key_v31'); } catch(e) {}
-        const input = document.getElementById('api-key-input');
-        if (input && (!appUser || appUser.role !== 'admin')) input.value = '';
-    }
-    function epApiInvalidMessage() {
-        return appUser && appUser.role === 'admin'
-            ? '❌ API-ключ неверный. Вставь новый ключ Gemini в настройках админа.'
-            : '❌ API-ключ неверный или не получен от админа. Админ должен заново сохранить ключ.';
-    }
-    async function epValidateGeminiKey(key) {
-        key = epCleanApiKey(key);
-        if (!epIsValidLookingApiKey(key)) throw new Error('Ключ не похож на Gemini API key. Он должен начинаться с AIza.');
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${encodeURIComponent(key)}`;
-        const payload = { contents: [{ parts: [{ text: 'Ответь одним словом: OK' }] }] };
-        const res = await fetch(url, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload) });
-        const data = await res.json().catch(() => ({}));
-        if (!res.ok || data.error) throw new Error((data.error && data.error.message) || 'API key validation failed');
-        return key;
-    }
-    async function epGetGeminiKey() {
-        await epLoadGlobalApi();
-        const key = epCleanApiKey(GEMINI_API_KEY);
-        if (!key || !epIsValidLookingApiKey(key)) return '';
-        return key;
-    }
-    function epHandleGeminiError(e) {
-        const msg = String((e && (e.message || e)) || '');
-        if (/API key not valid|API_KEY_INVALID|invalid api key|Ключ не похож/i.test(msg)) {
-            epClearBadLocalApi();
-            showToast(epApiInvalidMessage());
-        }
-    }
-
-    function epNormName(s) { return epText(s).toLowerCase().replace(/ё/g, 'е').replace(/\s+/g, ' '); }
-    function epNewId(type) { return (type === 'mat' ? 'um' : 'uw') + Date.now() + '_' + Math.floor(Math.random() * 100000); }
-    function epSafeNumber(v) { const n = Number(String(v).replace(',', '.').replace(/[^0-9.\-]/g, '')); return Number.isFinite(n) ? n : 0; }
-    function epCloneItem(item, type, scope) {
-        return {
-            id: item.id || epNewId(type),
-            c: epText(item.c || item.category || item.cat || 'Разное') || 'Разное',
-            n: epText(item.n || item.name || item.title || item.item || ''),
-            p: epSafeNumber(item.p ?? item.price ?? item.cost ?? item.sum ?? 0),
-            u: epText(item.u || item.unit || item.ed || 'шт') || 'шт',
-            _epScope: scope || item._epScope || 'user'
-        };
-    }
-    function epCleanItems(items, type, scope) {
-        if (!Array.isArray(items)) return [];
-        return items.map(x => epCloneItem(x, type, scope)).filter(x => x.n);
-    }
-    function epDedup(items) {
-        const seen = new Set();
-        return items.filter(x => {
-            const k = epNormName(x.n) + '|' + epText(x.c).toLowerCase() + '|' + epText(x.u).toLowerCase() + '|' + x._epScope;
-            if (seen.has(k)) return false;
-            seen.add(k);
-            return true;
-        });
-    }
-    function epMergeDbs() {
-        matDB = epDedup([
-            ...epCleanItems(epGlobalMatDB.length ? epGlobalMatDB : matDB, 'mat', 'global'),
-            ...epCleanItems(userMatDB, 'mat', 'user')
-        ]);
-        workDB = epDedup([
-            ...epCleanItems(epGlobalWorkDB.length ? epGlobalWorkDB : workDB, 'work', 'global'),
-            ...epCleanItems(userWorkDB, 'work', 'user')
-        ]);
-    }
-    function epCurrentUserKey() {
-        return (appUser && (appUser.uid || appUser.email || appUser.phone || appUser.name)) || 'local_master';
-    }
-    function epSaveLocalUserDb() {
-        safeSet('user_db_mat_v31', JSON.stringify(userMatDB));
-        safeSet('user_db_work_v31', JSON.stringify(userWorkDB));
-    }
-    async function epSaveUserDbToServer() {
-        epSaveLocalUserDb();
-        if (!db || !appUser) return;
-        try {
-            await db.collection('user_db').doc(epCurrentUserKey()).set({
-                uid: epCurrentUserKey(),
-                ownerName: appUser.name || '',
-                ownerRole: appUser.role || 'master',
-                matDB: userMatDB,
-                workDB: userWorkDB,
-                updatedAt: new Date().toISOString()
-            }, { merge: true });
-        } catch (e) { console.warn('user_db save error', e); }
-    }
-    async function epSaveGlobalDb() {
-        epGlobalMatDB = epCleanItems(epGlobalMatDB.length ? epGlobalMatDB : matDB.filter(x => x._epScope !== 'user'), 'mat', 'global');
-        epGlobalWorkDB = epCleanItems(epGlobalWorkDB.length ? epGlobalWorkDB : workDB.filter(x => x._epScope !== 'user'), 'work', 'global');
-        matDB = epDedup([...epCleanItems(epGlobalMatDB, 'mat', 'global'), ...epCleanItems(userMatDB, 'mat', 'user')]);
-        workDB = epDedup([...epCleanItems(epGlobalWorkDB, 'work', 'global'), ...epCleanItems(userWorkDB, 'work', 'user')]);
-        try { if (db) await db.collection('settings').doc('global_db').set({ matDB: epGlobalMatDB, workDB: epGlobalWorkDB, updatedAt: new Date().toISOString() }); } catch(e) { console.warn('global_db save error', e); }
-    }
-    async function epLoadUserDb() {
-        try { userMatDB = JSON.parse(safeGet('user_db_mat_v31', '[]')) || []; } catch(e) { userMatDB = []; }
-        try { userWorkDB = JSON.parse(safeGet('user_db_work_v31', '[]')) || []; } catch(e) { userWorkDB = []; }
-        if (db && appUser) {
-            try {
-                const doc = await db.collection('user_db').doc(epCurrentUserKey()).get();
-                if (doc.exists) {
-                    userMatDB = epCleanItems(doc.data().matDB || [], 'mat', 'user');
-                    userWorkDB = epCleanItems(doc.data().workDB || [], 'work', 'user');
-                    epSaveLocalUserDb();
-                }
-            } catch (e) { console.warn('user_db load error', e); }
-        }
-        epMergeDbs();
-    }
-
-    window.epToggleAiMenu = function (event) {
-        if (event) { event.preventDefault(); event.stopPropagation(); }
-        const group = document.getElementById('ep-ai-menu-group');
-        if (group) group.classList.toggle('open');
+    // === STATE ===
+    window.EP_AI_CONFIG = {
+        provider: safeGet('ep_ai_provider_v1', 'gemini') || 'gemini',
+        geminiKey: '',
+        openaiKey: '',
+        openaiModel: safeGet('ep_openai_model_v1', 'gpt-4.1-mini') || 'gpt-4.1-mini'
     };
 
-    async function epLoadGlobalApi() {
-        const adminBox = document.getElementById('admin-api-settings');
-        const masterStatus = document.getElementById('master-api-status');
-        const input = document.getElementById('api-key-input');
-        const isAdmin = appUser && appUser.role === 'admin';
+    window.EP_DB_REVIEW = { type: 'mat', items: [], source: '' };
 
-        if (adminBox) adminBox.style.display = isAdmin ? 'block' : 'none';
-        if (masterStatus) {
-            masterStatus.style.display = 'none';
-            masterStatus.innerHTML = '✅ ИИ подключён администратором';
-        }
+    function epCleanText(v) {
+        return (v || '').toString().replace(/\s+/g, ' ').trim();
+    }
 
-        let key = '';
+    function epMoney(v) {
+        const n = Number(String(v || '').replace(',', '.').replace(/[^\d.]/g, ''));
+        return Number.isFinite(n) ? n : 0;
+    }
 
-        // 1) Главный источник для всех мастеров: settings/global_api
-        if (db) {
-            try {
-                const doc = await db.collection('settings').doc('global_api').get();
-                if (doc.exists) key = epCleanApiKey(doc.data().geminiKey || doc.data().apiKey || '');
-            } catch (e) { console.warn('global_api load error', e); }
-        }
+    function epEscape(s) {
+        return String(s ?? '').replace(/[&<>"']/g, function (m) {
+            return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[m];
+        });
+    }
 
-        // 2) Запасной источник: users/{uid}.geminiKey
-        if (!key && db && appUser && appUser.uid) {
-            try {
-                const udoc = await db.collection('users').doc(appUser.uid).get();
-                if (udoc.exists) key = epCleanApiKey(udoc.data().geminiKey || '');
-            } catch(e) { console.warn('user geminiKey load error', e); }
-        }
-        if (!key && appUser && appUser.geminiKey) key = epCleanApiKey(appUser.geminiKey);
+    function epNormProvider(p) {
+        return p === 'openai' ? 'openai' : 'gemini';
+    }
 
-        // 3) Локальный ключ разрешён только админу, чтобы мастер не брал старый/битый ключ из localStorage.
-        if (!key && isAdmin) key = epCleanApiKey(safeGet('gemini_key_v31', ''));
+    function epCurrentProvider() {
+        return epNormProvider(window.EP_AI_CONFIG.provider || safeGet('ep_ai_provider_v1', 'gemini'));
+    }
 
-        if (key && epIsValidLookingApiKey(key)) {
-            GEMINI_API_KEY = key;
-            safeSet('gemini_key_v31', key);
-            if (input) input.value = isAdmin ? key : '';
-            if (!isAdmin && masterStatus) {
-                masterStatus.style.display = 'block';
-                masterStatus.innerHTML = '✅ ИИ подключён администратором';
-            }
-        } else {
-            if (!isAdmin) epClearBadLocalApi();
-            if (input) input.value = isAdmin ? epCleanApiKey(safeGet('gemini_key_v31', '')) : '';
-            if (!isAdmin && masterStatus) {
-                masterStatus.style.display = 'block';
-                masterStatus.style.background = 'rgba(239,68,68,0.10)';
-                masterStatus.style.color = 'var(--danger)';
-                masterStatus.innerHTML = '⚠️ ИИ-ключ не получен от администратора';
-            }
+    function epCurrentKey() {
+        const p = epCurrentProvider();
+        if (p === 'openai') return window.EP_AI_CONFIG.openaiKey || safeGet('ep_openai_key_v1', '');
+        return window.EP_AI_CONFIG.geminiKey || (typeof GEMINI_API_KEY !== 'undefined' ? GEMINI_API_KEY : '') || safeGet('gemini_key_v31', '');
+    }
+
+    function epSetAiProvider(provider, saveRemote) {
+        provider = epNormProvider(provider);
+        window.EP_AI_CONFIG.provider = provider;
+        safeSet('ep_ai_provider_v1', provider);
+        epRefreshProviderUI();
+
+        if (saveRemote && db && appUser && appUser.role === 'admin') {
+            epSaveAiConfig(false);
+        } else if (saveRemote && appUser && appUser.role !== 'admin') {
+            showToast('ИИ-провайдер: ' + (provider === 'openai' ? 'OpenAI' : 'Gemini'));
         }
     }
 
-    const epOriginalFinishLoginSetup = window.finishLoginSetup;
-    window.finishLoginSetup = async function () {
-        if (typeof epOriginalFinishLoginSetup === 'function') {
-            await epOriginalFinishLoginSetup.apply(this, arguments);
+    window.epSetAiProvider = epSetAiProvider;
+
+    function epRefreshProviderUI() {
+        const p = epCurrentProvider();
+
+        document.querySelectorAll('input[name="ep-ai-provider-main"], input[name="ep-ai-provider-admin"]').forEach(function (r) {
+            r.checked = (r.value === p);
+        });
+
+        document.querySelectorAll('.ep-ai-choice').forEach(function (el) {
+            const input = el.querySelector('input');
+            el.classList.toggle('active', input && input.value === p);
+        });
+
+        const label = p === 'openai' ? 'OpenAI' : 'Gemini';
+        const state = document.getElementById('ep-main-ai-state');
+        if (state) state.innerText = 'Активный ИИ: ' + label;
+
+        const masterInfo = document.getElementById('ep-ai-master-info');
+        if (masterInfo) masterInfo.innerText = 'ИИ подключён администратором: ' + label;
+    }
+
+    window.epRefreshProviderUI = epRefreshProviderUI;
+
+    function epInsertMainProviderSwitch() {
+        if (document.getElementById('ep-main-ai-switch')) return;
+
+        const header = document.querySelector('#main-app .header');
+        if (!header) return;
+
+        const box = document.createElement('div');
+        box.id = 'ep-main-ai-switch';
+        box.innerHTML = `
+            <label class="ep-ai-choice">
+                <input type="radio" name="ep-ai-provider-main" value="gemini" onchange="epSetAiProvider('gemini', true)">
+                Gemini
+            </label>
+            <label class="ep-ai-choice">
+                <input type="radio" name="ep-ai-provider-main" value="openai" onchange="epSetAiProvider('openai', true)">
+                OpenAI
+            </label>
+            <div id="ep-main-ai-state">Активный ИИ</div>
+        `;
+
+        header.parentNode.insertBefore(box, header.nextSibling);
+    }
+
+    function epMakeAiMenuGroup() {
+        const menu = document.getElementById('burger-menu');
+        if (!menu || document.getElementById('ep-ai-functions-group')) return;
+
+        const aiButtons = Array.from(menu.querySelectorAll('button')).filter(function (b) {
+            const t = epCleanText(b.textContent);
+            return t.includes('ИИ-Анализ') || t.includes('ИИ-Снабженец') || t.includes('ИИ-Помощник') || t.includes('ИИ-Сравнение');
+        });
+
+        if (!aiButtons.length) return;
+
+        const wrap = document.createElement('div');
+        wrap.id = 'ep-ai-functions-group';
+        wrap.innerHTML = `
+            <button id="ep-ai-functions-btn" type="button">✨ ИИ Функции <span class="ep-beta-label">(бета)</span></button>
+            <div id="ep-ai-functions-panel"></div>
+        `;
+
+        aiButtons[0].parentNode.insertBefore(wrap, aiButtons[0]);
+        const panel = wrap.querySelector('#ep-ai-functions-panel');
+
+        aiButtons.forEach(function (b) {
+            panel.appendChild(b);
+        });
+
+        wrap.querySelector('#ep-ai-functions-btn').addEventListener('click', function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+            wrap.classList.toggle('open');
+        });
+    }
+
+    function epAddBetaLabels() {
+        Array.from(document.querySelectorAll('button')).forEach(function (b) {
+            const t = epCleanText(b.textContent);
+            if (t.includes('Конфигуратор щита') && !t.includes('бета')) {
+                b.innerHTML = b.innerHTML.replace('Конфигуратор щита', 'Конфигуратор щита <span class="ep-beta-label">(бета)</span>');
+            }
+            if (t.includes('Пул розеток') && !t.includes('бета')) {
+                b.innerHTML = b.innerHTML.replace(/Пул розеток и\s*В?\S?M|Пул розеток и BIM|Пул розеток и ВІM/iu, 'Пул розеток и BIM <span class="ep-beta-label">(бета)</span>');
+            }
+        });
+    }
+
+    // === SETTINGS / API SYNC ===
+    function epPatchSettingsUI() {
+        if (document.getElementById('ep-ai-admin-box')) return;
+
+        const oldInput = document.getElementById('api-key-input');
+        if (!oldInput) return;
+
+        const h4 = oldInput.previousElementSibling;
+        if (h4) h4.style.display = 'none';
+        oldInput.style.display = 'none';
+
+        const box = document.createElement('div');
+        box.id = 'ep-ai-admin-box';
+        box.style.cssText = 'padding:12px; background:rgba(79,70,229,.06); border:1px solid rgba(79,70,229,.25); border-radius:14px; margin-bottom:14px;';
+        box.innerHTML = `
+            <h4 style="color:var(--primary); margin:0 0 8px;">🤖 ИИ-провайдер</h4>
+
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:10px;">
+                <label class="ep-ai-choice"><input type="radio" name="ep-ai-provider-admin" value="gemini" onchange="epSetAiProvider('gemini', false)"> Gemini</label>
+                <label class="ep-ai-choice"><input type="radio" name="ep-ai-provider-admin" value="openai" onchange="epSetAiProvider('openai', false)"> OpenAI</label>
+            </div>
+
+            <div id="ep-ai-admin-keys">
+                <label style="font-size:11px; font-weight:800; color:var(--gray);">Gemini API</label>
+                <input type="password" id="ep-gemini-key-input" placeholder="AIza..." style="margin-bottom:8px;">
+
+                <label style="font-size:11px; font-weight:800; color:var(--gray);">OpenAI API</label>
+                <input type="password" id="ep-openai-key-input" placeholder="sk-..." style="margin-bottom:8px;">
+
+                <label style="font-size:11px; font-weight:800; color:var(--gray);">OpenAI модель</label>
+                <input type="text" id="ep-openai-model-input" value="gpt-4.1-mini" style="margin-bottom:8px;">
+
+                <button class="btn-primary" style="width:100%; margin-bottom:8px;" onclick="epSaveAiConfig(true)">✅ Проверить и отправить мастерам</button>
+                <button class="btn-danger" style="width:100%; background:var(--gray);" onclick="epClearLocalAiKeys()">🧹 Очистить старые локальные ключи</button>
+            </div>
+
+            <div id="ep-ai-master-info" style="display:none; font-size:12px; font-weight:900; padding:10px; border-radius:10px; background:rgba(16,185,129,.1); color:var(--success);">
+                ИИ подключён администратором
+            </div>
+        `;
+
+        oldInput.parentNode.insertBefore(box, oldInput.nextSibling);
+    }
+
+    window.epClearLocalAiKeys = function () {
+        safeSet('gemini_key_v31', '');
+        safeSet('ep_openai_key_v1', '');
+        safeSet('ep_gemini_key_v1', '');
+        if (typeof GEMINI_API_KEY !== 'undefined') GEMINI_API_KEY = '';
+        if (document.getElementById('api-key-input')) document.getElementById('api-key-input').value = '';
+        if (document.getElementById('ep-gemini-key-input')) document.getElementById('ep-gemini-key-input').value = '';
+        if (document.getElementById('ep-openai-key-input')) document.getElementById('ep-openai-key-input').value = '';
+        showToast('Старые локальные ключи очищены');
+    };
+
+    async function epTestProviderKey(provider, key, model) {
+        provider = epNormProvider(provider);
+        if (!key) throw new Error('Введите API-ключ');
+
+        if (provider === 'openai') {
+            const r = await fetch('https://api.openai.com/v1/responses', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + key },
+                body: JSON.stringify({
+                    model: model || 'gpt-4.1-mini',
+                    input: [{ role: 'user', content: [{ type: 'input_text', text: 'Ответь одним словом: ok' }] }],
+                    max_output_tokens: 20
+                })
+            });
+            const data = await r.json();
+            if (!r.ok || data.error) throw new Error(data.error ? data.error.message : 'OpenAI API error');
+            return true;
         }
-        epGlobalMatDB = epCleanItems(matDB, 'mat', 'global');
-        epGlobalWorkDB = epCleanItems(workDB, 'work', 'global');
-        await epLoadGlobalApi();
-        await epLoadUserDb();
-        try { renderMainTable(); updateMasterBadge(); } catch(e) {}
-        try { if (document.getElementById('settModal').style.display === 'flex') renderDbEditors(); } catch(e) {}
-        if (appUser && appUser.role === 'admin') {
-            setTimeout(function () { try { listenForDbProposals(); } catch(e) {} }, 300);
+
+        const url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=' + encodeURIComponent(key);
+        const r = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ contents: [{ parts: [{ text: 'Ответь одним словом: ok' }] }] })
+        });
+        const data = await r.json();
+        if (!r.ok || data.error) throw new Error(data.error ? data.error.message : 'Gemini API error');
+        return true;
+    }
+
+    window.epSaveAiConfig = async function (withTest) {
+        if (!appUser || appUser.role !== 'admin') {
+            showToast('Только админ меняет API');
+            return;
+        }
+
+        const provider = epCurrentProvider();
+        const geminiKey = epCleanText(document.getElementById('ep-gemini-key-input')?.value || window.EP_AI_CONFIG.geminiKey || '');
+        const openaiKey = epCleanText(document.getElementById('ep-openai-key-input')?.value || window.EP_AI_CONFIG.openaiKey || '');
+        const model = epCleanText(document.getElementById('ep-openai-model-input')?.value || 'gpt-4.1-mini');
+
+        const keyToTest = provider === 'openai' ? openaiKey : geminiKey;
+
+        try {
+            if (withTest) {
+                showLoader('Проверяю API...', '🤖');
+                await epTestProviderKey(provider, keyToTest, model);
+            }
+
+            window.EP_AI_CONFIG = { provider: provider, geminiKey: geminiKey, openaiKey: openaiKey, openaiModel: model };
+            safeSet('ep_ai_provider_v1', provider);
+            safeSet('ep_gemini_key_v1', geminiKey);
+            safeSet('ep_openai_key_v1', openaiKey);
+            safeSet('ep_openai_model_v1', model);
+
+            if (geminiKey && typeof GEMINI_API_KEY !== 'undefined') GEMINI_API_KEY = geminiKey;
+
+            if (db) {
+                await db.collection('settings').doc('ai_config').set({
+                    provider: provider,
+                    geminiKey: geminiKey,
+                    openaiKey: openaiKey,
+                    openaiModel: model,
+                    updatedAt: new Date().toISOString(),
+                    updatedBy: appUser.uid || null
+                }, { merge: true });
+
+                await db.collection('settings').doc('global_api').set({
+                    provider: provider,
+                    geminiKey: geminiKey,
+                    openaiKey: openaiKey,
+                    openaiModel: model,
+                    updatedAt: new Date().toISOString()
+                }, { merge: true });
+
+                try {
+                    const usersSnap = await db.collection('users').get();
+                    const batch = db.batch();
+                    usersSnap.forEach(function (doc) {
+                        batch.set(doc.ref, {
+                            aiProvider: provider,
+                            geminiKey: geminiKey,
+                            openaiKey: openaiKey,
+                            openaiModel: model
+                        }, { merge: true });
+                    });
+                    await batch.commit();
+                } catch (e) {
+                    console.warn('Не удалось разослать по users:', e);
+                }
+            }
+
+            hideLoader();
+            epRefreshProviderUI();
+            showToast('✅ API проверен и отправлен мастерам');
+        } catch (e) {
+            hideLoader();
+            showToast('❌ ' + (e.message || 'Ошибка API'));
         }
     };
 
     window.saveApiKey = async function (val) {
-        if (!appUser || appUser.role !== 'admin') return showToast('⛔ API-ключ может менять только админ');
-        let key = epCleanApiKey(val);
-        if (!key) return showToast('Введите API-ключ');
-
-        showLoader('Проверяю API-ключ...', '🔑');
-        try {
-            key = await epValidateGeminiKey(key);
-        } catch(e) {
-            hideLoader();
-            console.error('Gemini key validation error', e);
-            return showToast('❌ API-ключ неверный. Проверь ключ Gemini и вставь заново.');
+        if (!appUser || appUser.role !== 'admin') {
+            showToast('API вводит только админ');
+            return;
         }
+        epPatchSettingsUI();
+        const input = document.getElementById('ep-gemini-key-input');
+        if (input) input.value = val || '';
+        window.EP_AI_CONFIG.provider = 'gemini';
+        epSetAiProvider('gemini', false);
+        await epSaveAiConfig(true);
+    };
 
-        GEMINI_API_KEY = key;
-        safeSet('gemini_key_v31', key);
-        const input = document.getElementById('api-key-input');
-        if (input) input.value = key;
-
-        showLoader('Рассылка API мастерам...', '🔑');
+    async function epLoadAiConfigFromServer() {
         try {
-            if (db) {
-                await db.collection('settings').doc('global_api').set({
-                    geminiKey: key,
-                    updatedAt: new Date().toISOString(),
-                    updatedBy: appUser.uid || appUser.email || appUser.phone || 'admin'
-                }, { merge: true });
+            let data = null;
 
-                try {
-                    const snap = await db.collection('users').get();
-                    const batch = db.batch();
-                    snap.docs.forEach(doc => batch.set(doc.ref, { geminiKey: key }, { merge: true }));
-                    await batch.commit();
-                } catch (e) {
-                    console.warn('users geminiKey batch error', e);
+            if (db) {
+                const cfgDoc = await db.collection('settings').doc('ai_config').get();
+                if (cfgDoc.exists) data = cfgDoc.data();
+
+                if (!data) {
+                    const oldDoc = await db.collection('settings').doc('global_api').get();
+                    if (oldDoc.exists) data = oldDoc.data();
+                }
+
+                if (appUser && appUser.uid) {
+                    const userDoc = await db.collection('users').doc(appUser.uid).get();
+                    if (userDoc.exists) {
+                        const u = userDoc.data();
+                        data = Object.assign({}, data || {}, {
+                            provider: u.aiProvider || (data && data.provider),
+                            geminiKey: u.geminiKey || (data && data.geminiKey),
+                            openaiKey: u.openaiKey || (data && data.openaiKey),
+                            openaiModel: u.openaiModel || (data && data.openaiModel)
+                        });
+                    }
                 }
             }
-            showToast('✅ API-ключ проверен и отправлен мастерам');
-        } catch(e) {
-            console.error(e);
-            showToast('⚠️ Ключ рабочий, но Firestore не дал разослать');
-        } finally { hideLoader(); }
+
+            if (data) {
+                window.EP_AI_CONFIG.provider = epNormProvider(data.provider || window.EP_AI_CONFIG.provider);
+                window.EP_AI_CONFIG.geminiKey = data.geminiKey || data.key || window.EP_AI_CONFIG.geminiKey || '';
+                window.EP_AI_CONFIG.openaiKey = data.openaiKey || window.EP_AI_CONFIG.openaiKey || '';
+                window.EP_AI_CONFIG.openaiModel = data.openaiModel || window.EP_AI_CONFIG.openaiModel || 'gpt-4.1-mini';
+            } else {
+                window.EP_AI_CONFIG.geminiKey = safeGet('ep_gemini_key_v1', '') || safeGet('gemini_key_v31', '');
+                window.EP_AI_CONFIG.openaiKey = safeGet('ep_openai_key_v1', '');
+                window.EP_AI_CONFIG.openaiModel = safeGet('ep_openai_model_v1', 'gpt-4.1-mini');
+            }
+
+            safeSet('ep_ai_provider_v1', window.EP_AI_CONFIG.provider);
+            if (window.EP_AI_CONFIG.geminiKey && typeof GEMINI_API_KEY !== 'undefined') GEMINI_API_KEY = window.EP_AI_CONFIG.geminiKey;
+
+            const g = document.getElementById('ep-gemini-key-input');
+            const o = document.getElementById('ep-openai-key-input');
+            const m = document.getElementById('ep-openai-model-input');
+            if (g) g.value = window.EP_AI_CONFIG.geminiKey || '';
+            if (o) o.value = window.EP_AI_CONFIG.openaiKey || '';
+            if (m) m.value = window.EP_AI_CONFIG.openaiModel || 'gpt-4.1-mini';
+
+            const keysBox = document.getElementById('ep-ai-admin-keys');
+            const masterInfo = document.getElementById('ep-ai-master-info');
+            if (keysBox && masterInfo && appUser) {
+                if (appUser.role === 'admin') {
+                    keysBox.style.display = 'block';
+                    masterInfo.style.display = 'none';
+                } else {
+                    keysBox.style.display = 'none';
+                    masterInfo.style.display = 'block';
+                }
+            }
+
+            epRefreshProviderUI();
+        } catch (e) {
+            console.warn('AI config load error:', e);
+        }
+    }
+
+    // === AI PROVIDER CALLS ===
+    async function epCallGemini(promptText, opts) {
+        const key = window.EP_AI_CONFIG.geminiKey || (typeof GEMINI_API_KEY !== 'undefined' ? GEMINI_API_KEY : '') || safeGet('gemini_key_v31', '');
+        if (!key) throw new Error('Нужен Gemini API ключ');
+
+        const parts = [{ text: promptText }];
+        if (opts && opts.imageDataUrl) {
+            const match = opts.imageDataUrl.match(/^data:(.*?);base64,(.*)$/);
+            if (match) parts.push({ inline_data: { mime_type: match[1], data: match[2] } });
+        }
+
+        const url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=' + encodeURIComponent(key);
+        const r = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ contents: [{ parts: parts }] })
+        });
+        const data = await r.json();
+        if (!r.ok || data.error) throw new Error(data.error ? data.error.message : 'Gemini API error');
+        return (((data.candidates || [])[0] || {}).content || {}).parts?.map(p => p.text || '').join('') || '';
+    }
+
+    function epExtractOpenAiText(data) {
+        if (data.output_text) return data.output_text;
+        let out = '';
+        (data.output || []).forEach(function (item) {
+            (item.content || []).forEach(function (c) {
+                if (c.text) out += c.text;
+                if (c.type === 'output_text' && c.text) out += c.text;
+            });
+        });
+        return out;
+    }
+
+    async function epCallOpenAI(promptText, opts) {
+        const key = window.EP_AI_CONFIG.openaiKey || safeGet('ep_openai_key_v1', '');
+        if (!key) throw new Error('Нужен OpenAI API ключ');
+
+        const content = [{ type: 'input_text', text: promptText }];
+        if (opts && opts.imageDataUrl) {
+            content.push({ type: 'input_image', image_url: opts.imageDataUrl });
+        }
+
+        const r = await fetch('https://api.openai.com/v1/responses', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + key },
+            body: JSON.stringify({
+                model: window.EP_AI_CONFIG.openaiModel || 'gpt-4.1-mini',
+                input: [{ role: 'user', content: content }],
+                max_output_tokens: opts && opts.maxTokens ? opts.maxTokens : 3000
+            })
+        });
+        const data = await r.json();
+        if (!r.ok || data.error) throw new Error(data.error ? data.error.message : 'OpenAI API error');
+        return epExtractOpenAiText(data);
+    }
+
+    async function epAskAI(promptText, opts) {
+        await epLoadAiConfigFromServer();
+        const provider = epCurrentProvider();
+        if (provider === 'openai') return epCallOpenAI(promptText, opts || {});
+        return epCallGemini(promptText, opts || {});
+    }
+
+    window.epAskAI = epAskAI;
+
+    function epStripCode(t) {
+        return (t || '').replace(/```json/gi, '').replace(/```html/gi, '').replace(/```[a-z]*/gi, '').replace(/```/g, '').trim();
+    }
+
+    function epParseJsonArray(t) {
+        t = epStripCode(t);
+        try { return JSON.parse(t); } catch(e) {}
+        const m = t.match(/\[[\s\S]*\]/);
+        if (m) {
+            try { return JSON.parse(m[0]); } catch(e) {}
+        }
+        return [];
+    }
+
+    // Override AI functions
+    window.runAiCheck = async function () {
+        showLoader('ИИ анализирует...', '🤖');
+        try {
+            const estNames = currentEstimate.map(i => i.n).join(', ');
+            const promptText = 'Я электрик. Смета: ' + estNames + '. Найди логические ошибки: крепеж, рамки, УЗО, автоматы, коробки, расходники. Верни ТОЛЬКО JSON массив: [{"reason":"объяснение","suggestedName":"название"}]. Если всё идеально, верни [].';
+            const txt = await epAskAI(promptText, { maxTokens: 2500 });
+            const suggestions = epParseJsonArray(txt);
+            hideLoader();
+
+            if (!suggestions.length) return showToast('✨ Всё идеально! Смета полная.');
+
+            document.getElementById('ai-modal-title').innerText = '✨ ИИ-Аналитика';
+            document.getElementById('ai-suggestions').innerHTML = suggestions.map(function (s) {
+                return `<div style="background:var(--bg); padding:12px; border-radius:10px; margin-bottom:10px; border-left:4px solid var(--ai);">
+                    <div style="font-weight:800;">${epEscape(s.reason || '')}</div>
+                    <div style="font-size:12px; color:var(--gray); margin-top:5px;">Совет: ${epEscape(s.suggestedName || '')}</div>
+                </div>`;
+            }).join('');
+            openModal('aiModal');
+        } catch (e) {
+            hideLoader();
+            showToast('❌ ' + (e.message || 'Сбой ИИ'));
+        }
     };
 
-    window.openModal = (function (orig) {
-        return function (id) {
-            if (typeof orig === 'function') orig(id); else document.getElementById(id).style.display = 'flex';
-            if (id === 'settModal') {
-                setTimeout(function () { try { renderDbEditors(); epLoadGlobalApi(); if(appUser && appUser.role === 'admin') listenForDbProposals(); } catch(e) { console.warn(e); } }, 80);
+    window.aiSupply = async function () {
+        showLoader('ИИ формирует закупку...', '🤖');
+        try {
+            const mats = currentEstimate.filter(i => i.type === 'mat').map(i => `${i.n} - ${i.q} ${i.u || ''}`).join(', ');
+            const txt = await epAskAI('Смета материалов: ' + mats + '. Раздели на категории для закупки. Верни чистый HTML: <h3>, <ul>, <li>, <b>.', { maxTokens: 2500 });
+            hideLoader();
+            document.getElementById('ai-modal-title').innerText = '📦 ИИ-Снабженец';
+            document.getElementById('ai-suggestions').innerHTML = `<div style="font-size:13px; line-height:1.5;">${epStripCode(txt)}</div>`;
+            openModal('aiModal');
+        } catch(e) { hideLoader(); showToast('❌ ' + (e.message || 'Сбой ИИ')); }
+    };
+
+    window.aiPueHelper = async function () {
+        showLoader('ИИ думает...', '🤖');
+        try {
+            const txt = await epAskAI('Смета: ' + currentEstimate.map(i => i.n).join(', ') + '. Какие нормы ПУЭ и практические замечания нужны? Кратко в HTML.', { maxTokens: 2500 });
+            hideLoader();
+            document.getElementById('ai-modal-title').innerText = '📚 ПУЭ Справка';
+            document.getElementById('ai-suggestions').innerHTML = `<div style="font-size:13px; line-height:1.5;">${epStripCode(txt)}</div>`;
+            openModal('aiModal');
+        } catch(e) { hideLoader(); showToast('❌ ' + (e.message || 'Сбой ИИ')); }
+    };
+
+    window.compareShopsAI = async function () {
+        showLoader('Сравнение цен...', '🤖');
+        try {
+            let shops = document.getElementById('ai-shops')?.value || 'Лемана ПРО, Петрович, ВсеИнструменты';
+            const txt = await epAskAI('Материалы: ' + currentEstimate.filter(i=>i.type==='mat').map(i=>i.n).join(', ') + '. Создай HTML таблицу с максимальными розничными ценами ГОСТ в магазинах: ' + shops + '. Верни только HTML.', { maxTokens: 3000 });
+            hideLoader();
+            document.getElementById('ai-modal-title').innerText = '🛒 Макс. Цены ГОСТ';
+            document.getElementById('ai-suggestions').innerHTML = `<div style="overflow-x:auto;">${epStripCode(txt)}</div>`;
+            openModal('aiModal');
+        } catch(e) { hideLoader(); showToast('❌ ' + (e.message || 'Сбой ИИ')); }
+    };
+
+    // === DATABASE IMPORT / EXPORT / SERVER ===
+    function epDbTypeLabel(type) { return type === 'work' ? 'работ' : 'материалов'; }
+    function epCurrentDb(type) { return type === 'work' ? workDB : matDB; }
+    function epSetCurrentDb(type, arr) { if (type === 'work') workDB = arr; else matDB = arr; }
+
+    function epNormalizeItems(raw, type) {
+        const arr = Array.isArray(raw) ? raw : [];
+        return arr.map(function (x, i) {
+            if (Array.isArray(x)) {
+                x = { c: x[0], n: x[1], p: x[2], u: x[3] };
             }
+            return {
+                id: (type === 'work' ? 'w' : 'm') + '_ai_' + Date.now() + '_' + i,
+                c: epCleanText(x.c || x.cat || x.category || x['Категория'] || x['категория'] || 'Разное') || 'Разное',
+                n: epCleanText(x.n || x.name || x.title || x['Название'] || x['Наименование'] || x['наименование'] || ''),
+                p: epMoney(x.p || x.price || x.cost || x['Цена'] || x['Сумма'] || x['цена'] || 0),
+                u: epCleanText(x.u || x.unit || x['Ед'] || x['Ед.'] || x['Ед. изм'] || x['единица'] || 'шт') || 'шт'
+            };
+        }).filter(function (x) { return x.n; });
+    }
+
+    async function epSaveUserDb() {
+        try {
+            safeSet('user_db_mat_v31', JSON.stringify(matDB));
+            safeSet('user_db_work_v31', JSON.stringify(workDB));
+            if (db && appUser && appUser.uid) {
+                await db.collection('user_db').doc(appUser.uid).set({
+                    uid: appUser.uid,
+                    name: appUser.name || appUser.email || '',
+                    matDB: matDB,
+                    workDB: workDB,
+                    updatedAt: new Date().toISOString()
+                }, { merge: true });
+            }
+        } catch (e) {
+            console.warn('save user db error', e);
+        }
+    }
+
+    async function epSaveGlobalDb() {
+        if (!db) return;
+        await db.collection('settings').doc('global_db').set({ matDB: matDB, workDB: workDB, updatedAt: new Date().toISOString() }, { merge: true });
+    }
+
+    async function epLoadUserDbAfterLogin() {
+        try {
+            if (!appUser || !appUser.uid) return;
+            let loaded = false;
+
+            if (db) {
+                const doc = await db.collection('user_db').doc(appUser.uid).get();
+                if (doc.exists) {
+                    const d = doc.data();
+                    if (Array.isArray(d.matDB)) { matDB = d.matDB; loaded = true; }
+                    if (Array.isArray(d.workDB)) { workDB = d.workDB; loaded = true; }
+                }
+            }
+
+            if (!loaded) {
+                try {
+                    const lm = JSON.parse(safeGet('user_db_mat_v31', '[]'));
+                    const lw = JSON.parse(safeGet('user_db_work_v31', '[]'));
+                    if (lm.length) matDB = lm;
+                    if (lw.length) workDB = lw;
+                } catch(e){}
+            }
+
+            renderDbEditors();
+        } catch(e) {
+            console.warn('load user db error', e);
+        }
+    }
+
+    function epInsertDbTools() {
+        if (document.getElementById('ep-db-ai-tools')) return;
+        const tabs = document.querySelector('#settModal .tabs-container');
+        if (!tabs) return;
+
+        const box = document.createElement('div');
+        box.id = 'ep-db-ai-tools';
+        box.innerHTML = `
+            <h3>🤖 Импорт / экспорт базы через ИИ</h3>
+            <div class="ep-db-ai-grid">
+                <button class="btn-info" onclick="epTriggerDbFileImport('mat')">📥 Материалы: Excel / JSON / фото / скрин</button>
+                <button class="btn-work" onclick="epTriggerDbFileImport('work')">📥 Работы: Excel / JSON / фото / скрин</button>
+                <button class="btn-vendor" onclick="epOpenTextImport('mat')">📝 Материалы из текста</button>
+                <button class="btn-vendor" onclick="epOpenTextImport('work')">📝 Работы из текста</button>
+                <button class="btn-success" onclick="epExportMyDb()">📤 Экспорт моей базы</button>
+                <button class="btn-shield" onclick="epExportGlobalDb()">🌍 Экспорт глобальной базы</button>
+            </div>
+        `;
+        tabs.parentNode.insertBefore(box, tabs);
+    }
+
+    window.epTriggerDbFileImport = function (type) {
+        window.EP_DB_REVIEW.type = type;
+        const input = document.getElementById('ep-db-file-input');
+        input.value = '';
+        input.onchange = function (e) {
+            const file = e.target.files && e.target.files[0];
+            if (file) epReadDbFile(file, type);
         };
-    })(window.openModal);
-
-    function epEscape(s) {
-        return epText(s).replace(/[&<>'"]/g, function (c) { return ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'})[c]; });
-    }
-
-    window.renderDbEditors = function () {
-        epMergeDbs();
-        let catsM = [...new Set(matDB.map(m=>m.c || 'Разное'))];
-        let catsW = [...new Set(workDB.map(w=>w.c || 'Разное'))];
-        const dl = document.getElementById('db-cats');
-        if (dl) dl.innerHTML = [...new Set([...catsM, ...catsW])].map(c=>`<option value="${epEscape(c)}">`).join('');
-
-        function rowHtml(item, type) {
-            const scope = item._epScope || 'global';
-            const scopeText = scope === 'user' ? 'Моя база' : 'Глобальная';
-            const scopeColor = scope === 'user' ? 'var(--success)' : 'var(--primary)';
-            const delLabel = appUser && appUser.role === 'admin' ? '🗑' : 'Удалить';
-            return `<div class="emp-row" style="gap:6px; align-items:flex-start;">
-                <div style="flex:1;"><b>${epEscape(item.n)}</b><br><span style="color:var(--gray);font-size:10px;">${epEscape(item.p)} ₽ / ${epEscape(item.u)} · <b style="color:${scopeColor};">${scopeText}</b></span></div>
-                <input type="number" value="${epEscape(item.p)}" onchange="requestPriceChange('${type}', '${epEscape(item.id)}', this.value)" style="width:62px;margin:0;padding:4px;text-align:center;">
-                <button class="btn-danger ep-small-btn" onclick="epDeleteDbItem('${type}', '${epEscape(item.id)}', '${scope}')">${delLabel}</button>
-            </div>`;
-        }
-        function groupsHtml(arr, type, orange) {
-            let html = '';
-            let groups = {};
-            arr.forEach(x => { const c = x.c || 'Разное'; groups[c] = groups[c] || []; groups[c].push(x); });
-            Object.keys(groups).forEach((c, idx) => {
-                let sid = `db_${type}_${idx}`;
-                let st = orange ? 'style="color:var(--orange); border-color:rgba(245,158,11,0.2); background:rgba(245,158,11,0.08);"' : '';
-                html += `<div class="cat-header" ${st} onclick="toggleCat('${sid}')">${epEscape(c)}</div><div class="cat-body" id="${sid}">`;
-                groups[c].forEach(x => html += rowHtml(x, type));
-                html += `</div>`;
-            });
-            return html || `<div style="font-size:12px; color:var(--gray); padding:10px;">Пока пусто</div>`;
-        }
-        const matList = document.getElementById('editor-mat-list');
-        const workList = document.getElementById('editor-work-list');
-        if (matList) matList.innerHTML = groupsHtml(matDB, 'mat', false);
-        if (workList) workList.innerHTML = groupsHtml(workDB, 'work', true);
+        input.click();
     };
 
-    window.addDbItem = async function () {
-        let cat = epText(document.getElementById('db-new-cat').value) || 'Разное';
-        let name = epText(document.getElementById('db-new-name').value);
-        let price = epSafeNumber(document.getElementById('db-new-price').value);
-        let unit = epText(document.getElementById('db-new-unit').value) || 'шт';
-        let isMat = document.getElementById('editor-mat-list').style.display !== 'none';
-        let type = isMat ? 'mat' : 'work';
-        if(!name) return showToast('Введите название!');
-        let item = { id: epNewId(type), c: cat, n: name, p: price, u: unit };
-        await epAddItems(type, [item], 'add');
-        document.getElementById('db-new-name').value = '';
-        document.getElementById('db-new-price').value = '';
-        showToast(appUser && appUser.role === 'admin' ? '✅ Добавлено в глобальную базу' : '✅ Добавлено в мою базу и отправлено админу');
-    };
-
-    window.requestPriceChange = async function (type, id, newPrice) {
-        newPrice = epSafeNumber(newPrice);
-        let arr = type === 'mat' ? matDB : workDB;
-        let item = arr.find(x => x.id === id);
-        if (!item) return;
-        if (appUser && appUser.role === 'admin' && (item._epScope || 'global') === 'global') {
-            let base = type === 'mat' ? epGlobalMatDB : epGlobalWorkDB;
-            let b = base.find(x => x.id === id || epNormName(x.n) === epNormName(item.n));
-            if (b) b.p = newPrice;
-            item.p = newPrice;
-            await epSaveGlobalDb();
-            showToast('✅ Цена изменена глобально');
-        } else {
-            let personal = type === 'mat' ? userMatDB : userWorkDB;
-            let p = personal.find(x => x.id === id || epNormName(x.n) === epNormName(item.n));
-            if (p) p.p = newPrice;
-            else personal.push({ id: epNewId(type), c: item.c, n: item.n, p: newPrice, u: item.u });
-            await epSaveUserDbToServer();
-            epMergeDbs();
-            showToast('✅ Цена сохранена в моей базе');
-        }
-        renderDbEditors();
-    };
-
-    async function epCreateProposal(type, item) {
-        if (!db || !appUser || appUser.role === 'admin') return;
-        try {
-            await db.collection('db_proposals').add({
-                type, item: { id: item.id, c: item.c, n: item.n, p: item.p, u: item.u },
-                status: 'pending',
-                uid: epCurrentUserKey(),
-                masterName: appUser.name || '',
-                createdAt: new Date().toISOString()
-            });
-        } catch(e) { console.warn('proposal error', e); }
-    }
-
-    async function epAddItems(type, items, mode) {
-        items = epCleanItems(items, type, appUser && appUser.role === 'admin' ? 'global' : 'user');
-        if (!items.length) return showToast('Нет выбранных позиций');
-        const isAdmin = appUser && appUser.role === 'admin';
-        const target = isAdmin ? (type === 'mat' ? epGlobalMatDB : epGlobalWorkDB) : (type === 'mat' ? userMatDB : userWorkDB);
-        items.forEach(item => {
-            let idx = target.findIndex(x => epNormName(x.n) === epNormName(item.n) && epText(x.c).toLowerCase() === epText(item.c).toLowerCase());
-            if (mode === 'replace' && idx >= 0) target[idx] = Object.assign({}, target[idx], item, { id: target[idx].id || item.id });
-            else if (idx >= 0 && mode === 'add') target[idx] = Object.assign({}, target[idx], item, { id: target[idx].id || item.id });
-            else target.push(item);
-        });
-        if (isAdmin) await epSaveGlobalDb(); else {
-            await epSaveUserDbToServer();
-            for (const item of items) await epCreateProposal(type, item);
-        }
-        epMergeDbs();
-        renderDbEditors();
-    }
-
-    window.epDeleteDbItem = async function (type, id, scope) {
-        const isAdmin = appUser && appUser.role === 'admin';
-        let arr = type === 'mat' ? matDB : workDB;
-        let item = arr.find(x => x.id === id);
-        if (!item) return;
-        if (isAdmin) {
-            let choice = prompt('Удаление позиции:\n1 — удалить у меня\n2 — удалить у всех', '2');
-            if (choice === '1') {
-                let personal = type === 'mat' ? userMatDB : userWorkDB;
-                personal = personal.filter(x => x.id !== id && epNormName(x.n) !== epNormName(item.n));
-                if (type === 'mat') userMatDB = personal; else userWorkDB = personal;
-                await epSaveUserDbToServer();
-                showToast('✅ Удалено у меня');
-            } else if (choice === '2') {
-                let global = type === 'mat' ? epGlobalMatDB : epGlobalWorkDB;
-                global = global.filter(x => x.id !== id && epNormName(x.n) !== epNormName(item.n));
-                if (type === 'mat') epGlobalMatDB = global; else epGlobalWorkDB = global;
-                await epSaveGlobalDb();
-                showToast('✅ Удалено у всех');
-            } else return;
-        } else {
-            const ok = await customConfirm('Удалить позицию?', 'У мастера позиция удалится только из личной базы.');
-            if (!ok) return;
-            if (type === 'mat') userMatDB = userMatDB.filter(x => x.id !== id && epNormName(x.n) !== epNormName(item.n));
-            else userWorkDB = userWorkDB.filter(x => x.id !== id && epNormName(x.n) !== epNormName(item.n));
-            await epSaveUserDbToServer();
-            showToast('✅ Удалено из моей базы');
-        }
-        epMergeDbs(); renderDbEditors();
-    };
-
-    window.listenForDbProposals = function () {
-        if (!db || !appUser || appUser.role !== 'admin') return;
-        const box = document.getElementById('admin-db-proposals');
-        if (!box) return;
-        try {
-            db.collection('db_proposals').where('status', '==', 'pending').onSnapshot(snap => {
-                if (snap.empty) { box.innerHTML = '<span style="font-size:11px;color:gray;">Заявок нет</span>'; return; }
-                let html = '';
-                snap.forEach(doc => {
-                    const d = doc.data(); const item = d.item || {};
-                    html += `<div class="emp-row" style="display:block;">
-                        <div style="margin-bottom:6px;"><b>${epEscape(item.n)}</b><br><span style="font-size:10px;color:var(--gray);">${d.type === 'mat' ? 'Материал' : 'Работа'} · ${epEscape(item.c)} · ${epEscape(item.p)} ₽ / ${epEscape(item.u)} · ${epEscape(d.masterName || '')}</span></div>
-                        <button class="btn-success ep-small-btn" onclick="epApproveDbProposal('${doc.id}', 'full')">Добавить</button>
-                        <button class="btn-primary ep-small-btn" onclick="epApproveDbProposal('${doc.id}', 'name')">Только название</button>
-                        <button class="btn-danger ep-small-btn" onclick="epApproveDbProposal('${doc.id}', 'reject')">Отклонить</button>
-                    </div>`;
-                });
-                box.innerHTML = html;
-            });
-        } catch(e) { box.innerHTML = '<span style="font-size:11px;color:var(--danger);">Ошибка загрузки заявок</span>'; console.warn(e); }
-    };
-
-    window.epApproveDbProposal = async function (id, mode) {
-        if (!db || !appUser || appUser.role !== 'admin') return;
-        const ref = db.collection('db_proposals').doc(id);
-        const snap = await ref.get();
-        if (!snap.exists) return showToast('Заявка не найдена');
-        const d = snap.data();
-        if (mode === 'reject') { await ref.update({ status:'rejected', decidedAt:new Date().toISOString() }); showToast('Отклонено'); return; }
-        let item = epCloneItem(d.item || {}, d.type, 'global');
-        if (mode === 'name') item.p = 0;
-        if (d.type === 'mat') epGlobalMatDB.push(item); else epGlobalWorkDB.push(item);
-        await epSaveGlobalDb();
-        await ref.update({ status: mode === 'full' ? 'accepted_full' : 'accepted_name_only', decidedAt:new Date().toISOString() });
-        showToast(mode === 'full' ? '✅ Добавлено в глобальную базу' : '✅ Добавлено название без суммы');
-        renderDbEditors();
-    };
-
-    window.epSelectDbFile = function (type) {
-        epImportType = type;
-        const inp = document.getElementById('ep-db-file-input');
-        if (inp) { inp.value = ''; inp.click(); }
-    };
     window.epOpenTextImport = function (type) {
-        epImportType = type;
-        epPendingItems = [];
-        document.getElementById('epDbImportTitle').innerText = (type === 'mat' ? 'Импорт материалов из текста' : 'Импорт работ из текста');
-        document.getElementById('epDbTextBox').style.display = 'block';
-        document.getElementById('epDbImportList').innerHTML = '';
-        document.getElementById('epDbImportText').value = '';
-        openModal('epDbImportModal');
+        window.EP_DB_REVIEW.type = type;
+        document.getElementById('ep-text-import-title').innerText = 'Импорт ' + epDbTypeLabel(type) + ' из текста';
+        document.getElementById('ep-text-import-value').value = '';
+        openModal('ep-text-import-modal');
     };
-    window.epAnalyzeTextImport = async function () {
-        const text = document.getElementById('epDbImportText').value;
-        if (!epText(text)) return showToast('Вставьте текст');
-        epPendingItems = await epAnalyzeRawText(epImportType, text, 'text.txt');
-        epRenderImportReview();
+
+    window.epRunTextImport = async function () {
+        const text = document.getElementById('ep-text-import-value').value;
+        closeModal('ep-text-import-modal');
+        await epAiNormalizeDbText(text, window.EP_DB_REVIEW.type, 'текст');
     };
-    window.epHandleDbFile = async function (event) {
-        const file = event.target.files && event.target.files[0];
-        if (!file) return;
-        document.getElementById('epDbImportTitle').innerText = (epImportType === 'mat' ? 'Импорт материалов' : 'Импорт работ') + ': ' + file.name;
-        document.getElementById('epDbTextBox').style.display = 'none';
-        document.getElementById('epDbImportList').innerHTML = '<div style="font-size:12px;color:var(--gray);">Читаю файл...</div>';
-        openModal('epDbImportModal');
-        try {
-            epPendingItems = await epReadImportFile(epImportType, file);
-            epRenderImportReview();
-        } catch(e) {
-            document.getElementById('epDbImportList').innerHTML = `<div style="color:var(--danger);font-size:12px;">Ошибка чтения: ${epEscape(e.message || e)}</div>`;
-        }
-    };
-    async function epReadImportFile(type, file) {
-        const name = file.name.toLowerCase();
-        if (name.endsWith('.json')) {
-            const text = await file.text();
-            const data = JSON.parse(text);
-            if (Array.isArray(data)) return epCleanItems(data, type, 'user');
-            if (data.matDB || data.workDB) return epCleanItems(type === 'mat' ? (data.matDB || []) : (data.workDB || []), type, 'user');
-            if (data.items) return epCleanItems(data.items, type, 'user');
-            return [];
-        }
-        if (name.endsWith('.xlsx') || name.endsWith('.xls')) {
-            const buf = await file.arrayBuffer();
-            const wb = XLSX.read(buf, { type:'array' });
-            let rowsText = '';
-            wb.SheetNames.forEach(sn => { rowsText += '\n# ' + sn + '\n' + XLSX.utils.sheet_to_csv(wb.Sheets[sn]); });
-            return await epAnalyzeRawText(type, rowsText, file.name);
-        }
-        if (name.endsWith('.csv')) {
-            const text = await file.text();
-            return await epAnalyzeRawText(type, text, file.name);
-        }
-        if (file.type && file.type.startsWith('image/')) {
-            return await epAnalyzeImage(type, file);
-        }
-        const text = await file.text();
-        return await epAnalyzeRawText(type, text, file.name);
-    }
-    function epLocalParseRows(type, raw) {
-        const lines = String(raw || '').split(/\r?\n/).map(x=>x.trim()).filter(Boolean).slice(0, 250);
-        const items = [];
-        lines.forEach(line => {
-            if (/^(наименование|название|item|name|категория)/i.test(line)) return;
-            const parts = line.split(/[;\t,]/).map(x=>x.trim()).filter(Boolean);
-            let c='Разное', n='', p=0, u='шт';
-            if (parts.length >= 4) { c=parts[0]; n=parts[1]; p=epSafeNumber(parts[2]); u=parts[3] || 'шт'; }
-            else if (parts.length >= 2) { n=parts[0]; p=epSafeNumber(parts[1]); u=parts[2] || 'шт'; }
-            else {
-                const m = line.match(/(.+?)\s+(\d+[\d\s.,]*)\s*(руб|₽|р)?\s*(шт|м|м2|м²|комп|уп|точка)?$/i);
-                if (m) { n=m[1].trim(); p=epSafeNumber(m[2]); u=m[4] || 'шт'; }
-            }
-            if (n) items.push({ id: epNewId(type), c, n, p, u });
-        });
-        return epCleanItems(items, type, 'user');
-    }
-    async function epAnalyzeRawText(type, raw, filename) {
-        const fallback = epLocalParseRows(type, raw);
-        const key = await epGetGeminiKey();
-        if (!key) return fallback;
-        showLoader('ИИ читает базу...', '🤖');
-        try {
-            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${encodeURIComponent(key)}`;
-            const prompt = `Ты помощник электрика. Извлеки из текста позиции для базы ${type === 'mat' ? 'материалов' : 'работ'}. Верни только JSON массив без markdown. Формат строго: [{"c":"Категория","n":"Название","p":123,"u":"шт"}]. Цена p числом, если цены нет — 0. Текст/файл: ${filename || ''}\n\n${String(raw).slice(0, 14000)}`;
-            const payload = { contents: [{ parts: [{ text: prompt }] }] };
-            const res = await fetch(url, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload) });
-            const data = await res.json();
-            if (data.error) throw new Error(data.error.message);
-            const txt = data.candidates[0].content.parts[0].text.replace(/```[a-z]*\n?/g,'').replace(/```/g,'').trim();
-            const parsed = JSON.parse(txt);
-            hideLoader();
-            const ai = epCleanItems(parsed, type, 'user');
-            return ai.length ? ai : fallback;
-        } catch(e) {
-            hideLoader();
-            epHandleGeminiError(e);
-            console.warn('AI parse fallback', e);
-            return fallback;
-        }
-    }
-    async function epAnalyzeImage(type, file) {
-        const key = await epGetGeminiKey();
-        if (!key) throw new Error('ИИ-ключ не получен от админа или ключ неверный. Зайди админом и сохрани рабочий Gemini API-ключ.');
-        showLoader('ИИ читает фото/скрин...', '🖼');
-        const base64 = await new Promise((resolve, reject) => {
+
+    function epReadFileAsText(file) {
+        return new Promise(function (resolve, reject) {
             const r = new FileReader();
-            r.onload = () => resolve(String(r.result).split(',')[1]);
+            r.onload = function () { resolve(r.result); };
+            r.onerror = reject;
+            r.readAsText(file);
+        });
+    }
+
+    function epReadFileAsDataURL(file) {
+        return new Promise(function (resolve, reject) {
+            const r = new FileReader();
+            r.onload = function () { resolve(r.result); };
             r.onerror = reject;
             r.readAsDataURL(file);
         });
+    }
+
+    function epReadFileAsArrayBuffer(file) {
+        return new Promise(function (resolve, reject) {
+            const r = new FileReader();
+            r.onload = function () { resolve(r.result); };
+            r.onerror = reject;
+            r.readAsArrayBuffer(file);
+        });
+    }
+
+    async function epReadDbFile(file, type) {
+        showLoader('Читаю файл...', '📥');
         try {
-            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${encodeURIComponent(key)}`;
-            const prompt = `На изображении прайс/таблица/скрин. Извлеки позиции для базы ${type === 'mat' ? 'материалов' : 'работ'} электрика. Верни только JSON массив: [{"c":"Категория","n":"Название","p":123,"u":"шт"}]. Если цены нет — p=0.`;
-            const payload = { contents: [{ parts: [{ text: prompt }, { inline_data: { mime_type: file.type || 'image/jpeg', data: base64 } }] }] };
-            const res = await fetch(url, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload) });
-            const data = await res.json();
-            if (data.error) throw new Error(data.error.message);
-            const txt = data.candidates[0].content.parts[0].text.replace(/```[a-z]*\n?/g,'').replace(/```/g,'').trim();
+            const name = file.name || '';
+            const lower = name.toLowerCase();
+
+            if (file.type.startsWith('image/')) {
+                const imageDataUrl = await epReadFileAsDataURL(file);
+                await epAiNormalizeImage(imageDataUrl, type, name);
+                return;
+            }
+
+            if (lower.endsWith('.json')) {
+                const txt = await epReadFileAsText(file);
+                let raw = JSON.parse(txt);
+                if (raw.matDB && type === 'mat') raw = raw.matDB;
+                if (raw.workDB && type === 'work') raw = raw.workDB;
+                epShowDbReview(epNormalizeItems(raw, type), type, name);
+                return;
+            }
+
+            if (lower.endsWith('.xlsx') || lower.endsWith('.xls') || lower.endsWith('.csv')) {
+                let rows = [];
+                if (window.XLSX) {
+                    const ab = await epReadFileAsArrayBuffer(file);
+                    const wb = XLSX.read(ab, { type: 'array' });
+                    const ws = wb.Sheets[wb.SheetNames[0]];
+                    rows = XLSX.utils.sheet_to_json(ws, { defval: '' });
+                } else {
+                    const txt = await epReadFileAsText(file);
+                    rows = txt.split(/\r?\n/).map(function(line) {
+                        const cols = line.split(';').length > line.split(',').length ? line.split(';') : line.split(',');
+                        return { Категория: cols[0], Наименование: cols[1], Цена: cols[2], Ед: cols[3] };
+                    });
+                }
+                await epAiNormalizeDbText(JSON.stringify(rows).slice(0, 80000), type, name);
+                return;
+            }
+
+            const txt = await epReadFileAsText(file);
+            await epAiNormalizeDbText(txt, type, name);
+        } catch (e) {
             hideLoader();
-            return epCleanItems(JSON.parse(txt), type, 'user');
-        } catch(e) {
-            hideLoader();
-            epHandleGeminiError(e);
-            throw e;
+            showToast('❌ ' + (e.message || 'Ошибка импорта'));
         }
     }
-    function epRenderImportReview() {
-        const box = document.getElementById('epDbImportList');
-        if (!box) return;
-        if (!epPendingItems.length) { box.innerHTML = '<div style="font-size:12px;color:var(--gray);">Позиции не найдены</div>'; return; }
-        box.innerHTML = epPendingItems.map((it, i) => `<label class="ep-import-row"><input type="checkbox" data-ep-import-index="${i}" checked><div><b>${epEscape(it.n)}</b><br><span>${epEscape(it.c)} · ${epEscape(it.p)} ₽ / ${epEscape(it.u)}</span></div><input type="number" value="${epEscape(it.p)}" onchange="epPendingItems[${i}].p=Number(this.value)||0" style="margin:0;padding:6px;text-align:center;"></label>`).join('');
+
+    async function epAiNormalizeImage(imageDataUrl, type, source) {
+        try {
+            const prompt = 'Ты помощник электрика. На изображении/скрине может быть прайс, смета или таблица. Извлеки позиции для базы ' + epDbTypeLabel(type) + '. Верни ТОЛЬКО JSON массив объектов: [{"c":"Категория","n":"Название","p":123,"u":"шт"}]. Если цены нет, p=0. Без пояснений.';
+            const txt = await epAskAI(prompt, { imageDataUrl: imageDataUrl, maxTokens: 4000 });
+            const items = epNormalizeItems(epParseJsonArray(txt), type);
+            hideLoader();
+            epShowDbReview(items, type, source);
+        } catch (e) {
+            hideLoader();
+            showToast('❌ ' + (e.message || 'ИИ не прочитал изображение'));
+        }
     }
-    window.epApplyImportedDb = async function (mode) {
-        const checked = Array.from(document.querySelectorAll('[data-ep-import-index]:checked')).map(x => epPendingItems[Number(x.dataset.epImportIndex)]).filter(Boolean);
-        if (!checked.length) return showToast('Отметьте галочками позиции');
-        await epAddItems(epImportType, checked, mode);
-        closeModal('epDbImportModal');
-        showToast(mode === 'replace' ? '✅ Выбранные заменены' : '✅ Выбранные добавлены');
+
+    async function epAiNormalizeDbText(rawText, type, source) {
+        showLoader('ИИ структурирует базу...', '🤖');
+        try {
+            const prompt = 'Ты помощник электрика. Приведи данные к базе ' + epDbTypeLabel(type) + '. Верни ТОЛЬКО JSON массив объектов: [{"c":"Категория","n":"Название","p":123,"u":"шт"}]. Цена числом. Если цены нет, p=0. Данные: ' + String(rawText).slice(0, 90000);
+            const txt = await epAskAI(prompt, { maxTokens: 5000 });
+            const items = epNormalizeItems(epParseJsonArray(txt), type);
+            hideLoader();
+            epShowDbReview(items, type, source);
+        } catch (e) {
+            hideLoader();
+            showToast('❌ ' + (e.message || 'ИИ не обработал данные'));
+        }
+    }
+
+    function epShowDbReview(items, type, source) {
+        window.EP_DB_REVIEW = { type: type, items: items, source: source || '' };
+        document.getElementById('ep-db-ai-review-title').innerText = 'Импорт ' + epDbTypeLabel(type) + ': ' + (source || '');
+        const list = document.getElementById('ep-db-ai-review-list');
+
+        if (!items.length) {
+            list.innerHTML = `<div style="padding:12px; color:var(--danger); font-weight:800;">ИИ не нашёл позиции. Попробуйте другой файл или текст.</div>`;
+        } else {
+            list.innerHTML = items.map(function (it, idx) {
+                return `<div class="ep-db-review-row">
+                    <input type="checkbox" id="ep-db-check-${idx}" checked>
+                    <div>
+                        <input id="ep-db-cat-${idx}" value="${epEscape(it.c)}" placeholder="Категория">
+                        <input id="ep-db-name-${idx}" value="${epEscape(it.n)}" placeholder="Название">
+                        <div style="display:grid; grid-template-columns:1fr 1fr; gap:6px;">
+                            <input id="ep-db-price-${idx}" type="number" value="${Number(it.p)||0}" placeholder="Цена">
+                            <input id="ep-db-unit-${idx}" value="${epEscape(it.u || 'шт')}" placeholder="ед.">
+                        </div>
+                    </div>
+                </div>`;
+            }).join('');
+        }
+
+        openModal('ep-db-ai-review-modal');
+    }
+
+    function epGetReviewedSelected() {
+        const items = window.EP_DB_REVIEW.items || [];
+        return items.map(function (it, idx) {
+            const checked = document.getElementById('ep-db-check-' + idx)?.checked;
+            if (!checked) return null;
+            return {
+                id: it.id || (window.EP_DB_REVIEW.type === 'work' ? 'w' : 'm') + '_ai_' + Date.now() + '_' + idx,
+                c: epCleanText(document.getElementById('ep-db-cat-' + idx)?.value) || 'Разное',
+                n: epCleanText(document.getElementById('ep-db-name-' + idx)?.value),
+                p: epMoney(document.getElementById('ep-db-price-' + idx)?.value),
+                u: epCleanText(document.getElementById('ep-db-unit-' + idx)?.value) || 'шт'
+            };
+        }).filter(Boolean).filter(function (x) { return x.n; });
+    }
+
+    function epSameItem(a, b) {
+        return epCleanText(a.n).toLowerCase() === epCleanText(b.n).toLowerCase() && epCleanText(a.c).toLowerCase() === epCleanText(b.c).toLowerCase();
+    }
+
+    async function epSendDbProposal(type, items, action) {
+        if (!db || !appUser || appUser.role === 'admin' || !items.length) return;
+        try {
+            await db.collection('db_proposals').add({
+                uid: appUser.uid || '',
+                masterName: appUser.name || appUser.email || '',
+                type: type,
+                action: action,
+                items: items,
+                status: 'pending',
+                createdAt: new Date().toISOString()
+            });
+        } catch(e) {
+            console.warn('proposal error', e);
+        }
+    }
+
+    window.epApplyReviewedDbItems = async function (mode) {
+        const type = window.EP_DB_REVIEW.type;
+        const items = epGetReviewedSelected();
+        if (!items.length) return showToast('Нет выбранных позиций');
+
+        let arr = epCurrentDb(type).slice();
+
+        items.forEach(function (it) {
+            const idx = arr.findIndex(x => epSameItem(x, it));
+            if (mode === 'replace' && idx >= 0) {
+                arr[idx] = Object.assign({}, arr[idx], it, { id: arr[idx].id || it.id });
+            } else if (idx < 0) {
+                arr.push(it);
+            } else if (mode === 'add') {
+                arr.push(Object.assign({}, it, { id: it.id + '_' + Math.random().toString(36).slice(2, 6) }));
+            }
+        });
+
+        epSetCurrentDb(type, arr);
+
+        if (appUser && appUser.role === 'admin') {
+            try { await epSaveGlobalDb(); } catch(e) { console.warn(e); }
+        }
+
+        await epSaveUserDb();
+        await epSendDbProposal(type, items, mode);
+
+        renderDbEditors();
+        closeModal('ep-db-ai-review-modal');
+        showToast('✅ База обновлена' + (appUser && appUser.role !== 'admin' ? ' и отправлена админу' : ''));
     };
+
     function epDownloadJson(filename, data) {
-        const blob = new Blob([JSON.stringify(data, null, 2)], { type:'application/json;charset=utf-8' });
+        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json;charset=utf-8' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
-        a.href = url; a.download = filename; document.body.appendChild(a); a.click();
-        setTimeout(() => { URL.revokeObjectURL(url); a.remove(); }, 500);
+        a.href = url; a.download = filename;
+        document.body.appendChild(a); a.click(); a.remove();
+        setTimeout(function(){ URL.revokeObjectURL(url); }, 1000);
     }
+
     window.epExportMyDb = function () {
-        epDownloadJson('electric-pro-my-db.json', { version:'electric-pro-db-v1', exportedAt:new Date().toISOString(), owner: appUser || null, matDB: userMatDB, workDB: userWorkDB });
-    };
-    window.epExportGlobalDb = function () {
-        epDownloadJson('electric-pro-global-db.json', { version:'electric-pro-global-db-v1', exportedAt:new Date().toISOString(), matDB: epGlobalMatDB.length ? epGlobalMatDB : matDB.filter(x => x._epScope !== 'user'), workDB: epGlobalWorkDB.length ? epGlobalWorkDB : workDB.filter(x => x._epScope !== 'user') });
+        epDownloadJson('electric-pro-my-db.json', {
+            owner: appUser ? { uid: appUser.uid, name: appUser.name || appUser.email || '' } : null,
+            matDB: matDB,
+            workDB: workDB,
+            exportedAt: new Date().toISOString()
+        });
     };
 
-    // Make internal pending list editable from inline onchange
-    Object.defineProperty(window, 'epPendingItems', { get: () => epPendingItems, set: v => { epPendingItems = v || []; } });
+    window.epExportGlobalDb = async function () {
+        let data = { matDB: matDB, workDB: workDB };
+        try {
+            if (db) {
+                const doc = await db.collection('settings').doc('global_db').get();
+                if (doc.exists) data = doc.data();
+            }
+        } catch(e){}
+        epDownloadJson('electric-pro-global-db.json', Object.assign({}, data, { exportedAt: new Date().toISOString() }));
+    };
 
-    // If page already loaded before patch wraps finishLoginSetup, apply visible-only fixes.
+    // Override renderDbEditors with delete buttons
+    const epOldRenderDbEditors = window.renderDbEditors;
+    window.renderDbEditors = function () {
+        let catsM = [...new Set(matDB.map(m=>m.c || 'Разное'))];
+        let catsW = [...new Set(workDB.map(w=>w.c || 'Разное'))];
+
+        const catsEl = document.getElementById('db-cats');
+        if (catsEl) catsEl.innerHTML = [...new Set([...catsM, ...catsW])].map(c=>`<option value="${epEscape(c)}">`).join('');
+
+        let htmlMat = '';
+        let mGroups = {}; matDB.forEach(m => { mGroups[m.c||'Разное'] = mGroups[m.c||'Разное'] || []; mGroups[m.c||'Разное'].push(m); });
+        Object.keys(mGroups).forEach((c, idx) => {
+            let sid = 'db_m_'+idx;
+            htmlMat += `<div class="cat-header" onclick="toggleCat('${sid}')">${epEscape(c)}</div><div class="cat-body" id="${sid}">`;
+            mGroups[c].forEach(m => {
+                htmlMat += `<div class="emp-row">
+                    <div style="flex:1;"><b>${epEscape(m.n)}</b><br><span style="color:var(--gray);font-size:10px;">${Number(m.p)||0} ₽ / ${epEscape(m.u || 'шт')}</span></div>
+                    <div class="ep-row-actions">
+                        <input type="number" value="${Number(m.p)||0}" onchange="requestPriceChange('mat', '${epEscape(m.id)}', this.value)" style="width:70px;margin:0;padding:4px;text-align:center;">
+                        <button class="btn-danger" onclick="epDeleteDbItem('mat','${epEscape(m.id)}')" title="Удалить">🗑</button>
+                    </div>
+                </div>`;
+            });
+            htmlMat += `</div>`;
+        });
+        const em = document.getElementById('editor-mat-list');
+        if (em) em.innerHTML = htmlMat;
+
+        let htmlWork = '';
+        let wGroups = {}; workDB.forEach(w => { wGroups[w.c||'Разное'] = wGroups[w.c||'Разное'] || []; wGroups[w.c||'Разное'].push(w); });
+        Object.keys(wGroups).forEach((c, idx) => {
+            let sid = 'db_w_'+idx;
+            htmlWork += `<div class="cat-header" style="color:var(--orange); border-color:rgba(245,158,11,0.2); background:rgba(245,158,11,0.08);" onclick="toggleCat('${sid}')">${epEscape(c)}</div><div class="cat-body" id="${sid}">`;
+            wGroups[c].forEach(w => {
+                htmlWork += `<div class="emp-row">
+                    <div style="flex:1;"><b>${epEscape(w.n)}</b><br><span style="color:var(--gray);font-size:10px;">${Number(w.p)||0} ₽ / ${epEscape(w.u || 'шт')}</span></div>
+                    <div class="ep-row-actions">
+                        <input type="number" value="${Number(w.p)||0}" onchange="requestPriceChange('work', '${epEscape(w.id)}', this.value)" style="width:70px;margin:0;padding:4px;text-align:center;">
+                        <button class="btn-danger" onclick="epDeleteDbItem('work','${epEscape(w.id)}')" title="Удалить">🗑</button>
+                    </div>
+                </div>`;
+            });
+            htmlWork += `</div>`;
+        });
+        const ew = document.getElementById('editor-work-list');
+        if (ew) ew.innerHTML = htmlWork;
+    };
+
+    window.epDeleteDbItem = async function (type, id) {
+        const isAdmin = appUser && appUser.role === 'admin';
+        let mode = 'mine';
+
+        if (isAdmin) {
+            mode = await new Promise(function (resolve) {
+                const all = confirm('Админ: нажмите OK = удалить у всех. Отмена = удалить только у меня.');
+                resolve(all ? 'all' : 'mine');
+            });
+        } else {
+            const ok = confirm('Удалить позицию только у себя?');
+            if (!ok) return;
+        }
+
+        let arr = epCurrentDb(type).filter(x => x.id !== id);
+        epSetCurrentDb(type, arr);
+
+        await epSaveUserDb();
+
+        if (isAdmin && mode === 'all') {
+            try { await epSaveGlobalDb(); } catch(e) { console.warn(e); }
+        }
+
+        renderDbEditors();
+        showToast(isAdmin && mode === 'all' ? 'Удалено у всех' : 'Удалено у меня');
+    };
+
+    window.addDbItem = async function () {
+        let cat = document.getElementById('db-new-cat').value.trim() || 'Разное';
+        let name = document.getElementById('db-new-name').value.trim();
+        let price = Number(document.getElementById('db-new-price').value) || 0;
+        let unit = document.getElementById('db-new-unit').value.trim() || 'шт';
+        let isMat = document.getElementById('editor-mat-list').style.display !== 'none';
+
+        if(!name) return showToast('Введите название!');
+
+        const type = isMat ? 'mat' : 'work';
+        let newItem = { id: (isMat?'m':'w') + Date.now(), c: cat, n: name, p: price, u: unit };
+        let arr = epCurrentDb(type).slice();
+        arr.push(newItem);
+        epSetCurrentDb(type, arr);
+
+        if (appUser && appUser.role === 'admin') {
+            try { await epSaveGlobalDb(); } catch(e) {}
+        } else {
+            await epSendDbProposal(type, [newItem], 'manual_add');
+        }
+
+        await epSaveUserDb();
+        renderDbEditors();
+        document.getElementById('db-new-name').value = '';
+        document.getElementById('db-new-price').value = '';
+        showToast(appUser && appUser.role === 'admin' ? '✅ Позиция добавлена глобально' : '✅ Добавлено у вас и отправлено админу');
+    };
+
+    window.requestPriceChange = async function (type, id, newPrice) {
+        newPrice = Number(newPrice) || 0;
+        let arr = epCurrentDb(type);
+        let item = arr.find(x => x.id === id);
+        if (!item) return;
+        item.p = newPrice;
+
+        if (appUser && appUser.role === 'admin') {
+            try { await epSaveGlobalDb(); } catch(e){}
+            showToast('✅ Цена изменена глобально');
+        } else {
+            await epSaveUserDb();
+            await epSendDbProposal(type, [item], 'price_change');
+            showToast('✅ Цена изменена у вас и отправлена админу');
+        }
+    };
+
+    // Admin proposals
+    function epInsertAdminProposalBox() {
+        if (document.getElementById('admin-db-proposals')) return;
+        const panel = document.getElementById('admin-panel');
+        if (!panel) return;
+        const box = document.createElement('div');
+        box.innerHTML = `
+            <h4 style="color:var(--primary); margin: 10px 0 5px;">🌍 Заявки в глобальную базу:</h4>
+            <div id="admin-db-proposals" style="margin-bottom:10px; border:1px solid var(--primary); background:rgba(79,70,229,.05); border-radius:8px; padding:8px; max-height:240px; overflow-y:auto; font-size:12px;"></div>
+        `;
+        panel.insertBefore(box, panel.firstChild.nextSibling);
+    }
+
+    function epListenDbProposals() {
+        if (!db || !appUser || appUser.role !== 'admin') return;
+        epInsertAdminProposalBox();
+        const cont = document.getElementById('admin-db-proposals');
+        if (!cont || cont.dataset.listen === '1') return;
+        cont.dataset.listen = '1';
+
+        db.collection('db_proposals').where('status', '==', 'pending').onSnapshot(function (snap) {
+            if (snap.empty) {
+                cont.innerHTML = `<span style="color:var(--gray);">Новых заявок нет</span>`;
+                return;
+            }
+            cont.innerHTML = '';
+            snap.forEach(function (doc) {
+                const d = doc.data();
+                const items = d.items || [];
+                cont.innerHTML += `<div class="ep-db-admin-proposal">
+                    <b>${epEscape(d.masterName || d.uid || 'Мастер')}</b>
+                    <div style="color:var(--gray); font-size:11px;">${d.type === 'work' ? 'Работы' : 'Материалы'} • ${epEscape(d.action || '')} • ${items.length} поз.</div>
+                    <div style="font-size:11px; margin-top:5px;">${items.slice(0,3).map(x => epEscape(x.n)).join('<br>')}${items.length > 3 ? '<br>...' : ''}</div>
+                    <div class="ep-mini-actions">
+                        <button class="btn-success" onclick="epAdminResolveDbProposal('${doc.id}','full')">✅ Добавить полностью</button>
+                        <button class="btn-primary" onclick="epAdminResolveDbProposal('${doc.id}','names')">🏷 Только название без суммы</button>
+                        <button class="btn-danger" onclick="epAdminResolveDbProposal('${doc.id}','reject')">❌ Отклонить</button>
+                    </div>
+                </div>`;
+            });
+        }, function (e) {
+            cont.innerHTML = `<span style="color:var(--danger);">Ошибка заявок: ${epEscape(e.message)}</span>`;
+        });
+    }
+
+    window.epAdminResolveDbProposal = async function (id, mode) {
+        if (!db || !appUser || appUser.role !== 'admin') return;
+        showLoader('Обработка заявки...', '🌍');
+        try {
+            const ref = db.collection('db_proposals').doc(id);
+            const doc = await ref.get();
+            if (!doc.exists) throw new Error('Заявка не найдена');
+            const d = doc.data();
+
+            if (mode !== 'reject') {
+                const type = d.type || 'mat';
+                let items = (d.items || []).map(function (x) {
+                    return Object.assign({}, x, mode === 'names' ? { p: 0 } : {});
+                });
+                let arr = epCurrentDb(type).slice();
+                items.forEach(function (it) {
+                    const idx = arr.findIndex(x => epSameItem(x, it));
+                    if (idx >= 0) arr[idx] = Object.assign({}, arr[idx], it, { id: arr[idx].id || it.id });
+                    else arr.push(it);
+                });
+                epSetCurrentDb(type, arr);
+                await epSaveGlobalDb();
+                renderDbEditors();
+            }
+
+            await ref.set({
+                status: mode === 'reject' ? 'rejected' : 'approved',
+                decision: mode,
+                decidedAt: new Date().toISOString(),
+                decidedBy: appUser.uid || ''
+            }, { merge: true });
+
+            hideLoader();
+            showToast(mode === 'reject' ? 'Заявка отклонена' : '✅ Добавлено в глобальную базу');
+        } catch(e) {
+            hideLoader();
+            showToast('❌ ' + (e.message || 'Ошибка'));
+        }
+    };
+
+    // Patch lifecycle
+    const epOldFinishLoginSetup = window.finishLoginSetup;
+    window.finishLoginSetup = async function () {
+        if (typeof epOldFinishLoginSetup === 'function') epOldFinishLoginSetup();
+        epPatchSettingsUI();
+        epInsertMainProviderSwitch();
+        epInsertDbTools();
+        epMakeAiMenuGroup();
+        epAddBetaLabels();
+        await epLoadAiConfigFromServer();
+        await epLoadUserDbAfterLogin();
+        epListenDbProposals();
+    };
+
+    function epInitialApply() {
+        epPatchSettingsUI();
+        epInsertMainProviderSwitch();
+        epInsertDbTools();
+        epMakeAiMenuGroup();
+        epAddBetaLabels();
+        epRefreshProviderUI();
+        if (appUser) {
+            epLoadAiConfigFromServer();
+            epLoadUserDbAfterLogin();
+            epListenDbProposals();
+        }
+    }
+
     document.addEventListener('DOMContentLoaded', function () {
-        try { epLoadGlobalApi(); } catch(e) {}
+        epInitialApply();
+        setTimeout(epInitialApply, 400);
+        setTimeout(epInitialApply, 1200);
+    });
+
+    document.addEventListener('click', function () {
+        setTimeout(function () {
+            epMakeAiMenuGroup();
+            epAddBetaLabels();
+            epInsertDbTools();
+            epRefreshProviderUI();
+        }, 120);
     });
 })();
 </script>
 
-<!-- EP_SURGICAL_VERSION: 1778511340 -->
 </body>
 </html>
 
-<!-- EP_API_KEY_FIX_VERSION: api-key-fix-2 -->
+<!-- EP_SURGICAL_OPENAI_PROVIDER_VERSION: 1778513531 -->
